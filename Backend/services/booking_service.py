@@ -1,9 +1,11 @@
+from http.client import HTTPException
 from sqlalchemy.orm import Session
 from Backend.models.customer import Customer
 from Backend.models.table_booking import TableBooking
 from Backend.models.booking_table import BookingTable
 from Backend.schemas.booking import BookingTableCreate
 from sqlalchemy.orm import Session, joinedload
+from Backend.models.table import Table
 
 # =========================
 # GET ALL
@@ -46,10 +48,10 @@ def get_bookings_of_account(account_id: int, db: Session):
 # =========================
 # CREATE BOOKING + TABLES
 # =========================
-from Backend.models.table import Table
 
 def create_booking(db: Session, data: BookingTableCreate):
-    #  CHECK TRÙNG
+
+    # kiểm tra booking đã tồn tại chưa
     existed = (
         db.query(TableBooking)
         .filter(
@@ -61,7 +63,7 @@ def create_booking(db: Session, data: BookingTableCreate):
 
     if existed:
         return existed
-
+    # 1️ tạo booking
     booking = TableBooking(
         CustomerID=data.customer_id,
         BookingTime=data.booking_time,
@@ -72,19 +74,26 @@ def create_booking(db: Session, data: BookingTableCreate):
     db.commit()
     db.refresh(booking)
 
-    for table_id in data.table_ids:
-        db.add(
-            BookingTable(
+    # 2️ kiểm tra có table_ids không
+    if data.table_ids and len(data.table_ids) > 0:
+
+        booking_tables = []
+
+        for table_id in data.table_ids:
+            bt = BookingTable(
                 BookingID=booking.BookingID,
-                TableID=table_id
+                TableID=table_id,
+                TableNumber=None
             )
-        )
+            booking_tables.append(bt)
 
-    db.commit()
+        # add tất cả cùng lúc
+        db.add_all(booking_tables)
+
+        # commit insert booking_tables
+        db.commit()
+
     return booking
-
-
-
 # =========================
 # DELETE
 # =========================
@@ -107,10 +116,6 @@ def get_tables_of_booking(db: Session, booking_id: int):
         .filter(BookingTable.BookingID == booking_id)
         .all()
     )
-from sqlalchemy.orm import Session
-from Backend.models.table_booking import TableBooking
-from Backend.models.booking_table import BookingTable
-from Backend.models.table import Table
 
 def get_booking_with_tables(db: Session, booking_id: int):
     booking = (
@@ -135,8 +140,8 @@ def get_booking_with_tables(db: Session, booking_id: int):
         "BookingTime": booking.BookingTime,
         "tables": [
             {
-                "TableID": t.TableID,
                 "TableNumber": t.TableNumber
             } for t in tables
         ]
     }
+

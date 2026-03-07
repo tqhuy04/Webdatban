@@ -4,7 +4,8 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import os, shutil
+import os
+import shutil
 
 from Backend.database import get_db
 from Backend.schemas.menu_item import (
@@ -12,12 +13,15 @@ from Backend.schemas.menu_item import (
     MenuItemUpdate,
     MenuItemResponse
 )
+
 from Backend.controllers.menu_item_controller import (
     get_all,
+    get_by_id,
     create,
     update,
     delete
 )
+
 from Backend.core.dependencies import admin_required
 from Backend.models.menu_category import MenuCategory
 
@@ -38,7 +42,15 @@ def get_menu_items(db: Session = Depends(get_db)):
 
 
 # =========================
-# CREATE (FORM + FILE) ✅
+# GET BY ID
+# =========================
+@router.get("/{item_id}", response_model=MenuItemResponse)
+def get_menu_item(item_id: int, db: Session = Depends(get_db)):
+    return get_by_id(db, item_id)
+
+
+# =========================
+# CREATE
 # =========================
 @router.post(
     "/",
@@ -56,12 +68,11 @@ def create_menu_item(
     db: Session = Depends(get_db),
     _: dict = Depends(admin_required)
 ):
-    # 🔎 Lấy tên nhóm
-    category = (
-        db.query(MenuCategory)
-        .filter(MenuCategory.CategoryID == CategoryID)
-        .first()
-    )
+
+    category = db.query(MenuCategory).filter(
+        MenuCategory.CategoryID == CategoryID
+    ).first()
+
     if not category:
         raise HTTPException(status_code=404, detail="Category không tồn tại")
 
@@ -88,7 +99,7 @@ def create_menu_item(
 
 
 # =========================
-# UPDATE (FORM + FILE) ✅
+# UPDATE
 # =========================
 @router.put("/{item_id}", response_model=MenuItemResponse)
 def update_menu_item(
@@ -104,11 +115,11 @@ def update_menu_item(
     db: Session = Depends(get_db),
     _: dict = Depends(admin_required)
 ):
+
     update_data = {}
 
     if CategoryID is not None:
         update_data["CategoryID"] = CategoryID
-
     if Name is not None:
         update_data["Name"] = Name
     if Description is not None:
@@ -118,19 +129,11 @@ def update_menu_item(
     if Status is not None:
         update_data["Status"] = Status
 
-    # 👉 Nếu upload ảnh mới
     if img:
-        if not CategoryID:
-            raise HTTPException(
-                status_code=400,
-                detail="Cần CategoryID khi đổi ảnh"
-            )
+        category = db.query(MenuCategory).filter(
+            MenuCategory.CategoryID == CategoryID
+        ).first()
 
-        category = (
-            db.query(MenuCategory)
-            .filter(MenuCategory.CategoryID == CategoryID)
-            .first()
-        )
         if not category:
             raise HTTPException(status_code=404, detail="Category không tồn tại")
 

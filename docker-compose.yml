@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: restaurant_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 130404
+      MYSQL_DATABASE: restaurant_booking
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - restaurant_network
+
+  # Backend FastAPI
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: restaurant_backend
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:130404@mysql:3306/restaurant_booking
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    networks:
+      - restaurant_network
+    volumes:
+      - ./Backend/uploads:/app/uploads
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: restaurant_frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - restaurant_network
+    stdin_open: true
+    tty: true
+
+volumes:
+  mysql_data:
+
+networks:
+  restaurant_network:
+    driver: bridge

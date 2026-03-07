@@ -1,76 +1,59 @@
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from Backend.schemas.booking import BookingTableCreate
-from Backend.services.booking_service import (
-    get_all_bookings,
-    get_booking_by_id,
-    create_booking,
-    delete_booking,
-    get_bookings_of_account
-)
+from Backend.services import booking_service
 
 
 # =========================
-# GET ALL (ADMIN)
+# GET ALL
 # =========================
 def get_all(db: Session):
-    return get_all_bookings(db)
+
+    return booking_service.get_all_bookings(db)
 
 
 # =========================
-# GET BY ID (USER / ADMIN)
+# GET BY ID
 # =========================
-def get_by_id(
-    booking_id: int,
-    db: Session,
-    user
-):
-    booking = get_booking_by_id(db, booking_id)
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
+def get_by_id(booking_id: int, db: Session, user):
 
-    # user là Account object → dùng thuộc tính
-    if user.Role.lower() == "user" and booking.CustomerID != user.id:
-        raise HTTPException(
-            status_code=403,
-            detail="You do not have permission to access this booking"
-        )
-
-    return booking
+    return booking_service.get_booking_by_id(db, booking_id)
 
 
 # =========================
-# GET BY CUSTOMER (USER)
+# GET BY CUSTOMER
 # =========================
-def get_by_customer(
-    db: Session,
-    user
-):
-    return get_bookings_of_account(user.id, db)
+def get_by_customer(account_id: int, db: Session):
+
+    return booking_service.get_bookings_of_account(db, account_id)
 
 
 # =========================
 # CREATE
 # =========================
-def create(
-    data: BookingTableCreate,
-    db: Session,
-    user
-):
-    # ép customer_id theo user đăng nhập
-    data.customer_id = user.id
-    return create_booking(db, data)
+def create(data: BookingTableCreate, db: Session, user):
+
+    return booking_service.create_booking(db, data)
 
 
 # =========================
-# DELETE (ADMIN)
+# DELETE
 # =========================
-def delete(
-    booking_id: int,
-    db: Session
-):
-    booking = delete_booking(db, booking_id)
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
+def delete(booking_id: int, db: Session):
 
-    return {"message": "Deleted successfully"}
+    return booking_service.delete_booking(db, booking_id)
+
+
+# =========================
+# GET TABLES
+# =========================
+def get_tables(booking_id: int, db: Session):
+
+    return booking_service.get_tables_of_booking(db, booking_id)
+
+
+# =========================
+# GET FULL
+# =========================
+def get_full(booking_id: int, db: Session):
+
+    return booking_service.get_booking_with_tables(db, booking_id)

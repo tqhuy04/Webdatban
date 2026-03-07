@@ -12,8 +12,12 @@ def get_all(db: Session):
     return get_all_orders(db)
 
 
-def get_by_booking(db: Session, booking_id: int):
-    return get_orders_by_booking(db, booking_id)
+def get_by_booking(db, booking_id: int):
+
+    orders = get_orders_by_booking(db, booking_id)
+
+
+    return orders or []
 
 
 def create(db: Session, data: OrderCreate):
