@@ -17,6 +17,7 @@ from Backend.models.booking_table import BookingTable
 from Backend.models.order import Order
 from Backend.models.order_detail import OrderDetail
 from Backend.models.promotion import Promotion
+from Backend.models.cart import Cart
 
 # CREATE TABLES
 Base.metadata.create_all(bind=engine)
@@ -30,7 +31,7 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React
+    allow_origins=["*"],  # Cho phép tất cả các origin trong development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,7 +60,8 @@ from Backend.routers import (
     promotion,
     statistcal,
     banking,
-    order_detail
+    order_detail,
+    cart
 )
 
 app.include_router(auth.router)
@@ -76,6 +78,7 @@ app.include_router(promotion.router)
 app.include_router(statistcal.router)
 app.include_router(banking.router)
 app.include_router(order_detail.router)
+app.include_router(cart.router)
 
 @app.get("/")
 def root():

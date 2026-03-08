@@ -1,28 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import Title from '../../../components/shared/Title';
 import menuItemApi from '../../../api/menu_itemApi';
+
+const SUGGEST_LIMIT = 3;
 
 function ProductDetails() {
     const { id } = useParams();
     const [quantity, setQuantity] = useState(1);
     const [product, setProduct] = useState(null);
+    const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchProduct = async () => {
             setLoading(true);
             try {
-                console.log('Fetching product with ID:', id);
                 const response = await menuItemApi.getById(id);
-                console.log('API Response:', response);
-                console.log('Response data:', response.data);
                 setProduct(response.data);
             } catch (error) {
                 console.error('Error fetching product:', error);
-                if (error.response) {
-                    console.error('Error response:', error.response);
-                }
             } finally {
                 setLoading(false);
             }
@@ -32,6 +29,24 @@ function ProductDetails() {
             fetchProduct();
         }
     }, [id]);
+
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            if (!product) return;
+            try {
+                const res = await menuItemApi.getAll();
+                const all = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
+                const others = all.filter((item) => item.MenuItemID !== product.MenuItemID);
+                const sameCategory = others.filter((item) => item.CategoryID === product.CategoryID);
+                const rest = others.filter((item) => item.CategoryID !== product.CategoryID);
+                const list = [...sameCategory, ...rest].slice(0, SUGGEST_LIMIT);
+                setSuggestions(list);
+            } catch (e) {
+                console.error('Error fetching suggestions:', e);
+            }
+        };
+        fetchSuggestions();
+    }, [product]);
 
     const handleDecrease = () => {
         if (quantity > 1) {
@@ -147,56 +162,39 @@ function ProductDetails() {
                         </div>
                     </div>
 
-                    {/* gợi ý */}
+                    {/* Có thể bạn đang tìm - gợi ý từ API */}
                     <div className='col-md-3 p-2'>
-                        <div style={{ border: '1px solid #d69c52', borderRadius: '10px', background: '#d69c52', height: '440px' }}>
+                        <div style={{ border: '1px solid #d69c52', borderRadius: '10px', background: '#d69c52', minHeight: '200px' }}>
                             <p style={{ color: '#fff', fontSize: '20px', textAlign: 'center', paddingTop: '8px' }}>
                                 Có thể bạn đang tìm
                             </p>
-
-                            <div style={{ background: '#10302c', height: '87.5%', borderRadius: '0 0 10px 10px' }}>
-                                <div className='row p-2'>
-                                    <div className="col-md-5">
-                                        <img
-                                            className='w-100'
-                                            style={{ borderRadius: '5px' }}
-                                            src='https://bizweb.dktcdn.net/thumb/medium/100/469/097/products/1c8da310231574e189b9012e3125a3.jpg?v=1667881665957'
-                                            alt='Dương cam chi lộ'
-                                        />
-                                    </div>
-                                    <div className="col-md-7 d-flex flex-column justify-content-center">
-                                        <p style={{ color: '#fff' }}>Dương cam chi lộ</p>
-                                        <p style={{ color: 'red' }}>55.000đ</p>
-                                    </div>
-                                </div>
-                                <div className='row p-2'>
-                                    <div className="col-md-5">
-                                        <img
-                                            className='w-100'
-                                            style={{ borderRadius: '5px' }}
-                                            src='https://bizweb.dktcdn.net/thumb/medium/100/469/097/products/19fe207c1918443c493a8ffc37de05.jpg?v=1667881644533'
-                                            alt='Trà nhài nhãn'
-                                        />
-                                    </div>
-                                    <div className="col-md-7 d-flex flex-column justify-content-center">
-                                        <p style={{ color: '#fff' }}>Trà nhài nhãn</p>
-                                        <p style={{ color: 'red' }}>48.000đ</p>
-                                    </div>
-                                </div>
-                                <div className='row p-2'>
-                                    <div className="col-md-5">
-                                        <img
-                                            className='w-100'
-                                            style={{ borderRadius: '5px' }}
-                                            src='https://bizweb.dktcdn.net/thumb/medium/100/469/097/products/1f8b8eb2049ed4362bd32f0899192c.jpg?v=1667881453383'
-                                            alt='Trà sữa ô long'
-                                        />
-                                    </div>
-                                    <div className="col-md-7 d-flex flex-column justify-content-center">
-                                        <p style={{ color: '#fff' }}>Trà sữa ô long</p>
-                                        <p style={{ color: 'red' }}>45.000đ</p>
-                                    </div>
-                                </div>
+                            <div style={{ background: '#10302c', padding: '8px 0', borderRadius: '0 0 10px 10px' }}>
+                                {suggestions.length === 0 ? (
+                                    <p className="text-white text-center small mb-0 py-2">Đang tải gợi ý...</p>
+                                ) : (
+                                    suggestions.map((item) => (
+                                        <Link
+                                            key={item.MenuItemID}
+                                            to={`/ProductDetails/${item.MenuItemID}`}
+                                            className="text-decoration-none d-block"
+                                        >
+                                            <div className="row p-2 align-items-center mx-0">
+                                                <div className="col-5 p-0 pl-2">
+                                                    <img
+                                                        className="w-100"
+                                                        style={{ borderRadius: '5px', aspectRatio: '1', objectFit: 'cover' }}
+                                                        src={getImagePath(item.ImageURL)}
+                                                        alt={item.Name}
+                                                    />
+                                                </div>
+                                                <div className="col-7 d-flex flex-column justify-content-center">
+                                                    <p className="mb-0 text-white small" style={{ color: '#fff' }}>{item.Name}</p>
+                                                    <p className="mb-0 small" style={{ color: 'red' }}>{formatPrice(item.Price)}</p>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>

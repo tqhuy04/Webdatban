@@ -23,8 +23,9 @@ const customerApi = {
     return axiosClient.delete(`/customers/${id}`);
   },
 
-  create(account_id, data) {
-    return axiosClient.post(`/customers?account_id=${account_id}`, data);
+  // ✅ TẠO CUSTOMER CHO USER HIỆN TẠI
+  create(data) {
+    return axiosClient.post("/customers/me", data);
   },
 };
 

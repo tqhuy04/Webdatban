@@ -6,6 +6,7 @@ import Home from "../pages/User/Home";
 import Login from "../pages/User/Login";
 import ProductDetails from "../pages/User/ProductDetails";
 import Cart from "../pages/User/Cart";
+import Checkout from "../pages/User/Checkout";
 import Pay from "../pages/User/Pay";
 import Thanks from "../pages/User/Thanks";
 import Bookings from "../pages/User/Bookings";
@@ -37,6 +38,7 @@ export const publicRoutes = [
   { path: "/Login", component: Login },
   { path: "/ProductDetails/:id", component: ProductDetails },
   { path: "/Cart", component: Cart },
+  { path: "/Checkout", component: Checkout },
   { path: "/Pay", component: Pay },
   { path: "/Thanks", component: Thanks },
   { path: "/Bookings", component: Bookings },

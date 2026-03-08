@@ -23,8 +23,18 @@ axiosClient.interceptors.request.use(config => {
 });
 
 axiosClient.interceptors.response.use(
-  response => response,        // ✅ trả full response
-  error => Promise.reject(error)
+  response => {
+    return response;
+  },
+  error => {
+    const status = error.response?.status;
+    const message = error.response?.data?.detail || error.message;
+    const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
+    const path = error.config?.url || 'unknown';
+
+    console.error(`[API] ${method} ${path} - ${status}: ${message}`);
+    return Promise.reject(error);
+  }
 );
 
 

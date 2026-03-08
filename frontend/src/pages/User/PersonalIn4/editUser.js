@@ -1,113 +1,124 @@
 import React, { useState, useEffect } from 'react';
 import userApi from '../../../api/userApi';
+import Notification from '../../../components/shared/Notification';
 
-const EditUser = ({ setName, setEmail, user_id, data, onClose }) => {
+const EditUser = ({ setName, setEmail, user_id, data }) => {
+    const [notification, setNotification] = useState({ message: '', type: 'success' });
 
-    const [Name_edit, setName_edit] = useState('');
-    const [Email_edit, setEmail_edit] = useState('');
-    const [Password, setPassword] = useState(null);
-    const [Password_old, setPassword_old] = useState(null);
-    const [ischangePassword, setischangePassword] = useState(false);
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification({ message: '', type: '' }), 3000);
+    };
+
+    const [nameEdit, setNameEdit] = useState('');
+    const [emailEdit, setEmailEdit] = useState('');
+    const [password, setPassword] = useState('');
+    const [oldPassword, setOldPassword] = useState('');
+    const [isChangePassword, setIsChangePassword] = useState(false);
 
     useEffect(() => {
         if (!data) return;
-        setEmail_edit(data.email);
-        setName_edit(data.name);
+        setEmailEdit(data.email);
+        setNameEdit(data.name);
     }, [data]);
 
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const data = {
-            name: Name_edit,
-            email: Email_edit,
+        const updateData = {
+            username: nameEdit,
+            email: emailEdit,
         }
 
-        if (Password !== null) {
-            data.password = Password;
-            data.password_old = Password_old;
+        if (isChangePassword && password) {
+            updateData.password = password;
+            updateData.password_old = oldPassword;
         }
 
-        userApi.update(user_id, data)
+        userApi.update(user_id, updateData)
             .then(response => {
-                alert('đã sửa thông tin tài khoản thành công')
-                setName(response.data.name);
+                showNotification('Đã cập nhật thông tin tài khoản thành công', 'success');
+                setName(response.data.username);
                 setEmail(response.data.email);
-                onClose();
             })
             .catch(error => {
-                console.error('Có lỗi ' + error)
-                alert('Mật khẩu cũ của bạn không đúng vui lòng nhập lại')
+                console.error('Có lỗi:', error);
+                showNotification('Mật khẩu cũ của bạn không đúng, vui lòng nhập lại', 'danger');
             })
-
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h4>Thêm dữ liệu</h4>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label className="form-label" style={{ color: 'black' }}>Tên</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={Name_edit}
-                            onChange={e => setName_edit(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label className="form-label" style={{ color: 'black' }}>Email</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={Email_edit}
-                            onChange={e => setEmail_edit(e.target.value)}
-                            required
-                        />
-                        <div className="mb-3">
-                            <label className="form-label" style={{ color: 'black' }}>Đổi mật khẩu</label>
-                            <input
-                                type="checkbox"
-                                onChange={() => setischangePassword(prev => !prev)}
-                                required
-                            />
-                        </div>
-                        {ischangePassword ?
-                            <>
-                                <div className="mb-3">
-                                    <label className="form-label" style={{ color: 'black' }}>Mật khẩu cũ</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={Password_old ? Password_old : ''}
-                                        onChange={e => setPassword_old(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label" style={{ color: 'black' }}>Mật khẩu mới</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={Password ? Password : ''}
-                                        onChange={e => setPassword(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </>
-                            :
-                            ''}
-
-
-                    </div>
-                    <button type="submit" className="btn btn-success me-2">Lưu</button>
-                    <button type="button" className="btn btn-secondary" onClick={() => onClose()}>Hủy</button>
-                </form>
+        <>
+            <Notification message={notification.message} type={notification.type} />
+            <form onSubmit={handleSubmit}>
+            <div className="form-group">
+                <label className="form-label">Tên đăng nhập</label>
+                <input
+                    type="text"
+                    className="form-input"
+                    value={nameEdit}
+                    onChange={e => setNameEdit(e.target.value)}
+                    placeholder="Nhập tên đăng nhập"
+                    required
+                />
             </div>
-        </div>
+            
+            <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                    type="email"
+                    className="form-input"
+                    value={emailEdit}
+                    onChange={e => setEmailEdit(e.target.value)}
+                    placeholder="Nhập email"
+                    required
+                />
+            </div>
+            
+            <div className="form-group">
+                <label className="form-label d-flex align-items-center">
+                    <input
+                        type="checkbox"
+                        className="me-2"
+                        checked={isChangePassword}
+                        onChange={() => setIsChangePassword(prev => !prev)}
+                    />
+                    Đổi mật khẩu
+                </label>
+            </div>
+            
+            {isChangePassword && (
+                <>
+                    <div className="form-group">
+                        <label className="form-label">Mật khẩu cũ</label>
+                        <input
+                            type="password"
+                            className="form-input"
+                            value={oldPassword}
+                            onChange={e => setOldPassword(e.target.value)}
+                            placeholder="Nhập mật khẩu cũ"
+                            required={isChangePassword}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Mật khẩu mới</label>
+                        <input
+                            type="password"
+                            className="form-input"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            placeholder="Nhập mật khẩu mới"
+                            required={isChangePassword}
+                        />
+                    </div>
+                </>
+            )}
 
+            <div className="d-flex gap-2">
+                <button type="submit" className="btn-save">Lưu thay đổi</button>
+            </div>
+        </form>
+        </>
     );
 }
 export default EditUser;

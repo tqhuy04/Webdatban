@@ -28,6 +28,20 @@ def get_my_customer(
 ):
     return get_customer_by_user(db, user.id)
 
+
+@router.post("/me", response_model=CustomerOut)
+def create_my_customer(
+    data: CustomerCreate,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    # Kiểm tra đã có customer chưa
+    existing = get_customer_by_user(db, user.id)
+    if existing:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Thông tin khách hàng đã tồn tại")
+    return create_customer(db, user.id, data)
+
 # ===== ADMIN =====
 @router.post("", response_model=CustomerOut)
 def create(
@@ -61,8 +75,13 @@ def update(
     customer_id: int,
     data: CustomerUpdate,
     db: Session = Depends(get_db),
-    admin=Depends(admin_required)
+    user=Depends(get_current_user)
 ):
+    # Lấy customer của user hiện tại
+    customer = get_customer_by_user(db, user.id)
+    if not customer or customer.id != customer_id:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Không có quyền cập nhật thông tin này")
     return update_customer(db, customer_id, data)
 
 

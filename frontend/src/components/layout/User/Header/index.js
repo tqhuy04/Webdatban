@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Zalo from "../../../shared/Zalo/Zalo";
+import { useCart } from "../../../../contexts/CartContext";
 
 function Header() {
     const navigate = useNavigate();
+    const { getCartItemCount } = useCart();
 
     const [isOpen, setIsOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(false);
+    const [cartCount, setCartCount] = useState(0);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
         setIsLogin(!!token);
     }, []);
+
+    useEffect(() => {
+        setCartCount(getCartItemCount());
+    }, [getCartItemCount]);
 
     const toggleMenu = () => {
         setIsOpen(!isOpen);
@@ -163,9 +170,29 @@ function Header() {
                                     </div>
 
                                     {/* CART */}
-                                    <div className="col-md-2 user-container">
+                                    <div className="col-md-2 user-container" style={{ position: 'relative' }}>
                                         <Link to="/Cart">
                                             <i className="fas fa-shopping-cart"></i>
+                                            {cartCount > 0 && (
+                                                <span
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: '-8px',
+                                                        right: '-8px',
+                                                        background: '#d69c52',
+                                                        color: '#fff',
+                                                        borderRadius: '50%',
+                                                        width: '18px',
+                                                        height: '18px',
+                                                        fontSize: '11px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                    }}
+                                                >
+                                                    {cartCount}
+                                                </span>
+                                            )}
                                         </Link>
                                     </div>
 

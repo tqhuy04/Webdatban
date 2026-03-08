@@ -1,50 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import customerApi from '../../../api/customerApi';
 
-const AddCustomer = ({ onUpdate, onClose, user_id }) => {
+const AddCustomer = ({ onUpdate }) => {
 
-    const [FullName, setFullName] = useState('');
-    const [PhoneNumber, setPhoneNumber] = useState('');
-    const [Address, setAddress] = useState('');
-
-    // ✅ DÙNG useEffect
-    useEffect(() => {
-        setFullName('');
-        setPhoneNumber('');
-        setAddress('');
-    }, []);
+    const [fullName, setFullName] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [address, setAddress] = useState('');
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
         const data = {
-            UserID: user_id,
-            FullName,
-            PhoneNumber,
-            Address,
+            full_name: fullName,
+            phone_number: phoneNumber,
+            address: address,
         };
 
         customerApi.create(data)
             .then(() => {
-                alert('đã thêm người đặt thành công');
+                alert('Đã thêm thông tin khách hàng thành công');
                 onUpdate();
-                onClose();
             })
             .catch(error => console.error(error));
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h4>Thêm dữ liệu</h4>
-                <form onSubmit={handleSubmit}>
-                    <input value={FullName} onChange={e => setFullName(e.target.value)} />
-                    <input value={PhoneNumber} onChange={e => setPhoneNumber(e.target.value)} />
-                    <input value={Address} onChange={e => setAddress(e.target.value)} />
-                    <button type="submit">Lưu</button>
-                </form>
+        <form onSubmit={handleSubmit} className="edit-section">
+            <h4 className="edit-title">Thêm thông tin khách hàng</h4>
+            
+            <div className="form-group">
+                <label className="form-label">Họ tên</label>
+                <input
+                    type="text"
+                    className="form-input"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    placeholder="Nhập họ tên"
+                    required
+                />
             </div>
-        </div>
+            
+            <div className="form-group">
+                <label className="form-label">Số điện thoại</label>
+                <input
+                    type="tel"
+                    className="form-input"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    placeholder="Nhập số điện thoại"
+                    required
+                />
+            </div>
+            
+            <div className="form-group">
+                <label className="form-label">Địa chỉ</label>
+                <input
+                    type="text"
+                    className="form-input"
+                    value={address}
+                    onChange={e => setAddress(e.target.value)}
+                    placeholder="Nhập địa chỉ"
+                    required
+                />
+            </div>
+
+            <div className="d-flex gap-2">
+                <button type="submit" className="btn-save">Lưu thông tin</button>
+            </div>
+        </form>
     );
 };
 

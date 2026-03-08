@@ -134,7 +134,7 @@ const MenuSelection = ({ isVisible, onClose }) => {
 
                 <div className="container mt-3">
                     <div className="row">
-                        <div className="col-md-8">
+                        <div className="col-md-8" style={{ border: '1px solid rgb(195, 194, 194)' }}>
                             <div className="p-2" style={{ height: "400px", overflowY: "auto" }}>
                                 <ul className="d-flex p-0 menu-category">
                                     {Menu_categorys.map((c) => (
@@ -159,15 +159,19 @@ const MenuSelection = ({ isVisible, onClose }) => {
                                         <div
                                             key={product.MenuItemID}
                                             className="col-md-5 text-center pro-item p-2 position-relative"
+                                            style={{ background: '#fff', marginBottom: '40px', height: '270px' }}
                                         >
-                                            <div className="pro-item_child">
+                                            <div className="pro-item_child" style={{ width: '100%', height: '100%', padding: '8px' }}>
                                                 <img
-                                                    src={getImagePath(product.ImageURL)}
+                                                    src={getImagePath(product.ImageURL) || 'https://via.placeholder.com/150?text=No+Image'}
                                                     alt={product.Name}
                                                     style={{
                                                         width: "100%",
                                                         height: "140px",
                                                         objectFit: "cover",
+                                                    }}
+                                                    onError={(e) => {
+                                                        e.target.src = 'https://via.placeholder.com/150?text=No+Image';
                                                     }}
                                                 />
                                                 <h6>{product.Name}</h6>
@@ -175,20 +179,66 @@ const MenuSelection = ({ isVisible, onClose }) => {
                                                     {formatNumber(product.Price)} đ
                                                 </p>
 
-                                                <div className="d-flex justify-content-center">
-                                                    <button onClick={() => updateQuantity(product.MenuItemID, -1)}>-</button>
-                                                    <input
-                                                        type="number"
-                                                        readOnly
-                                                        value={product.Quantity}
-                                                        style={{ width: "40px", textAlign: "center" }}
-                                                    />
-                                                    <button onClick={() => updateQuantity(product.MenuItemID, 1)}>+</button>
+                                                <div className="d-flex justify-content-center align-items-center mt-2" style={{ gap: '8px' }}>
+                                                    <button 
+                                                        onClick={() => updateQuantity(product.MenuItemID, -1)}
+                                                        style={{
+                                                            border: '1px solid #bd8133',
+                                                            background: '#fff',
+                                                            color: '#bd8133',
+                                                            width: '30px',
+                                                            height: '30px',
+                                                            borderRadius: '50%',
+                                                            fontSize: '18px',
+                                                            fontWeight: 'bold',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }}
+                                                    >-</button>
+                                                    <span
+                                                        style={{ 
+                                                            width: "40px", 
+                                                            textAlign: "center", 
+                                                            fontSize: '16px',
+                                                            fontWeight: 'bold'
+                                                        }}
+                                                    >
+                                                        {product.Quantity}
+                                                    </span>
+                                                    <button 
+                                                        onClick={() => updateQuantity(product.MenuItemID, 1)}
+                                                        style={{
+                                                            border: '1px solid #bd8133',
+                                                            background: '#fff',
+                                                            color: '#bd8133',
+                                                            width: '30px',
+                                                            height: '30px',
+                                                            borderRadius: '50%',
+                                                            fontSize: '18px',
+                                                            fontWeight: 'bold',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }}
+                                                    >+</button>
                                                 </div>
                                             </div>
 
                                             <button
                                                 className="select-btn"
+                                                style={{
+                                                    position: 'absolute',
+                                                    bottom: '-20%',
+                                                    left: '25%',
+                                                    border: 'none',
+                                                    borderRadius: '5px',
+                                                    background: '#bd8133',
+                                                    color: '#fff',
+                                                    padding: '5px'
+                                                }}
                                                 onClick={() =>
                                                     HandleAddSelectMenuItems(product)
                                                 }
@@ -210,6 +260,7 @@ const MenuSelection = ({ isVisible, onClose }) => {
                             <div
                                 className="p-2"
                                 style={{
+                                    border: '1px solid rgb(195, 194, 194)',
                                     background: "#fff",
                                     height: "400px",
                                     position: "relative",
@@ -231,6 +282,15 @@ const MenuSelection = ({ isVisible, onClose }) => {
                                                 onClick={() =>
                                                     HandleAddSelectMenuItems(item)
                                                 }
+                                                style={{
+                                                    color: '#fff',
+                                                    fontSize: '12px',
+                                                    background: 'red',
+                                                    height: '20px',
+                                                    border: 'none',
+                                                    borderRadius: '3px',
+                                                    padding: '2px 8px'
+                                                }}
                                             >
                                                 Xóa
                                             </button>

@@ -5,6 +5,8 @@ import authUser from '../../../api/authUser';
 import AddCustomer from './addCustomer';
 import EditCustomer from './editCustomer';
 import EditUser from './editUser';
+import Header from "../../../components/layout/User/Header";
+import './index.css';
 
 function PersonalIn4() {
     const [selectedTab, setSelectedTab] = useState("info1");
@@ -19,30 +21,8 @@ function PersonalIn4() {
     const [user_id, setUser_id] = useState(null);
     const [CustomerID, setCustomerID] = useState(null);
 
-    const [isFormVisibleAdd, setIsFormVisibleAdd] = useState(false);
-    const [isFormVisibleEdit, setIsFormVisibleEdit] = useState(false);
-    const [isFormVisibleUser, setIsFormVisibleUser] = useState(false);
-
-    // ===== MODAL HANDLER =====
-    const handleAddClick = () => setIsFormVisibleAdd(true);
-    const handleEditClick = () => setIsFormVisibleEdit(true);
-    const handleUserClick = () => setIsFormVisibleUser(true);
-
-    // ===== GET USER ID =====
-    useEffect(() => {
-        authUser.get_user_id()
-            .then(res => setUser_id(res.data.user_id))
-            .catch(() => console.error("Lỗi lấy user_id"));
-    }, []);
-
-    useEffect(() => {
-        if (!user_id) return;
-
-        userApi.getById(user_id).then(res => {
-            setName(res.data.name);
-            setEmail(res.data.email);
-        });
-
+    // Hàm refresh thông tin customer
+    const refreshCustomerData = () => {
         customerApi.getByIdUser()
             .then(res => {
                 setFullName(res.data.full_name);
@@ -50,88 +30,158 @@ function PersonalIn4() {
                 setAddress(res.data.address);
                 setCustomerID(res.data.id);
             })
+            .catch(err => console.error('Lỗi refresh customer:', err));
+    };
+
+    // ===== GET USER ID =====
+    useEffect(() => {
+        authUser.get_user_id()
+            .then(res => {
+                console.log("get_user_id response:", res);
+                setUser_id(res?.user_id);
+            })
+            .catch(err => console.error("Lỗi lấy user_id:", err));
+    }, []);
+
+    useEffect(() => {
+        if (!user_id) return;
+
+        console.log("user_id:", user_id);
+
+        userApi.getMe()
+            .then(res => {
+                console.log("Account response:", res);
+                setName(res.data.username);
+                setEmail(res.data.email);
+            })
+            .catch(err => console.error("Error getting account:", err));
+
+        customerApi.getByIdUser()
+            .then(res => {
+                console.log("Customer response:", res);
+                setFullName(res.data.full_name);
+                setPhoneNumber(res.data.phone_number);
+                setAddress(res.data.address);
+                setCustomerID(res.data.id);
+            })
             .catch(() => {
                 setFullName("");
+                setPhoneNumber("");
+                setAddress("");
             });
     }, [user_id]);
 
 
     return (
-        <div className="container mt-5 text-white">
-            <div className="row">
-                {/* TAB */}
-                <div className="col-md-3">
-                    <p
-                        className={selectedTab === "info1" ? "text-danger" : ""}
-                        onClick={() => setSelectedTab("info1")}
-                    >
-                        Thông tin tài khoản
-                    </p>
-                    <p
-                        className={selectedTab === "info2" ? "text-danger" : ""}
-                        onClick={() => setSelectedTab("info2")}
-                    >
-                        Thông tin đặt bàn
-                    </p>
-                </div>
+        <>
+            <Header />
+            <div className="personal-info-container">
+                <div className="row justify-content-center">
+                    <div className="col-lg-8">
+                        <div className="personal-info-card">
+                            <div className="row">
+                                {/* TAB */}
+                                <div className="col-md-3">
+                                    <div className="info-tabs">
+                                        <button
+                                            className={`tab-item ${selectedTab === "info1" ? "active" : ""}`}
+                                            onClick={() => setSelectedTab("info1")}
+                                        >
+                                            <i className="fas fa-user-circle me-2"></i>
+                                            Thông tin tài khoản
+                                        </button>
+                                        <button
+                                            className={`tab-item ${selectedTab === "info2" ? "active" : ""}`}
+                                            onClick={() => setSelectedTab("info2")}
+                                        >
+                                            <i className="fas fa-id-card me-2"></i>
+                                            Thông tin khách hàng
+                                        </button>
+                                    </div>
+                                </div>
 
-                {/* CONTENT */}
-                <div className="col-md-6">
-                    {selectedTab === "info1" && (
-                        <>
-                            <p>Tên đăng nhập: {name}</p>
-                            <p>Email: {email}</p>
-                            <button onClick={handleUserClick}>Chỉnh sửa</button>
+                                {/* CONTENT */}
+                                <div className="col-md-9">
+                                    <div className="info-content">
+                                        {selectedTab === "info1" && (
+                                            <div className="info-section">
+                                                <h3 className="info-title">Thông tin tài khoản</h3>
 
-                            {isFormVisibleUser && (
-                                <EditUser
-                                    data={{ name, email }}
-                                    user_id={user_id}
-                                    setName={setName}
-                                    setEmail={setEmail}
-                                    onClose={() => setIsFormVisibleUser(false)}
-                                />
-                            )}
-                        </>
-                    )}
+                                                <div className="info-item">
+                                                    <span className="info-label">Tên đăng nhập</span>
+                                                    <span className="info-value">{name || "Chưa cập nhật"}</span>
+                                                </div>
 
-                    {selectedTab === "info2" && (
-                        <>
-                            {fullName ? (
-                                <>
-                                    <p>Tên KH: {fullName}</p>
-                                    <p>SĐT: {phoneNumber}</p>
-                                    <p>Địa chỉ: {address}</p>
-                                    <button onClick={handleEditClick}>Chỉnh sửa</button>
+                                                <div className="info-item">
+                                                    <span className="info-label">Email</span>
+                                                    <span className="info-value">{email || "Chưa cập nhật"}</span>
+                                                </div>
 
-                                    {isFormVisibleEdit && (
-                                        <EditCustomer
-                                            data={{ fullName, phoneNumber, address, CustomerID }}
-                                            user_id={user_id}
-                                            onUpdate={() => { }}
-                                            onClose={() => setIsFormVisibleEdit(false)}
-                                        />
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    <p>Chưa có thông tin khách hàng</p>
-                                    <button onClick={handleAddClick}>Thêm</button>
+                                                <div className="edit-section">
+                                                    <h4 className="edit-title">Chỉnh sửa thông tin tài khoản</h4>
+                                                    <EditUser
+                                                        data={{ name, email }}
+                                                        user_id={user_id}
+                                                        setName={setName}
+                                                        setEmail={setEmail}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
 
-                                    {isFormVisibleAdd && (
-                                        <AddCustomer
-                                            user_id={user_id}
-                                            onUpdate={() => { }}
-                                            onClose={() => setIsFormVisibleAdd(false)}
-                                        />
-                                    )}
-                                </>
-                            )}
-                        </>
-                    )}
+                                        {selectedTab === "info2" && (
+                                            <div className="info-section">
+                                                <h3 className="info-title">Thông tin khách hàng</h3>
+
+                                                {fullName ? (
+                                                    <>
+                                                        <div className="info-item">
+                                                            <span className="info-label">Họ tên</span>
+                                                            <span className="info-value">{fullName}</span>
+                                                        </div>
+
+                                                        <div className="info-item">
+                                                            <span className="info-label">SĐT</span>
+                                                            <span className="info-value">{phoneNumber}</span>
+                                                        </div>
+
+                                                        <div className="info-item">
+                                                            <span className="info-label">Email</span>
+                                                            <span className="info-value">{email}</span>
+                                                        </div>
+
+                                                        <div className="info-item">
+                                                            <span className="info-label">Địa chỉ</span>
+                                                            <span className="info-value">{address}</span>
+                                                        </div>
+
+                                                        <div className="edit-section">
+                                                            <h4 className="edit-title">Chỉnh sửa thông tin</h4>
+                                                            <EditCustomer
+                                                                data={{ fullName, phoneNumber, address, CustomerID }}
+                                                                user_id={user_id}
+                                                                onUpdate={refreshCustomerData}
+                                                            />
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="no-info">
+                                                        <p>Chưa có thông tin khách hàng</p>
+                                                        <AddCustomer
+                                                            onUpdate={refreshCustomerData}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
 

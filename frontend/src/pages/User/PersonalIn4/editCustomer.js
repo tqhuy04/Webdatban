@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import customerApi from '../../../api/customerApi';
+import Notification from '../../../components/shared/Notification';
 
-const EditCustomer = ({ onUpdate, onClose, user_id, data }) => {
+const EditCustomer = ({ onUpdate, user_id, data }) => {
+    const [notification, setNotification] = useState({ message: '', type: 'success' });
 
-    const [FullName, setFullName] = useState();
-    const [PhoneNumber, setPhoneNumber] = useState();
-    const [Address, setAddress] = useState();
-    const [CustomerID, setCustomerID] = useState();
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification({ message: '', type: '' }), 3000);
+    };
+
+    const [fullName, setFullName] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [address, setAddress] = useState('');
+    const [customerID, setCustomerID] = useState();
 
     useEffect(() => {
         if (!data) return;
@@ -19,63 +26,67 @@ const EditCustomer = ({ onUpdate, onClose, user_id, data }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const data = {
-            UserID: user_id,
-            FullName,
-            PhoneNumber,
-            Address,
+        const updateData = {
+            full_name: fullName,
+            phone_number: phoneNumber,
+            address: address,
         }
-        customerApi.update(CustomerID, data)
+        customerApi.update(customerID, updateData)
             .then(response => {
-                alert('đã sửa người đặt thành công')
+                showNotification('Đã cập nhật thông tin thành công', 'success');
                 onUpdate();
-                onClose();
             })
-            .catch(error => console.error('có lỗi khi sửa người đặt ' + error))
-
+            .catch(error => {
+                console.error('Có lỗi khi cập nhật:', error);
+                showNotification('Có lỗi khi cập nhật', 'danger');
+            })
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h4>Thêm dữ liệu</h4>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label className="form-label" style={{ color: 'black' }}>Tên</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={FullName}
-                            onChange={e => setFullName(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="mb-3">
-                        <label className="form-label" style={{ color: 'black' }}>Số điện thoại</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={PhoneNumber}
-                            onChange={e => setPhoneNumber(e.target.value)}
-                            required
-                        />
-                        <div className="mb-3">
-                            <label className="form-label" style={{ color: 'black' }}>Địa chỉ</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={Address}
-                                onChange={e => setAddress(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
-                    <button type="submit" className="btn btn-success me-2">Lưu</button>
-                    <button type="button" className="btn btn-secondary" onClick={() => onClose()}>Hủy</button>
-                </form>
+        <>
+            <Notification message={notification.message} type={notification.type} />
+            <form onSubmit={handleSubmit}>
+            <div className="form-group">
+                <label className="form-label">Họ tên</label>
+                <input
+                    type="text"
+                    className="form-input"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    placeholder="Nhập họ tên"
+                    required
+                />
             </div>
-        </div>
+            
+            <div className="form-group">
+                <label className="form-label">Số điện thoại</label>
+                <input
+                    type="tel"
+                    className="form-input"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    placeholder="Nhập số điện thoại"
+                    required
+                />
+            </div>
+            
+            <div className="form-group">
+                <label className="form-label">Địa chỉ</label>
+                <input
+                    type="text"
+                    className="form-input"
+                    value={address}
+                    onChange={e => setAddress(e.target.value)}
+                    placeholder="Nhập địa chỉ"
+                    required
+                />
+            </div>
 
+            <div className="d-flex gap-2">
+                <button type="submit" className="btn-save">Lưu thay đổi</button>
+            </div>
+        </form>
+        </>
     );
 }
 export default EditCustomer;

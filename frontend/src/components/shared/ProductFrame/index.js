@@ -1,17 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-// import { apiUrl } from '../../../config';
+import { useCart } from '../../../contexts/CartContext';
 import Quikly from '../Quikly/Quikly';
 import Notification from '../Notification';
 
 const ProductFrame = ({ products }) => {
+    const { addToCart } = useCart();
 
     const getImagePath = (imageUrl) => {
-    if (!imageUrl) return '';
-    return encodeURI(
-        `http://localhost:8000/uploads/Categories/${imageUrl}`
-    );
-};
+        if (!imageUrl) return '';
+        return encodeURI(
+            `http://localhost:8000/uploads/Categories/${imageUrl}`
+        );
+    };
+
+
+    const handleAddToCart = (product, e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addToCart(product, 1);
+    };
 
 
     return (
@@ -32,35 +40,34 @@ const ProductFrame = ({ products }) => {
                                 background: '#fff',
                                 top: '1%',
                                 padding: '8px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
                             }}
                         >
-                            <img
-                                src={getImagePath(product.ImageURL)}
-                                alt={product.Name}
-                                style={{ height: '195px', width: '100%' }}
-                                className="mb-2"
-                            />
+                            <div>
+                                <img
+                                    src={getImagePath(product.ImageURL)}
+                                    alt={product.Name}
+                                    style={{ height: '195px', width: '100%' }}
+                                    className="mb-2"
+                                />
 
-                            <h5 style={{ height: '48px' }}>{product.Name}</h5>
-                            <p className="text-danger">{product.Price}</p>
+                                <h5>{product.Name}</h5>
+                            </div>
+
+                            <div className="pro-item-actions" style={{ marginTop: '8px' }}>
+                                <Link to={`/ProductDetails/${product.MenuItemID}`} className="btn-details">
+                                    Xem chi tiết
+                                </Link>
+                                <button
+                                    onClick={(e) => handleAddToCart(product, e)}
+                                    className="btn-add-cart"
+                                >
+                                    Thêm vào giỏ
+                                </button>
+                            </div>
                         </div>
-
-                        <Link to={`/ProductDetails/${product.MenuItemID}`}>
-                            <button
-                                style={{
-                                    position: 'absolute',
-                                    bottom: '-5%',
-                                    left: '30%',
-                                    border: 'none',
-                                    borderRadius: '5px',
-                                    background: '#bd8133',
-                                    color: '#fff',
-                                    padding: '5px',
-                                }}
-                            >
-                                Xem chi tiết
-                            </button>
-                        </Link>
                     </div>
                 ))}
             </div>
