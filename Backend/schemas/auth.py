@@ -9,7 +9,9 @@ class RegisterRequest(BaseModel):
     username: Username
     email: EmailStr
     password: Password
-    # ❌ KHÔNG cho FE gửi role
+    full_name: str = ""
+    phone_number: str = ""
+    address: str = ""
 
 
 class LoginRequest(BaseModel):

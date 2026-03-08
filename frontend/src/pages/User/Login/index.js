@@ -15,6 +15,9 @@ const Login = ({ isVisible = true, onClose }) => {
     const [regUsername, setRegUsername] = useState("");
     const [regEmail, setRegEmail] = useState("");
     const [regPassword, setRegPassword] = useState("");
+    const [regFullName, setRegFullName] = useState("");
+    const [regPhoneNumber, setRegPhoneNumber] = useState("");
+    const [regAddress, setRegAddress] = useState("");
 
     const [loading, setLoading] = useState(false);
 
@@ -56,7 +59,9 @@ const Login = ({ isVisible = true, onClose }) => {
                 username: regUsername,
                 email: regEmail,
                 password: regPassword,
-                role: "STAFF"
+                full_name: regFullName,
+                phone_number: regPhoneNumber,
+                address: regAddress
             });
 
             alert("Đăng ký thành công, vui lòng đăng nhập");
@@ -65,6 +70,9 @@ const Login = ({ isVisible = true, onClose }) => {
             setRegUsername("");
             setRegEmail("");
             setRegPassword("");
+            setRegFullName("");
+            setRegPhoneNumber("");
+            setRegAddress("");
 
         } catch (err) {
             alert(err.response?.data?.detail || "Đăng ký thất bại");
@@ -74,7 +82,7 @@ const Login = ({ isVisible = true, onClose }) => {
     };
 
     return (
-        <div style={{ height: "420px" }}>
+        <div>
             {/* Overlay */}
             <div
                 onClick={onClose}
@@ -119,6 +127,27 @@ const Login = ({ isVisible = true, onClose }) => {
                                 value={regPassword}
                                 onChange={(e) => setRegPassword(e.target.value)}
                                 required
+                            />
+
+                            <input
+                                type="text"
+                                placeholder="Full Name"
+                                value={regFullName}
+                                onChange={(e) => setRegFullName(e.target.value)}
+                            />
+
+                            <input
+                                type="text"
+                                placeholder="Phone Number"
+                                value={regPhoneNumber}
+                                onChange={(e) => setRegPhoneNumber(e.target.value)}
+                            />
+
+                            <input
+                                type="text"
+                                placeholder="Address"
+                                value={regAddress}
+                                onChange={(e) => setRegAddress(e.target.value)}
                             />
 
                             <button disabled={loading}>

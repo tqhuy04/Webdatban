@@ -49,8 +49,21 @@ def register(db: Session, data: RegisterRequest):
             username=data.username,
             email=data.email,
             password=data.password,
-            role="STAFF"
+            role="CUSTOMER"
         )
+
+        # Tự động tạo customer record
+        from Backend.models.customer import Customer
+        customer = Customer(
+            account_id=user.id,
+            full_name=data.full_name or data.username,
+            phone_number=data.phone_number or "",
+            address=data.address or ""
+        )
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -61,7 +74,8 @@ def register(db: Session, data: RegisterRequest):
         "message": "Đăng ký thành công",
         "user_id": user.id,
         "username": user.Username,
-        "email": user.Email
+        "email": user.Email,
+        "customer_id": customer.id
     }
 
 

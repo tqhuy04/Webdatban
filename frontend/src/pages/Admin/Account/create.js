@@ -61,6 +61,7 @@ const CreateForm = ({ setisShowFormCreate, GetUsers }) => {
                     >
                         <option value="STAFF">STAFF</option>
                         <option value="ADMIN">ADMIN</option>
+                        <option value="CUSTOMER">CUSTOMER</option>
                     </select>
 
                     <button className="btn btn-success me-2">Lưu</button>

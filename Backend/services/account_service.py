@@ -50,6 +50,18 @@ def create(db: Session, data: AccountCreate) -> AccountOut:
     db.commit()
     db.refresh(account)
 
+    # Tự động tạo Customer nếu role là CUSTOMER
+    if data.role == "CUSTOMER":
+        from Backend.models.customer import Customer
+        customer = Customer(
+            account_id=account.id,
+            full_name=data.username,
+            phone_number="",
+            address=""
+        )
+        db.add(customer)
+        db.commit()
+
     return to_account_out(account)   # 🔥 QUAN TRỌNG
 
 

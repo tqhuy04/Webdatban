@@ -90,6 +90,7 @@ const EditForm = ({ setisShowFormEdit, GetUsers, data, id }) => {
                         >
                             <option value="STAFF">STAFF</option>
                             <option value="ADMIN">ADMIN</option>
+                            <option value="CUSTOMER">CUSTOMER</option>
                         </select>
                     </div>
 
