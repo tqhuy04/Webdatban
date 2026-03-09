@@ -11,6 +11,7 @@ function Booking_table() {
         if (BookingID) {
             fetchBooking();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [BookingID]);
 
     const fetchBooking = async () => {
@@ -56,7 +57,7 @@ function Booking_table() {
                         </td>
                         <td>
                             {Array.isArray(booking.tables) &&
-                            booking.tables.length > 0 ? (
+                                booking.tables.length > 0 ? (
                                 booking.tables
                                     .map(t => t.TableNumber)
                                     .join(", ")

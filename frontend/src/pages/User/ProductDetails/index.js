@@ -2,15 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Title from '../../../components/shared/Title';
 import menuItemApi from '../../../api/menu_itemApi';
+import { useCart } from '../../../contexts/CartContext';
+import Notification from '../../../components/shared/Notification';
 
 const SUGGEST_LIMIT = 3;
 
 function ProductDetails() {
     const { id } = useParams();
+    const { addToCart } = useCart();
     const [quantity, setQuantity] = useState(1);
     const [product, setProduct] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [notification, setNotification] = useState({
+        message: '',
+        type: 'success',
+    });
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -67,6 +74,23 @@ function ProductDetails() {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
     };
 
+    const handleAddToCart = () => {
+        if (!product) return;
+
+        addToCart(product, quantity);
+        setNotification({
+            message: 'Thêm vào giỏ hàng thành công!',
+            type: 'success',
+        });
+
+        setTimeout(() => {
+            setNotification({
+                message: '',
+                type: 'success',
+            });
+        }, 3000);
+    };
+
     if (loading) {
         return (
             <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0', minHeight: '100vh' }}>
@@ -89,6 +113,8 @@ function ProductDetails() {
 
     return (
         <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0' }}>
+            <Notification message={notification.message} type={notification.type} />
+
             <div className='container-fluid p-0' style={{ height: '50px', background: '#000' }}>
                 <div className='container h-100 d-flex align-items-center'>
                     <p className='m-0' style={{ color: '#fff' }}>Trang chủ / </p>
@@ -143,7 +169,11 @@ function ProductDetails() {
                                     </button>
                                 </div>
 
-                                <button className='bt-booking mt-4' style={{ width: '180px' }}>
+                                <button
+                                    className='bt-booking mt-4'
+                                    style={{ width: '180px' }}
+                                    onClick={handleAddToCart}
+                                >
                                     Thêm vào giỏ hàng
                                 </button>
                             </div>

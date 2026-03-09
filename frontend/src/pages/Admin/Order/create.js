@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import orderApi from "../../../api/orderApi";
 import promotionApi from "../../../api/promotionApi";
-import format_date from "../../../components/utils/format_date";
 
 const CreateForm = ({ setisShowFormCreate, GetOrders, BookingID, CustomerID }) => {
 

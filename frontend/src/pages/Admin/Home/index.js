@@ -1,11 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { Bar, Pie } from "react-chartjs-2";
-import { Chart as ChartJS } from "chart.js/auto"; // chỉ cần import là đủ
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement,
+} from "chart.js";
 import statisticalApi from "../../../api/statisticalApi";
+import { formatNumber } from "../../../components/utils/format_number";
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement
+);
 
 function Home() {
     const [SumOrder, setSumOrder] = useState(0);
     const [CountTable, setCountTable] = useState(0);
+    const [SumRevenue, setSumRevenue] = useState(0);
 
     const [labels, setLabels] = useState([]);
     const [datasets, setDatasets] = useState([]);
@@ -16,11 +37,14 @@ function Home() {
     const [timeFrame, setTimeFrame] = useState("morning");
 
     useEffect(() => {
-        // tổng đơn + tổng bàn
+        // tổng đơn + tổng bàn + doanh thu
         statisticalApi.getOrderandTable()
             .then(response => {
                 setSumOrder(response.data.totalOrders);
                 setCountTable(response.data.totalTables);
+                if (typeof response.data.totalRevenue !== "undefined") {
+                    setSumRevenue(response.data.totalRevenue);
+                }
             })
             .catch(error => {
                 console.error("có lỗi trong quá trình lấy dl: ", error);
@@ -93,7 +117,7 @@ function Home() {
 
             {/* THỐNG KÊ */}
             <div className="row mt-2 p-2">
-                <div className="col-md-6 p-2" style={{ height: "100px" }}>
+                <div className="col-md-4 p-2" style={{ height: "100px" }}>
                     <div
                         style={{
                             boxShadow: "0 -4px 10px 4px rgba(0, 0, 0, 0.1)",
@@ -107,7 +131,7 @@ function Home() {
                     </div>
                 </div>
 
-                <div className="col-md-6 p-2" style={{ height: "100px" }}>
+                <div className="col-md-4 p-2" style={{ height: "100px" }}>
                     <div
                         style={{
                             boxShadow: "0 -4px 10px 4px rgba(0, 0, 0, 0.1)",
@@ -118,6 +142,20 @@ function Home() {
                     >
                         <h6 className="pt-3">Tổng số bàn</h6>
                         <p>{CountTable}</p>
+                    </div>
+                </div>
+
+                <div className="col-md-4 p-2" style={{ height: "100px" }}>
+                    <div
+                        style={{
+                            boxShadow: "0 -4px 10px 4px rgba(0, 0, 0, 0.1)",
+                            width: "100%",
+                            height: "100%",
+                            textAlign: "center",
+                        }}
+                    >
+                        <h6 className="pt-3">Tổng doanh thu</h6>
+                        <p>{formatNumber(SumRevenue)} đ</p>
                     </div>
                 </div>
             </div>

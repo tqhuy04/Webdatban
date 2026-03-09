@@ -82,11 +82,18 @@ function Bill() {
 
         bankingApi
             .check(data)
-            .then(() => {
-                createTableBooking();
+            .then((res) => {
+                const result = res?.data;
+
+                if (result?.success) {
+                    createTableBooking();
+                } else {
+                    alert(result?.message || "Thanh toán chưa được xác nhận từ VNPAY.");
+                }
             })
             .catch(error => {
                 console.error("Lỗi check banking:", error.response?.data || error);
+                alert("Không kiểm tra được giao dịch. Vui lòng thử lại sau.");
             });
     }
 

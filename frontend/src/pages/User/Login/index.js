@@ -149,9 +149,22 @@ const Login = ({ isVisible = true, onClose }) => {
                                 value={regAddress}
                                 onChange={(e) => setRegAddress(e.target.value)}
                             />
-
                             <button disabled={loading}>
                                 {loading ? "Loading..." : "Sign Up"}
+                            </button>
+                            <button
+                                type="button"
+                                style={{
+                                    marginTop: "8px",
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "#FF4B2B",
+                                    fontWeight: "bold",
+                                    cursor: "pointer",
+                                }}
+                                onClick={() => setRightPanelActive(false)}
+                            >
+                                Back to Sign In
                             </button>
                         </form>
                     </div>

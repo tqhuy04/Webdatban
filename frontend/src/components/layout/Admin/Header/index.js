@@ -49,7 +49,7 @@ function Header() {
                         <span className="badge">1</span>
                     </div>
                     <div className='col-md-9 d-flex align-items-center account dropdown-container ' ref={dropdownRef} onClick={toggleDropdown}>
-                        <img src='https://coderthemes.com/upvex/layouts/light/assets/images/users/user-1.jpg' style={{ marginRight: '4px', width: '40px', borderRadius: '50%' }} />
+                        <img src='https://coderthemes.com/upvex/layouts/light/assets/images/users/user-1.jpg' alt="User avatar" style={{ marginRight: '4px', width: '40px', borderRadius: '50%' }} />
                         <p className='m-0'>Lupin</p>
                         <i class="fa-solid fa-chevron-down" style={{ fontSize: '1rem', marginLeft: '4px' }}></i>
 
@@ -57,7 +57,7 @@ function Header() {
                             <div className="user-dropdown">
                                 <Link to=''>Thông tin cá nhân</Link>
                                 <Link to=''>Cài đặt</Link>
-                                <span onClick={()=>handleLogout()}>Đăng xuất</span>
+                                <span onClick={() => handleLogout()}>Đăng xuất</span>
                             </div>
                         )}
 

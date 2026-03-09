@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import Notification from '../Notification';
 import { formatNumber } from '../../utils/format_number';

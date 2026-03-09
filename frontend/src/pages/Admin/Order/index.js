@@ -17,6 +17,7 @@ function Order() {
         if (BookingID) {
             getOrders();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [BookingID]);
 
     const getOrders = () => {

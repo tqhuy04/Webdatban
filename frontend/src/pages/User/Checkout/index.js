@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../../contexts/CartContext';
 import customerApi from '../../../api/customerApi';
-import orderApi from '../../../api/orderApi';
+import tableApi from '../../../api/tableApi';
 
 function Checkout() {
     const navigate = useNavigate();
@@ -11,6 +11,12 @@ function Checkout() {
     const [customer, setCustomer] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [showTableModal, setShowTableModal] = useState(false);
+    const [tables, setTables] = useState([]);
+    const [loadingTables, setLoadingTables] = useState(false);
+    const [selectedTable, setSelectedTable] = useState(null);
+    const [bookingDate, setBookingDate] = useState('');
+    const [bookingTime, setBookingTime] = useState('');
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -40,7 +46,22 @@ function Checkout() {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     };
 
-    const handleSubmitOrder = async () => {
+    useEffect(() => {
+        if (!showTableModal || tables.length > 0) return;
+
+        setLoadingTables(true);
+        tableApi
+            .getAll()
+            .then(res => {
+                setTables(res.data || []);
+            })
+            .catch(err => {
+                console.error('Lỗi lấy danh sách bàn:', err);
+            })
+            .finally(() => setLoadingTables(false));
+    }, [showTableModal, tables.length]);
+
+    const handleOpenTableModal = () => {
         if (cartItems.length === 0) {
             alert('Giỏ hàng trống!');
             return;
@@ -51,29 +72,72 @@ function Checkout() {
             return;
         }
 
+        if (!bookingDate || !bookingTime) {
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10);
+            const timeStr = now.toTimeString().slice(0, 5);
+            setBookingDate(dateStr);
+            setBookingTime(timeStr);
+        }
+
+        setShowTableModal(true);
+    };
+
+    const handleSubmitOrder = () => {
+        if (!bookingDate || !bookingTime) {
+            alert('Vui lòng chọn ngày và giờ đến!');
+            return;
+        }
+
+        if (!selectedTable) {
+            alert('Vui lòng chọn bàn trước khi đặt hàng!');
+            return;
+        }
+
         setSubmitting(true);
 
         try {
-            const orderData = {
-                BookingID: 1,
-                CustomerID: customer.id,
-                OrderDate: new Date().toISOString(),
-                Items: cartItems.map(item => ({
-                    MenuItemID: item.MenuItemID,
-                    Quantity: item.Quantity,
-                    Price: item.Price
-                }))
+            // Lưu thông tin sang sessionStorage để trang Bill sử dụng
+            const customerId = customer?.id || customer?.CustomerID;
+
+            const bookingInfo = {
+                booking_date: bookingDate,
+                booking_time: bookingTime,
+                customer_id: customerId,
+                full_name: customer?.full_name,
+                email: customer?.email,
+                phone_number: customer?.phone_number,
+                address: customer?.address,
+                people: selectedTable?.Capacity || 1,
+                status: 0,
+                BookingTime: `${bookingDate} ${bookingTime}`,
             };
 
-            await orderApi.create(orderData);
+            sessionStorage.setItem('table_bookings', JSON.stringify(bookingInfo));
+            sessionStorage.setItem('tables', JSON.stringify([selectedTable]));
+            sessionStorage.setItem('menu_items', JSON.stringify(cartItems));
+            sessionStorage.setItem('total_price', JSON.stringify(getCartTotal()));
+            sessionStorage.setItem(
+                'customer',
+                JSON.stringify({
+                    CustomerID: customerId,
+                    full_name: customer?.full_name,
+                    email: customer?.email,
+                    phone_number: customer?.phone_number,
+                    address: customer?.address,
+                })
+            );
 
             clearCart();
-            alert('Đặt hàng thành công!');
-            navigate('/Thanks');
-
+            alert('Đặt bàn & chuyển sang thanh toán!');
+            setShowTableModal(false);
+            setSelectedTable(null);
+            setBookingDate('');
+            setBookingTime('');
+            navigate('/Bill');
         } catch (error) {
-            console.error('Error creating order:', error);
-            alert('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!');
+            console.error('Error preparing bill data:', error);
+            alert('Có lỗi xảy ra khi chuẩn bị thanh toán. Vui lòng thử lại!');
         } finally {
             setSubmitting(false);
         }
@@ -206,7 +270,7 @@ function Checkout() {
                             </div>
 
                             <button
-                                onClick={handleSubmitOrder}
+                                onClick={handleOpenTableModal}
                                 disabled={submitting}
                                 style={{
                                     width: '100%',
@@ -244,6 +308,193 @@ function Checkout() {
                     </div>
                 </div>
             </div>
+            {showTableModal && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.6)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 9999
+                    }}
+                >
+                    <div
+                        style={{
+                            background: '#fff',
+                            borderRadius: '10px',
+                            padding: '20px',
+                            width: '700px',
+                            maxHeight: '80vh',
+                            overflowY: 'auto'
+                        }}
+                    >
+                        <h4 style={{ marginBottom: '16px', color: '#10302c' }}>Chọn bàn</h4>
+                        <div
+                            style={{
+                                display: 'flex',
+                                gap: '12px',
+                                marginBottom: '16px'
+                            }}
+                        >
+                            <div style={{ flex: 1 }}>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        fontWeight: '500',
+                                        marginBottom: '4px'
+                                    }}
+                                >
+                                    Ngày đến
+                                </label>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    value={bookingDate}
+                                    onChange={e => setBookingDate(e.target.value)}
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label
+                                    style={{
+                                        display: 'block',
+                                        fontWeight: '500',
+                                        marginBottom: '4px'
+                                    }}
+                                >
+                                    Giờ đến
+                                </label>
+                                <input
+                                    type="time"
+                                    className="form-control"
+                                    value={bookingTime}
+                                    onChange={e => setBookingTime(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        {loadingTables ? (
+                            <p>Đang tải danh sách bàn...</p>
+                        ) : (
+                            <div style={{ maxHeight: '220px', overflowY: 'auto', marginBottom: '16px' }}>
+                                {tables
+                                    .filter(table => table.Status !== 1)
+                                    .map(table => (
+                                        <div
+                                            key={table.TableID}
+                                            onClick={() => setSelectedTable(table)}
+                                            style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                padding: '10px 12px',
+                                                borderRadius: '6px',
+                                                border: selectedTable?.TableID === table.TableID
+                                                    ? '2px solid #d69c52'
+                                                    : '1px solid #ddd',
+                                                marginBottom: '8px',
+                                                cursor: 'pointer',
+                                                background: selectedTable?.TableID === table.TableID ? '#fff6eb' : '#fff'
+                                            }}
+                                        >
+                                            <div>
+                                                <strong>{table.TableNumber}</strong>
+                                                <p className='mb-0' style={{ fontSize: '13px' }}>
+                                                    Sức chứa: {table.Capacity} người
+                                                </p>
+                                            </div>
+                                            {table.Status === 1 && (
+                                                <span style={{ color: 'red', fontSize: '13px' }}>Đã được đặt</span>
+                                            )}
+                                        </div>
+                                    ))}
+                                {tables.filter(table => table.Status !== 1).length === 0 && (
+                                    <p>Hiện tại chưa có bàn trống.</p>
+                                )}
+                            </div>
+                        )}
+
+                        <h5 style={{ marginTop: '8px', color: '#10302c' }}>Hóa đơn</h5>
+                        <div
+                            style={{
+                                border: '1px solid #ddd',
+                                borderRadius: '6px',
+                                padding: '10px',
+                                maxHeight: '200px',
+                                overflowY: 'auto'
+                            }}
+                        >
+                            {cartItems.map(item => (
+                                <div
+                                    key={item.MenuItemID}
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        marginBottom: '6px'
+                                    }}
+                                >
+                                    <span>{item.Name} x {item.Quantity}</span>
+                                    <span style={{ color: '#c8760b' }}>
+                                        {formatNumber(item.Price * item.Quantity)}đ
+                                    </span>
+                                </div>
+                            ))}
+                            <hr />
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                <span>Tổng cộng:</span>
+                                <span style={{ color: '#d69c52' }}>
+                                    {formatNumber(getCartTotal())}đ
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className='text-end mt-3'>
+                            <button
+                                onClick={() => {
+                                    setShowTableModal(false);
+                                    if (!submitting) {
+                                        setSelectedTable(null);
+                                    }
+                                }}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #6c757d',
+                                    background: '#fff',
+                                    marginRight: '10px'
+                                }}
+                                disabled={submitting}
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                onClick={handleSubmitOrder}
+                                disabled={submitting}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: '#d69c52',
+                                    color: '#fff',
+                                    fontWeight: 'bold',
+                                    opacity: submitting ? 0.7 : 1,
+                                    cursor: submitting ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                {submitting ? 'Đang xử lý...' : 'Xác nhận đặt bàn & đặt món'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

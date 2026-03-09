@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import userApi from "../../../api/userApi";
 import customerApi from "../../../api/customerApi";
 import authUser from '../../../api/authUser';
@@ -9,6 +10,7 @@ import Header from "../../../components/layout/User/Header";
 import './index.css';
 
 function PersonalIn4() {
+    const navigate = useNavigate();
     const [selectedTab, setSelectedTab] = useState("info1");
 
     const [name, setName] = useState('');
@@ -20,6 +22,14 @@ function PersonalIn4() {
 
     const [user_id, setUser_id] = useState(null);
     const [CustomerID, setCustomerID] = useState(null);
+
+    // Chỉ cho phép CUSTOMER truy cập
+    useEffect(() => {
+        const role = localStorage.getItem("role");
+        if (role !== "CUSTOMER") {
+            navigate("/", { replace: true });
+        }
+    }, [navigate]);
 
     // Hàm refresh thông tin customer
     const refreshCustomerData = () => {

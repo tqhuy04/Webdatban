@@ -40,44 +40,44 @@ function App() {
         <ScrollToTop />
         <Routes>
 
-        {/* ================= PUBLIC ROUTES ================= */}
-        {publicRoutes.map(({ path, component: Page, layout }, index) => {
-          const Layout = layout ?? User;
+          {/* ================= PUBLIC ROUTES ================= */}
+          {publicRoutes.map(({ path, component: Page, layout }, index) => {
+            const Layout = layout ?? User;
 
-          return (
-            <Route
-              key={index}
-              path={path}
-              element={
-                <Layout>
-                  <Page />
-                </Layout>
-              }
-            />
-          );
-        })}
-
-        {/* ================= ADMIN ROUTES ================= */}
-        {adminRoutes.map(({ path, component: Page, layout }, index) => {
-          const Layout = layout ?? Admin;
-
-          return (
-            <Route
-              key={index}
-              path={path}
-              element={
-                <RequireAuth role="ADMIN">
+            return (
+              <Route
+                key={index}
+                path={path}
+                element={
                   <Layout>
                     <Page />
                   </Layout>
-                </RequireAuth>
-              }
-            />
-          );
-        })}
+                }
+              />
+            );
+          })}
 
-        {/* ================= FALLBACK ================= */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+          {/* ================= ADMIN ROUTES ================= */}
+          {adminRoutes.map(({ path, component: Page, layout }, index) => {
+            const Layout = layout ?? Admin;
+
+            return (
+              <Route
+                key={index}
+                path={path}
+                element={
+                  <RequireAuth role="ADMIN">
+                    <Layout>
+                      <Page />
+                    </Layout>
+                  </RequireAuth>
+                }
+              />
+            );
+          })}
+
+          {/* ================= FALLBACK ================= */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </CartProvider>
     </Router>

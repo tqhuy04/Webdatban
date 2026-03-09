@@ -8,13 +8,16 @@ const EditForm = ({ setisShowFormEdit, GetTable_bookings, data, id }) => {
     const [Status, setStatus] = useState("");
     const [Customers, setCustomers] = useState([]);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        const date = new Date(data.BookingTime);
-        const time = date.toISOString().substring(11, 16);
+        if (data) {
+            const date = new Date(data.BookingTime);
+            const time = date.toISOString().substring(11, 16);
 
-        setCustomerID(data.CustomerID);
-        setBookingTime(time);
-        setStatus(data.Status);
+            setCustomerID(data.CustomerID);
+            setBookingTime(time);
+            setStatus(data.Status);
+        }
 
         customerApi.getAll()
             .then(res => setCustomers(res.data || []))

@@ -13,6 +13,7 @@ function Order_detail() {
 
     useEffect(() => {
         GetOrderDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [OrderID]);
 
     const GetOrderDetails = () => {
@@ -27,11 +28,11 @@ function Order_detail() {
     };
 
     const getImagePath = (imageUrl) => {
-    if (!imageUrl) return '';
-    return encodeURI(
-        `http://localhost:8000/uploads/Categories/${imageUrl}`
-    );
-};
+        if (!imageUrl) return '';
+        return encodeURI(
+            `http://localhost:8000/uploads/Categories/${imageUrl}`
+        );
+    };
     return (
         <div className="container mt-3">
             <div className="d-flex justify-content-between mb-3">

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import promotionApi from "../../../api/promotionApi";
 import orderApi from "../../../api/orderApi";
-import { data } from "react-router-dom";
 
 const EditForm = ({ setisShowFormEdit, GetOrders, data, id }) => {
     const [OrderDate, setOrderDate] = useState('');
@@ -16,14 +15,15 @@ const EditForm = ({ setisShowFormEdit, GetOrders, data, id }) => {
             })
             .catch(error => {
                 console.error('có lỗi trong quá trình lấy dl: ' + error);
-            })
-        const date = new Date(data.OrderDate);
-
-        const time = date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-        setOrderDate(time);
-        setTotalAmount(data.TotalAmount);
-
-    }, [])
+            });
+        if (data) {
+            const date = new Date(data.OrderDate);
+            const time = date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+            setOrderDate(time);
+            setTotalAmount(data.TotalAmount);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data])
 
     const handleSubmit = (e) => {
         e.preventDefault();

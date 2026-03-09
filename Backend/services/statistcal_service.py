@@ -9,10 +9,15 @@ from Backend.models.table import Table
 def get_order_and_table_statistical(db: Session) -> Dict[str, int]:
     total_orders = db.query(func.count(Order.OrderID)).scalar()
     total_tables = db.query(func.count(Table.TableID)).scalar()
+    total_revenue = (
+        db.query(func.coalesce(func.sum(Order.TotalAmount), 0))
+        .scalar()
+    )
 
     return {
         "totalOrders": total_orders,
-        "totalTables": total_tables
+        "totalTables": total_tables,
+        "totalRevenue": float(total_revenue or 0),
     }
 
 
