@@ -20,6 +20,7 @@ class OrderResponse(BaseModel):
     OrderDate: datetime
     TotalAmount: float
     Items: List[OrderDetailResponse]
+    promotion: Optional[dict] = None
 
     class Config:
         from_attributes = True

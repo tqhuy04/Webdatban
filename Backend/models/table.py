@@ -8,4 +8,4 @@ class Table(Base):
     TableID = Column(Integer, primary_key=True, index=True)
     TableNumber = Column(String(255), nullable=False)
     Capacity = Column(Integer, nullable=False)
-    Status = Column(String(255), nullable=False)
+    Status = Column(Integer, nullable=False)

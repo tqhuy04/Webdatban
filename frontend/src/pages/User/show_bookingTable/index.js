@@ -19,14 +19,15 @@ function Show_bookingTable() {
     useEffect(() => {
         if (!BookingID) return;
 
-        booking_tableApi.getAllOfBooking(BookingID)
+        booking_tableApi.getTablesOfBooking(BookingID)
             .then(response => {
                 setTables(response.data);
             })
             .catch(error => {
                 console.error('có lỗi trong quá trình lấy id', error);
             });
-    }, [BookingID]); // ✅ FIX dependency
+    }, [BookingID]); //
+    //  FIX dependency
 
     return (
         <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0' }}>
@@ -61,7 +62,7 @@ function Show_bookingTable() {
                         <tbody>
                             {tables?.map(table => (
                                 <tr
-                                    key={table.TableBookingID} // ✅ key
+                                    key={`${table.BookingID}-${table.TableID}`}
                                     style={{ background: '#135b50', color: 'white' }}
                                 >
                                     <td>{table.table.TableNumber}</td>

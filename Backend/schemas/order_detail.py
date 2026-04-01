@@ -12,10 +12,8 @@ class OrderDetailBase(BaseModel):
     Quantity: int
 
 class OrderDetailCreate(BaseModel):
-    OrderID: int
     MenuItemID: int
     Quantity: int
-    Price: float
 
 
 class OrderDetailResponse(OrderDetailCreate):

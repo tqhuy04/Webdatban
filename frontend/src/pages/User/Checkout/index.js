@@ -117,7 +117,22 @@ function Checkout() {
             sessionStorage.setItem('tables', JSON.stringify([selectedTable]));
             sessionStorage.setItem('menu_items', JSON.stringify(cartItems));
             sessionStorage.setItem('total_price', JSON.stringify(getCartTotal()));
+            // Dùng localStorage để giữ dữ liệu khi redirect từ VNPay về
+            localStorage.setItem('table_bookings', JSON.stringify(bookingInfo));
+            localStorage.setItem('tables', JSON.stringify([selectedTable]));
+            localStorage.setItem('menu_items', JSON.stringify(cartItems));
+            localStorage.setItem('total_price', JSON.stringify(getCartTotal()));
             sessionStorage.setItem(
+                'customer',
+                JSON.stringify({
+                    CustomerID: customerId,
+                    full_name: customer?.full_name,
+                    email: customer?.email,
+                    phone_number: customer?.phone_number,
+                    address: customer?.address,
+                })
+            );
+            localStorage.setItem(
                 'customer',
                 JSON.stringify({
                     CustomerID: customerId,

@@ -35,6 +35,17 @@ def admin_get_all(
 
 
 # =========================
+# GET MY BOOKINGS (MUST be before /{booking_id} to avoid conflict)
+# =========================
+@router.get("/customer/me")
+def user_get_my_bookings(
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    return get_by_customer(user.id, db)
+
+
+# =========================
 # GET BY ID
 # =========================
 @router.get("/{booking_id}")
@@ -44,17 +55,6 @@ def user_get_booking(
     user=Depends(get_current_user)
 ):
     return get_by_id(booking_id, db, user)
-
-
-# =========================
-# GET MY BOOKINGS
-# =========================
-@router.get("/customer/me")
-def user_get_my_bookings(
-    db: Session = Depends(get_db),
-    user=Depends(get_current_user)
-):
-    return get_by_customer(user.id, db)
 
 
 # =========================

@@ -14,7 +14,7 @@ function Order() {
     useEffect(() => {
         if (!BookingID) return;
 
-        orderApi.getAllOfBooking(BookingID)
+        orderApi.getByBooking(BookingID)
             .then(response => {
                 setorders(response.data);
             })
@@ -48,7 +48,7 @@ function Order() {
                                 <tr key={order.OrderID} style={{ background: '#135b50', color: 'white' }}>
                                     <td>{order.OrderDate}</td>
                                     <td>{order.TotalAmount}</td>
-                                    <td>{order.promotion?.Discount ?? 0}</td>
+                                    <td>{order.promotion?.DiscountPercent ?? 0}</td>
                                     <td>
                                         <i
                                             className="fa-solid fa-eye"

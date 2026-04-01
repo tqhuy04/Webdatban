@@ -21,9 +21,7 @@ const booking_tableApi = {
     },
 
     getTablesOfBooking(bookingId) {
-        return axiosClient.get(
-            `/booking-tables/booking/${bookingId}/tables`
-        );
+        return axiosClient.get(`/booking-tables/${bookingId}/tables`);
     },
     getFull(bookingId) {
         return axiosClient.get(`/booking-tables/${bookingId}/full`);

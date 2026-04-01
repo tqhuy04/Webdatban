@@ -17,6 +17,7 @@ class BookingTableResponse(BaseModel):
     booking_time: datetime
     table_ids: List[int]
 class BookingTableOut(BaseModel):
+    BookingID: int
     TableID: int
     table: TableOut
 

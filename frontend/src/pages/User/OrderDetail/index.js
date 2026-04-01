@@ -11,7 +11,7 @@ function OrderDetail() {
     useEffect(() => {
         if (!OrderID) return;
 
-        order_detailApi.getAllOfOrder(OrderID)
+        order_detailApi.getByOrder(OrderID)
             .then(response => {
                 setorder_details(response.data);
             })

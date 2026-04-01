@@ -44,8 +44,7 @@ export const publicRoutes = [
   { path: "/Bookings", component: Bookings },
   { path: "/Bill", component: Bill },
 
-  // ⚠️ thiếu CustomerID → thêm luôn cho khớp backend
-  { path: "/Order/:BookingID/:CustomerID", component: Order },
+  { path: "/Order/:BookingID", component: Order },
 
   { path: "/OrderDetail/:OrderID", component: OrderDetail },
   { path: "/PersonalIn4", component: PersonalIn4 },

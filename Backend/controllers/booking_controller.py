@@ -24,7 +24,7 @@ def get_by_id(booking_id: int, db: Session, user):
 # =========================
 def get_by_customer(account_id: int, db: Session):
 
-    return booking_service.get_bookings_of_account(db, account_id)
+    return booking_service.get_bookings_of_account(account_id, db)
 
 
 # =========================
