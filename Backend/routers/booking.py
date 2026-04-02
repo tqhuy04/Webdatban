@@ -11,6 +11,7 @@ from Backend.controllers.booking_controller import (
     create,
     delete,
     get_tables,
+    add_tables,
     get_full
 )
 
@@ -97,17 +98,11 @@ def add_table(
     data: dict,
     db: Session = Depends(get_db)
 ):
-    table_id = data.get("table_id")
+    table_ids = data.get("table_ids", [])
+    if not table_ids:
+        return {"error": "table_ids is required"}
 
-    booking_table = BookingTable(
-        BookingID=booking_id,
-        TableID=table_id
-    )
-
-    db.add(booking_table)
-    db.commit()
-
-    return {"message": "Add table success"}
+    return booking_service.add_tables_to_booking(db, booking_id, table_ids)
 # =========================
 # GET FULL BOOKING
 # =========================

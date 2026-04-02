@@ -1,4 +1,5 @@
 from http.client import HTTPException
+from typing import List
 from sqlalchemy.orm import Session
 from Backend.models.customer import Customer
 from Backend.models.table_booking import TableBooking
@@ -49,6 +50,35 @@ def get_bookings_of_account(account_id: int, db: Session):
 # CREATE BOOKING + TABLES
 # =========================
 
+def _add_tables_to_booking_internal(db: Session, booking_id: int, table_ids: List[int]):
+    """
+    Internal helper: thêm bàn vào booking (chỉ thêm bàn chưa có).
+    """
+    existing_tables = (
+        db.query(BookingTable.TableID)
+        .filter(BookingTable.BookingID == booking_id)
+        .all()
+    )
+    existing_table_ids = {t[0] for t in existing_tables}
+
+    new_table_ids = [tid for tid in table_ids if tid not in existing_table_ids]
+
+    if not new_table_ids:
+        return
+
+    booking_tables = []
+    for table_id in new_table_ids:
+        bt = BookingTable(
+            BookingID=booking_id,
+            TableID=table_id,
+            TableNumber=None
+        )
+        booking_tables.append(bt)
+
+    db.add_all(booking_tables)
+    db.commit()
+
+
 def create_booking(db: Session, data: BookingTableCreate):
 
     # kiểm tra booking đã tồn tại chưa
@@ -62,7 +92,11 @@ def create_booking(db: Session, data: BookingTableCreate):
     )
 
     if existed:
+        # Booking đã tồn tại → vẫn thêm tables nếu chưa có
+        if data.table_ids and len(data.table_ids) > 0:
+            _add_tables_to_booking_internal(db, existed.BookingID, data.table_ids)
         return existed
+
     # 1️ tạo booking
     booking = TableBooking(
         CustomerID=data.customer_id,
@@ -116,6 +150,30 @@ def get_tables_of_booking(db: Session, booking_id: int):
         .filter(BookingTable.BookingID == booking_id)
         .all()
     )
+
+# =========================
+# ADD TABLES TO BOOKING
+# =========================
+def add_tables_to_booking(db: Session, booking_id: int, table_ids: List[int]):
+    """
+    Thêm bàn vào booking đã tồn tại.
+    Chỉ thêm những bàn CHƯA có trong booking_tables.
+    """
+    existing_tables = (
+        db.query(BookingTable.TableID)
+        .filter(BookingTable.BookingID == booking_id)
+        .all()
+    )
+    existing_table_ids = {t[0] for t in existing_tables}
+
+    new_table_ids = [tid for tid in table_ids if tid not in existing_table_ids]
+
+    if not new_table_ids:
+        return {"message": "Tất cả các bàn đã tồn tại trong booking", "added": 0}
+
+    _add_tables_to_booking_internal(db, booking_id, new_table_ids)
+
+    return {"message": f"Đã thêm {len(new_table_ids)} bàn vào booking", "added": len(new_table_ids)}
 
 def get_booking_with_tables(db: Session, booking_id: int):
     booking = (

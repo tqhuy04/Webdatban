@@ -7,12 +7,10 @@ import table_bookingApi from "../../../api/table_bookingApi";
 import booking_tableApi from "../../../api/booking_tableApi";
 import tableApi from "../../../api/tableApi";
 import orderApi from "../../../api/orderApi";
-import order_detailApi from "../../../api/order_detailApi";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 
 function Bill() {
-    const [timeLeft, setTimeLeft] = useState(3600);
     const [menu_items, setmenu_items] = useState([]);
     const [table_bookings, settable_bookings] = useState(null);
     const [tables, settables] = useState([]);
@@ -107,7 +105,7 @@ function Bill() {
         setIsDataLoaded(true);
 
         console.log("DATA LOADED - Bill ready");
-    }, [navigate, searchParams]);
+    }, [navigate, searchParams, paymentSuccess]);
 
     // Redirect sang Thanks page sau 5 giây khi thanh toán thành công
     useEffect(() => {
@@ -157,14 +155,18 @@ function Bill() {
             // Tạo booking và order
             createTableBooking(table_bookings);
         }
-    }, [searchParams, isDataLoaded, table_bookings]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, isDataLoaded, table_bookings, createTableBooking]);
 
     /* ================= COUNTDOWN ================= */
+    // Timer state cho countdown (không hiển thị nhưng cần để tracking)
+    const [, setCountdown] = useState(3600);
+
     useEffect(() => {
         const timerRef = { current: null };
 
         timerRef.current = setInterval(() => {
-            setTimeLeft(prev => {
+            setCountdown(prev => {
                 if (prev <= 1) {
                     clearInterval(timerRef.current);
                     return 0;
@@ -180,39 +182,8 @@ function Bill() {
         };
     }, []);
 
-    /* ================= BANKING CHECK ================= */
-    function HandleCheckBanking() {
-        if (!table_bookings?.customer_id) {
-            alert("Thiếu CustomerID – vui lòng đăng nhập lại");
-            return;
-        }
-
-        alert("Vui lòng đợi hệ thống kiểm tra chuyển khoản");
-
-        const data = {
-            amount: Number(total_price),
-            bank_code: "VCB",
-            content: `${table_bookings.full_name}-${table_bookings.phone_number}`,
-        };
-
-        bankingApi
-            .check(data)
-            .then((res) => {
-                const result = res?.data;
-
-                if (result?.success) {
-                    createTableBooking();
-                } else {
-                    alert(result?.message || "Thanh toán chưa được xác nhận từ VNPAY.");
-                }
-            })
-            .catch(error => {
-                console.error("Lỗi check banking:", error.response?.data || error);
-                alert("Không kiểm tra được giao dịch. Vui lòng thử lại sau.");
-            });
-    }
-
     /* ================= CREATE BOOKING ================= */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     function createTableBooking(bookingData) {
         const booking = bookingData || table_bookings;
 
@@ -270,16 +241,26 @@ function Bill() {
 
 
     /* ================= BOOKING TABLE ================= */
-    function createBookingTables() {
-        if (!tables || tables.length === 0) {
-            console.error("table_ids rỗng");
+    function createBookingTables(bookingID) {
+        // LUÔN LUÔN lấy tables từ storage mới nhất
+        const currentTables = JSON.parse(localStorage.getItem("tables")) 
+            || JSON.parse(sessionStorage.getItem("tables")) 
+            || [];
+        const currentBooking = JSON.parse(localStorage.getItem("table_bookings")) 
+            || JSON.parse(sessionStorage.getItem("table_bookings")) 
+            || table_bookings;
+
+        if (!currentTables || currentTables.length === 0) {
+            console.error("table_ids rỗng - Kiểm tra lại session storage");
+            alert("Không tìm thấy thông tin bàn đã chọn. Vui lòng đặt bàn lại!");
+            setIsProcessingPayment(false);
             return;
         }
 
         const payload = {
-            customer_id: table_bookings.customer_id,
-            booking_time: `${table_bookings.booking_date}T${table_bookings.booking_time}:00`,
-            table_ids: tables.map(t => Number(t.TableID)),
+            customer_id: currentBooking.customer_id,
+            booking_time: `${currentBooking.booking_date}T${currentBooking.booking_time}:00`,
+            table_ids: currentTables.map(t => Number(t.TableID)),
         };
 
         console.log("BOOKING_TABLE PAYLOAD:", payload);
@@ -332,20 +313,6 @@ function Bill() {
                 console.error("Lỗi tạo order:", err.response?.data || err);
                 setIsProcessingPayment(false);
             });
-    }
-
-    /* ================= ORDER DETAIL ================= */
-    function createOrderDetail(OrderID) {
-        menu_items.forEach(item => {
-            order_detailApi.create({
-                OrderID,
-                MenuItemID: item.MenuItemID,
-                Quantity: item.Quantity || 1,
-                Price: item.Price,
-            }).catch(err => console.error(err));
-        });
-
-        setStatusOfTable();
     }
 
     async function setStatusOfTable() {
@@ -442,6 +409,7 @@ function Bill() {
     }
 
     const HandlePayCash = () => {
+        setIsProcessingPayment(true);
         createTableBooking();
     }
 
@@ -458,7 +426,15 @@ function Bill() {
 
         // Nếu đã có booking, chỉ cần tạo order mới và thanh toán
         if (existingBookingId) {
-            createOrderAndPay(parseInt(existingBookingId));
+            // Tạo booking_tables trước (nếu chưa có)
+            createBookingTablesForExistingBooking(parseInt(existingBookingId))
+                .then(() => {
+                    createOrderAndPay(parseInt(existingBookingId));
+                })
+                .catch(err => {
+                    console.error("Lỗi tạo booking_tables:", err);
+                    setIsProcessingPayment(false);
+                });
             return;
         }
 
@@ -484,7 +460,7 @@ function Bill() {
                 localStorage.setItem("current_booking_id", bookingID);
                 sessionStorage.setItem("current_booking_id", bookingID);
 
-                // Tạo booking_tables
+                // Tạo booking_tables ngay lập tức
                 createBookingTables(bookingID);
 
                 // Tạo order và thanh toán
@@ -510,7 +486,7 @@ function Bill() {
             Quantity: item.Quantity || 1
         }));
 
-        const payload = {
+        const orderPayload = {
             BookingID: bookingID,
             CustomerID: table_bookings.customer_id,
             PromotionID: Promotion?.PromotionID || null,
@@ -518,10 +494,10 @@ function Bill() {
             Items: items
         };
 
-        console.log("Creating order with payload:", payload);
+        console.log("Creating order with payload:", orderPayload);
 
         orderApi
-            .create(payload)
+            .create(orderPayload)
             .then(res => {
                 console.log("Order created:", res.data);
                 const orderId = res.data.OrderID;
@@ -534,6 +510,22 @@ function Bill() {
                 setIsProcessingPayment(false);
                 alert("Không tạo được đơn hàng. Vui lòng thử lại.");
             });
+    }
+
+    // Hàm tạo booking_tables khi booking đã tồn tại
+    const createBookingTablesForExistingBooking = (bookingID) => {
+        const currentTables = JSON.parse(localStorage.getItem("tables")) 
+            || JSON.parse(sessionStorage.getItem("tables")) 
+            || [];
+
+        if (!currentTables || currentTables.length === 0) {
+            console.log("Không có tables để tạo booking_tables");
+            return Promise.resolve();
+        }
+
+        const table_ids = currentTables.map(t => Number(t.TableID));
+
+        return booking_tableApi.addTablesToBooking(bookingID, table_ids);
     }
 
     const initiateVNPayPayment = (orderId) => {
@@ -566,15 +558,6 @@ function Bill() {
                 setIsProcessingPayment(false);
             });
     }
-
-    const formatTime = (seconds) => {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        return `${hours.toString().padStart(2, "0")}:${minutes
-            .toString()
-            .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-    };
 
     // Format payment message
     const formatMessage = (msg) => {

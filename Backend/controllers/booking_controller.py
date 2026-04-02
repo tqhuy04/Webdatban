@@ -52,6 +52,21 @@ def get_tables(booking_id: int, db: Session):
 
 
 # =========================
+# ADD TABLES TO BOOKING
+# =========================
+def add_tables(booking_id: int, data: dict, db: Session):
+    """
+    Thêm bàn vào booking đã tồn tại.
+    data = {"table_ids": [1, 2, 3]}
+    """
+    table_ids = data.get("table_ids", [])
+    if not table_ids:
+        return {"error": "table_ids is required"}
+
+    return booking_service.add_tables_to_booking(db, booking_id, table_ids)
+
+
+# =========================
 # GET FULL
 # =========================
 def get_full(booking_id: int, db: Session):

@@ -1,6 +1,7 @@
 import orderApi from "../../../api/orderApi";
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import './index.css';
 
 function Order() {
     const navigate = useNavigate();
@@ -24,19 +25,20 @@ function Order() {
     }, [BookingID]);
 
     return (
-        <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0' }}>
-            <div className='container-fluid p-0' style={{ height: '50px', background: '#000' }}>
-                <div className='container h-100 d-flex align-items-center'>
-                    <p className='m-0' style={{ color: '#fff' }}>Trang chủ / </p>
-                    <p className='m-0' style={{ color: '#d69c52' }}>Các lượt đặt bàn của tôi</p>
+        <div className='container-fluid w-100 order-page' style={{ padding: '80px 0 0 0' }}>
+            <div className='container-fluid p-0 breadcrumb-bar'>
+                <div className='container h-100 d-flex align-items-center breadcrumb-nav'>
+                    <p className='m-0 breadcrumb-link'>Trang chủ / </p>
+                    <p className='m-0 breadcrumb-current'>Các lượt đặt bàn của tôi</p>
                 </div>
             </div>
 
-            <div className='container order'>
-                <div className='container pb-3 mt-5'>
-                    <table className="w-100">
+            <div className='container order-container'>
+                <h2 className='order-title'>Danh sách đơn hàng</h2>
+                <div className='pb-3'>
+                    <table className="order-table">
                         <thead>
-                            <tr style={{ background: '#135b50', color: 'white' }}>
+                            <tr>
                                 <th>Thời gian đơn hàng</th>
                                 <th>Tổng tiền</th>
                                 <th>Mã giảm giá</th>
@@ -45,16 +47,24 @@ function Order() {
                         </thead>
                         <tbody>
                             {orders?.map((order) => (
-                                <tr key={order.OrderID} style={{ background: '#135b50', color: 'white' }}>
-                                    <td>{order.OrderDate}</td>
-                                    <td>{order.TotalAmount}</td>
-                                    <td>{order.promotion?.DiscountPercent ?? 0}</td>
+                                <tr key={order.OrderID}>
+                                    <td className='order-date'>{order.OrderDate}</td>
+                                    <td className='order-amount'>{order.TotalAmount.toLocaleString()} VNĐ</td>
                                     <td>
-                                        <i
-                                            className="fa-solid fa-eye"
-                                            style={{ cursor: 'pointer' }}
+                                        {order.promotion?.DiscountPercent ? (
+                                            <span className='order-discount'>{order.promotion.DiscountPercent}%</span>
+                                        ) : (
+                                            <span className='order-discount-none'>Không có</span>
+                                        )}
+                                    </td>
+                                    <td className='order-action'>
+                                        <button 
+                                            className='view-btn'
                                             onClick={() => handleToOrderDetail(order.OrderID)}
-                                        />
+                                        >
+                                            <i className="fa-solid fa-eye"></i>
+                                            Xem
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

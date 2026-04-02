@@ -1,0 +1,223 @@
+/* Order Page Styles */
+.order-page {
+  background: linear-gradient(135deg, #10302c 0%, #1a4d47 100%);
+  min-height: 100vh;
+}
+
+.breadcrumb-bar {
+  background: linear-gradient(90deg, #0a0a0a 0%, #1a1a1a 100%);
+  height: 50px;
+}
+
+.breadcrumb-nav {
+  color: #fff;
+}
+
+.breadcrumb-nav .breadcrumb-link {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.breadcrumb-nav .breadcrumb-link:hover {
+  color: #d69c52;
+}
+
+.breadcrumb-nav .breadcrumb-current {
+  color: #d69c52;
+  font-weight: 500;
+}
+
+.order-container {
+  padding: 40px 0;
+}
+
+.order-title {
+  color: #d69c52;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #d69c52;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: rgba(19, 91, 80, 0.9);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.order-table thead th {
+  background: linear-gradient(135deg, #135b50 0%, #1a7a6a 100%);
+  color: #fff;
+  padding: 18px 20px;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #d69c52;
+}
+
+.order-table thead th:first-child {
+  border-radius: 12px 0 0 0;
+}
+
+.order-table thead th:last-child {
+  border-radius: 0 12px 0 0;
+}
+
+.order-table tbody tr {
+  transition: all 0.3s ease;
+  background: rgba(19, 91, 80, 0.6);
+}
+
+.order-table tbody tr:hover {
+  background: rgba(19, 91, 80, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.order-table tbody td {
+  padding: 20px 20px;
+  text-align: center;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  vertical-align: middle;
+}
+
+.order-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.order-table tbody tr:last-child td:first-child {
+  border-radius: 0 0 0 12px;
+}
+
+.order-table tbody tr:last-child td:last-child {
+  border-radius: 0 0 12px 0;
+}
+
+.order-date {
+  font-weight: 500;
+  color: #e0e0e0;
+}
+
+.order-amount {
+  font-weight: 700;
+  color: #d69c52;
+  font-size: 1.1rem;
+}
+
+.order-discount {
+  background: linear-gradient(135deg, #d69c52 0%, #b8860b 100%);
+  color: #1a1a1a;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+.order-discount-none {
+  background: rgba(255, 255, 255, 0.1);
+  color: #888;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+.order-action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.order-action .view-btn {
+  background: linear-gradient(135deg, #d69c52 0%, #c98a45 100%);
+  color: #1a1a1a;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.order-action .view-btn:hover {
+  background: linear-gradient(135deg, #e5ad65 0%, #d69c52 100%);
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(214, 156, 82, 0.4);
+}
+
+.order-action .view-btn i {
+  font-size: 1rem;
+}
+
+/* Empty State */
+.order-empty {
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(19, 91, 80, 0.9);
+  border-radius: 12px;
+  color: #fff;
+}
+
+.order-empty-icon {
+  font-size: 4rem;
+  color: #d69c52;
+  margin-bottom: 20px;
+}
+
+.order-empty-text {
+  font-size: 1.2rem;
+  color: #ccc;
+}
+
+/* Loading State */
+.order-loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #d69c52;
+}
+
+.order-loading i {
+  font-size: 3rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .order-table {
+    font-size: 0.9rem;
+  }
+
+  .order-table thead th,
+  .order-table tbody td {
+    padding: 12px 10px;
+  }
+
+  .order-title {
+    font-size: 1.4rem;
+  }
+}

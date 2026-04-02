@@ -1,81 +1,114 @@
 import order_detailApi from "../../../api/order_detailApi";
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { apiUrl } from "../../../config";
+import { formatNumber } from "../../../components/utils/format_number";
+import './index.css';
 
 function OrderDetail() {
-    const navigate = useNavigate(); // ✅ dùng thật
+    const navigate = useNavigate();
     const [order_details, setorder_details] = useState(null);
+    const [loading, setLoading] = useState(true);
     const { OrderID } = useParams();
 
     useEffect(() => {
         if (!OrderID) return;
+        setLoading(true);
 
         order_detailApi.getByOrder(OrderID)
             .then(response => {
                 setorder_details(response.data);
+                setLoading(false);
             })
             .catch(error => {
                 console.error('có lỗi trong quá trình lấy dl: ' + error);
+                setLoading(false);
             });
-    }, [OrderID]); // ✅ thêm dependency
+    }, [OrderID]);
 
     const getImagePath = (productImg) => {
-        return `${apiUrl}/uploads/Categories/${productImg}`;
+        return `http://localhost:8000/uploads/Categories/${productImg}`;
     };
 
     return (
-        <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0' }}>
-            <div className='container-fluid p-0' style={{ height: '50px', background: '#000' }}>
-                <div className='container h-100 d-flex align-items-center'>
-                    <p className='m-0' style={{ color: '#fff' }}>Trang chủ / </p>
+        <div className='container-fluid w-100 order-detail-page' style={{ padding: '80px 0 0 0' }}>
+            <div className='container-fluid p-0 order-detail-breadcrumb'>
+                <div className='container h-100 d-flex align-items-center breadcrumb-inner'>
+                    <p className='m-0'>Trang chủ / </p>
                     <p
-                        className='m-0'
-                        style={{ color: '#d69c52', cursor: 'pointer' }}
-                        onClick={() => navigate(-1)}   // ✅ dùng useNavigate
+                        className='m-0 breadcrumb-current'
+                        onClick={() => navigate(-1)}
                     >
                         Chi tiết đơn hàng
                     </p>
                 </div>
             </div>
 
-            <div className='container order'>
-                <div className='container pb-3 mt-5'>
-                    <table className="w-100">
-                        <thead>
-                            <tr style={{ background: '#135b50', color: 'white' }}>
-                                <th>Ảnh món ăn</th>
-                                <th>Tên món ăn</th>
-                                <th>Đơn giá</th>
-                                <th>Số lượng</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {order_details?.map((order_detail, index) => (
-                                <tr key={index} style={{ background: '#135b50', color: 'white' }}>
-                                    <td>
-                                        <img
-                                            style={{ width: '108px' }}
-                                            src={getImagePath(order_detail.menu_item.ImageURL)}
-                                            alt={order_detail.menu_item.Name} // ✅ alt hợp lệ
-                                        />
-                                    </td>
-                                    <td>{order_detail.menu_item.Name}</td>
-                                    <td>{order_detail.Price}</td>
-                                    <td>{order_detail.Quantity}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            <div className='container order-detail-content'>
+                <h2 className='order-detail-title'>Chi tiết món trong đơn</h2>
 
-                    {/* nút quay lại */}
-                    <button
-                        className="btn btn-secondary mt-3"
-                        onClick={() => navigate(-1)}
-                    >
-                        Quay lại
-                    </button>
-                </div>
+                {loading ? (
+                    <div className="order-detail-loading">
+                        <div className="spinner" />
+                        <p>Đang tải chi tiết đơn hàng...</p>
+                    </div>
+                ) : order_details && order_details.length > 0 ? (
+                    <>
+                        <div className="order-detail-table-wrap">
+                            <table className="order-detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ảnh món ăn</th>
+                                        <th>Tên món ăn</th>
+                                        <th>Đơn giá</th>
+                                        <th>Số lượng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {order_details.map((order_detail, index) => (
+                                        <tr key={order_detail.OrderDetailID ?? index}>
+                                            <td data-label="">
+                                                <img
+                                                    className="order-detail-img"
+                                                    src={getImagePath(order_detail.menu_item.ImageURL)}
+                                                    alt={order_detail.menu_item.Name}
+                                                />
+                                            </td>
+                                            <td className="order-detail-name" data-label="Tên món">
+                                                {order_detail.menu_item.Name}
+                                            </td>
+                                            <td className="order-detail-price" data-label="Đơn giá">
+                                                {formatNumber(order_detail.Price)} đ
+                                            </td>
+                                            <td data-label="Số lượng">
+                                                <span className="order-detail-qty">{order_detail.Quantity}</span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="order-detail-back"
+                            onClick={() => navigate(-1)}
+                        >
+                            ← Quay lại
+                        </button>
+                    </>
+                ) : (
+                    <div className="order-detail-empty">
+                        <div className="order-detail-empty-icon">🍽️</div>
+                        <p>Không có món nào trong đơn này.</p>
+                        <button
+                            type="button"
+                            className="order-detail-back"
+                            onClick={() => navigate(-1)}
+                        >
+                            ← Quay lại
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

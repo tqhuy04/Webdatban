@@ -23,6 +23,14 @@ const booking_tableApi = {
     getTablesOfBooking(bookingId) {
         return axiosClient.get(`/booking-tables/${bookingId}/tables`);
     },
+
+    // Thêm bàn vào booking đã tồn tại
+    addTablesToBooking(bookingId, tableIds) {
+        return axiosClient.post(`/booking-tables/${bookingId}/tables`, {
+            table_ids: tableIds
+        });
+    },
+
     getFull(bookingId) {
         return axiosClient.get(`/booking-tables/${bookingId}/full`);
     },
