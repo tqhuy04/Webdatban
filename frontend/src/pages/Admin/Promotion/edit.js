@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import userApi from "../../../api/userApi"; // ❗ GIỮ – KHÔNG BỎ
 import promotionApi from "../../../api/promotionApi";
 import format_date from "../../../components/utils/format_date";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit, GetPromotions, data, id }) => {
+    const notify = useNotify();
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [discountPercent, setDiscountPercent] = useState("");
@@ -32,7 +34,7 @@ const EditForm = ({ setisShowFormEdit, GetPromotions, data, id }) => {
         e.preventDefault();
 
         if (!id) {
-            alert("Không xác định được khuyến mãi");
+            notify.warning("Không xác định được khuyến mãi");
             return;
         }
 
@@ -47,16 +49,12 @@ const EditForm = ({ setisShowFormEdit, GetPromotions, data, id }) => {
         promotionApi
             .update(id, payload)
             .then(() => {
-                alert("Cập nhật khuyến mãi thành công");
+                notify.success("Cập nhật khuyến mãi thành công");
                 GetPromotions();
                 setisShowFormEdit(false);
             })
-            .catch((error) => {
-                console.error(
-                    "Lỗi cập nhật khuyến mãi:",
-                    error.response?.data || error
-                );
-                alert("Cập nhật thất bại");
+            .catch(() => {
+                notify.error("Cập nhật thất bại");
             });
     };
 

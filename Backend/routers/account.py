@@ -57,18 +57,15 @@ def update(
     account_id: int,
     data: AccountUpdate,
     db: Session = Depends(get_db),
-    user: Account = Depends(get_current_user)
+    admin=Depends(admin_required)
 ):
-    # Chỉ cho phép user cập nhật chính tài khoản của mình
-    if user.id != account_id:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=403, detail="Không có quyền cập nhật tài khoản này")
     return update_account(db, account_id, data)
 
 
 @router.delete("/{account_id}")
 def remove(
     account_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin=Depends(admin_required)
 ):
     return delete_account(db, account_id)

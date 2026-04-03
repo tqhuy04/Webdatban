@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import tableApi from "../../../api/tableApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ table, setEditTable, GetTables }) => {
+    const notify = useNotify();
     const [TableNumber, setTableNumber] = useState("");
     const [Capacity, setCapacity] = useState("");
     const [Status, setStatus] = useState(0);
@@ -26,13 +28,12 @@ const EditForm = ({ table, setEditTable, GetTables }) => {
         tableApi
             .update(table.TableID, data)
             .then(() => {
-                alert("Cập nhật bàn thành công");
+                notify.success("Cập nhật bàn thành công");
                 GetTables();
-                setEditTable(null); // ✅ đóng form
+                setEditTable(null);
             })
-            .catch((err) => {
-                console.error("Lỗi cập nhật bàn:", err);
-                alert("Cập nhật thất bại");
+            .catch(() => {
+                notify.error("Cập nhật thất bại");
             });
     };
 

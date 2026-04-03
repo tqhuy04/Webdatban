@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import feedbackApi from "../../../api/feedbackApi";
 import userApi from "../../../api/userApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit, GetFeedbacks, data, id }) => {
+    const notify = useNotify();
     const [UserID, setUserID] = useState('');
     const [Content, setContent] = useState('');
     const [CreateAt, setCreateAt] = useState('');
@@ -40,7 +42,7 @@ const EditForm = ({ setisShowFormEdit, GetFeedbacks, data, id }) => {
 
         feedbackApi.update(id, payload)
             .then(() => {
-                alert('bạn đã sửa thông tin phản hồi thành công');
+                notify.success("Đã cập nhật phản hồi thành công");
                 GetFeedbacks();
                 setisShowFormEdit(false);
             })

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import orderApi from "../../../api/orderApi";
 import promotionApi from "../../../api/promotionApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const CreateForm = ({ setisShowFormCreate, GetOrders, BookingID, CustomerID }) => {
+    const notify = useNotify();
 
     const [OrderTime, setOrderTime] = useState("");
     const [PromotionID, setPromotionID] = useState(null);
@@ -13,14 +15,14 @@ const CreateForm = ({ setisShowFormCreate, GetOrders, BookingID, CustomerID }) =
     useEffect(() => {
         promotionApi.getAll()
             .then(res => setPromotions(res.data || []))
-            .catch(err => console.error("Lỗi lấy promotion:", err));
+            .catch(() => {});
     }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
         if (!OrderTime) {
-            alert("Vui lòng chọn giờ tạo đơn");
+            notify.warning("Vui lòng chọn giờ tạo đơn");
             return;
         }
 
@@ -42,13 +44,12 @@ const CreateForm = ({ setisShowFormCreate, GetOrders, BookingID, CustomerID }) =
 
         orderApi.create(data)
             .then(() => {
-                alert("Tạo order thành công");
+                notify.success("Tạo order thành công");
                 GetOrders();
                 setisShowFormCreate(false);
             })
-            .catch(err => {
-                console.error("Lỗi tạo order:", err.response?.data?.detail);
-                alert(JSON.stringify(err.response?.data?.detail, null, 2));
+            .catch(() => {
+                notify.error("Tạo order thất bại");
             });
     };
 

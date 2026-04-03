@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import userApi from "../../../api/userApi";
 import promotionApi from "../../../api/promotionApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit,GetPromotions,data,id }) => {
+    const notify = useNotify();
     const [Title,setTitle] = useState('');
     const [Description,setDescription] = useState('');
     const [Discount,setDiscount] = useState('');
@@ -28,7 +30,7 @@ const EditForm = ({ setisShowFormEdit,GetPromotions,data,id }) => {
         }
         promotionApi.update(id,data)
         .then(response=>{
-            alert('bạn đã sua thong tin mã giảm giá thành công');
+            notify.success("Đã cập nhật thành công");
             GetPromotions();
             setisShowFormEdit(false);
         })

@@ -63,7 +63,7 @@ def create_menu_item(
     Description: str = Form(...),
     Price: float = Form(...),
     Status: str = Form(...),
-    img: UploadFile = File(...),
+    img: Optional[UploadFile] = File(None),
 
     db: Session = Depends(get_db),
     _: dict = Depends(admin_required)
@@ -80,11 +80,14 @@ def create_menu_item(
     upload_dir = os.path.join(BASE_UPLOAD_DIR, category_folder)
     os.makedirs(upload_dir, exist_ok=True)
 
-    filename = img.filename
-    file_path = os.path.join(upload_dir, filename)
+    if img:
+        filename = img.filename
+        file_path = os.path.join(upload_dir, filename)
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(img.file, buffer)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(img.file, buffer)
+    else:
+        filename = "default.png"
 
     data = MenuItemCreate(
         CategoryID=CategoryID,

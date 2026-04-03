@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import feedbackApi from "../../../api/feedbackApi";
 import userApi from "../../../api/userApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const CreateForm = ({ onClose, refresh }) => {
+    const notify = useNotify();
     const [content, setContent] = useState("");
     const [userId, setUserId] = useState("");
     const [users, setUsers] = useState([]);
@@ -24,7 +26,7 @@ const CreateForm = ({ onClose, refresh }) => {
         e.preventDefault();
 
         if (!userId) {
-            alert("Vui lòng chọn tài khoản");
+            notify.warning("Vui lòng chọn tài khoản");
             return;
         }
 
@@ -34,7 +36,7 @@ const CreateForm = ({ onClose, refresh }) => {
                 Content: content,
             });
 
-            alert("Thêm đánh giá thành công");
+            notify.success("Thêm đánh giá thành công");
             refresh();
             onClose();
         } catch (err) {

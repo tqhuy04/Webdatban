@@ -3,8 +3,10 @@ import customerApi from "../../../api/customerApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
 import Pagination from "../../../components/shared/Pagination";
+import { useNotify } from "../../../contexts/ToastContext";
 
 function Customer() {
+    const notify = useNotify();
     const [customers, setCustomers] = useState([]);
     const [isShowFormCreate, setIsShowFormCreate] = useState(false);
     const [editCustomer, setEditCustomer] = useState(null);
@@ -21,8 +23,8 @@ function Customer() {
             .then(res => {
                 setCustomers(res.data);
             })
-            .catch(err => {
-                console.error("Có lỗi khi lấy khách hàng:", err);
+            .catch(() => {
+                // Silently fail
             });
     };
 
@@ -40,11 +42,11 @@ function Customer() {
 
         customerApi.delete(id)
             .then(() => {
-                alert("Xóa khách hàng thành công");
+                notify.success("Xóa khách hàng thành công");
                 getCustomers();
             })
-            .catch(err => {
-                console.error("Lỗi xóa khách hàng:", err);
+            .catch(() => {
+                // Silently fail
             });
     };
 

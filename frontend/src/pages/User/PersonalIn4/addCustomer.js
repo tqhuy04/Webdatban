@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import customerApi from '../../../api/customerApi';
+import { useNotify } from '../../../contexts/ToastContext';
 
 const AddCustomer = ({ onUpdate }) => {
+    const notify = useNotify();
 
     const [fullName, setFullName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -18,7 +20,7 @@ const AddCustomer = ({ onUpdate }) => {
 
         customerApi.create(data)
             .then(() => {
-                alert('Đã thêm thông tin khách hàng thành công');
+                notify.success('Đã thêm thông tin khách hàng thành công');
                 onUpdate();
             })
             .catch(error => console.error(error));

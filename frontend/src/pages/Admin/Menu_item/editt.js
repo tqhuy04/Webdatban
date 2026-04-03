@@ -2,8 +2,10 @@
 import React, { useEffect, useState } from "react";
 import userApi from "../../../api/userApi";
 import customerApi from "../../../api/customerApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit, GetCustomers, data, id }) => {
+    const notify = useNotify();
     const [FullName, setFullName] = useState('');
     const [PhoneNumber, setPhoneNumber] = useState('');
     const [Address, setAddress] = useState('');
@@ -28,7 +30,7 @@ const EditForm = ({ setisShowFormEdit, GetCustomers, data, id }) => {
         }
         customerApi.update(id, data)
             .then(response => {
-                alert('bạn đã sua thong tin khách hàng thành công');
+                notify.success("Đã cập nhật thành công");
                 GetCustomers();
                 setisShowFormEdit(false);
             })

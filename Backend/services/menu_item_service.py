@@ -5,12 +5,13 @@ from Backend.schemas.menu_item import MenuItemCreate, MenuItemUpdate
 
 
 def get_all_menu_items(db: Session):
-    return db.query(MenuItem).all()
+    return db.query(MenuItem).filter(MenuItem.IsDeleted == False).all()
 
 
 def get_menu_item_by_id(db: Session, item_id: int):
     return db.query(MenuItem).filter(
-        MenuItem.MenuItemID == item_id
+        MenuItem.MenuItemID == item_id,
+        MenuItem.IsDeleted == False
     ).first()
 
 
@@ -51,7 +52,7 @@ def delete_menu_item(db: Session, item_id: int):
     if not item:
         return False
 
-    db.delete(item)
+    item.IsDeleted = True
     db.commit()
 
     return True

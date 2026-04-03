@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import customerApi from "../../../api/customerApi";
 import table_bookingApi from "../../../api/table_bookingApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit, GetTable_bookings, data, id }) => {
+    const notify = useNotify();
     const [CustomerID, setCustomerID] = useState("");
     const [BookingTime, setBookingTime] = useState("");
     const [Status, setStatus] = useState("");
@@ -21,7 +23,7 @@ const EditForm = ({ setisShowFormEdit, GetTable_bookings, data, id }) => {
 
         customerApi.getAll()
             .then(res => setCustomers(res.data || []))
-            .catch(err => console.error(err));
+            .catch(() => {});
     }, []);
 
     const handleSubmit = (e) => {
@@ -35,12 +37,12 @@ const EditForm = ({ setisShowFormEdit, GetTable_bookings, data, id }) => {
 
         table_bookingApi.update(id, payload)
             .then(() => {
-                alert("Cập nhật booking thành công");
+                notify.success("Cập nhật booking thành công");
                 GetTable_bookings();
                 setisShowFormEdit(null);
             })
-            .catch(err => {
-                console.error("Lỗi cập nhật:", err);
+            .catch(() => {
+                notify.error("Cập nhật thất bại");
             });
     };
 

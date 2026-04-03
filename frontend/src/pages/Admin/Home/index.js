@@ -46,8 +46,8 @@ function Home() {
                     setSumRevenue(response.data.totalRevenue);
                 }
             })
-            .catch(error => {
-                console.error("có lỗi trong quá trình lấy dl: ", error);
+            .catch(() => {
+                // Silently fail
             });
 
         // chart order theo ngày
@@ -59,8 +59,8 @@ function Home() {
                 setLabels(chartLabels);
                 setDatasets(chartData);
             })
-            .catch(error => {
-                console.error("có lỗi trong quá trình lấy dl: ", error);
+            .catch(() => {
+                // Silently fail
             });
     }, []);
 

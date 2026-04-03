@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import menu_categoryApi from "../../../api/menu_categoryApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const CreateForm = ({ setisShowFormCreate, GetMenu_categorys }) => {
+    const notify = useNotify();
     const [CategoryName, setCategoryName] = useState("");
 
     const handleSubmit = (e) => {
@@ -10,7 +12,7 @@ const CreateForm = ({ setisShowFormCreate, GetMenu_categorys }) => {
         menu_categoryApi
             .create({ CategoryName })
             .then(() => {
-                alert("Bạn đã thêm nhóm thành công");
+                notify.success("Bạn đã thêm nhóm thành công");
                 GetMenu_categorys();
                 setisShowFormCreate(false);
             })

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import booking_tableApi from "../../../api/booking_tableApi";
 import tableApi from "../../../api/tableApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const CreateForm = ({
     setisShowFormCreate,
     GetBooking_tables,
     BookingID
 }) => {
+    const notify = useNotify();
 
     const [TableID, setTableID] = useState("");
     const [Tables, setTables] = useState([]);
@@ -22,8 +24,8 @@ const CreateForm = ({
             const res = await tableApi.getAll();
             setTables(res.data);
         }
-        catch (err) {
-            console.error("Lỗi load tables:", err);
+        catch {
+            // Silently fail
         }
     };
 
@@ -33,7 +35,7 @@ const CreateForm = ({
         e.preventDefault();
 
         if (!TableID) {
-            alert("Vui lòng chọn bàn");
+            notify.warning("Vui lòng chọn bàn");
             return;
         }
 
@@ -49,7 +51,7 @@ const CreateForm = ({
             // update status bàn
             await tableApi.setStatus(TableID);
 
-            alert("Thêm bàn thành công ✅");
+            notify.success("Thêm bàn thành công");
 
             // reload danh sách bàn của booking
             await GetBooking_tables();
@@ -57,11 +59,8 @@ const CreateForm = ({
             setisShowFormCreate(false);
 
         }
-        catch (err) {
-
-            console.error(err);
-            alert("Lỗi thêm bàn ❌");
-
+        catch {
+            notify.error("Lỗi thêm bàn");
         }
         finally {
             setLoading(false);

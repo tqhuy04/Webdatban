@@ -11,6 +11,7 @@ import { publicRoutes, adminRoutes } from "./routes";
 import User from "./components/layout/User";
 import Admin from "./components/layout/Admin";
 import { CartProvider } from "./contexts/CartContext";
+import { ToastProvider } from "./contexts/ToastContext";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
@@ -36,10 +37,10 @@ const RequireAuth = ({ children, role }) => {
 function App() {
   return (
     <Router>
-      <CartProvider>
-        <ScrollToTop />
-        <Routes>
-
+      <ToastProvider>
+        <CartProvider>
+          <ScrollToTop />
+          <Routes>
           {/* ================= PUBLIC ROUTES ================= */}
           {publicRoutes.map(({ path, component: Page, layout }, index) => {
             const Layout = layout ?? User;
@@ -79,7 +80,8 @@ function App() {
           {/* ================= FALLBACK ================= */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </CartProvider>
+        </CartProvider>
+      </ToastProvider>
     </Router>
   );
 }

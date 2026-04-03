@@ -4,8 +4,10 @@ import CreateForm from "./create";
 import EditForm from "./edit";
 import { useParams, useNavigate } from "react-router-dom";
 import { formatNumber } from "../../../components/utils/format_number";
+import { useNotify } from "../../../contexts/ToastContext";
 
 function Order() {
+    const notify = useNotify();
     const navigate = useNavigate();
     const { BookingID, CustomerID } = useParams();
 
@@ -25,8 +27,8 @@ function Order() {
             .then(res => {
                 setOrders(res.data ?? []);
             })
-            .catch(err => {
-                console.error("Lỗi lấy đơn hàng:", err);
+            .catch(() => {
+                // Silently fail
             });
     };
 
@@ -36,11 +38,11 @@ function Order() {
         orderApi
             .delete(id)
             .then(() => {
-                alert("Xóa đơn hàng thành công");
+                notify.success("Xóa đơn hàng thành công");
                 getOrders();
             })
-            .catch(err => {
-                console.error("Lỗi xóa đơn hàng:", err);
+            .catch(() => {
+                // Silently fail
             });
     };
 

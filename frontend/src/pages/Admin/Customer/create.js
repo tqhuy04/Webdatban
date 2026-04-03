@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import customerApi from "../../../api/customerApi";
 import userApi from "../../../api/userApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const CreateForm = ({ onClose, reload }) => {
+    const notify = useNotify();
     const [fullName, setFullName] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [address, setAddress] = useState("");
@@ -12,14 +14,14 @@ const CreateForm = ({ onClose, reload }) => {
     useEffect(() => {
         userApi.getAll()
             .then(res => setUsers(res.data))
-            .catch(err => console.error(err));
+            .catch(() => {});
     }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!accountId) {
-            alert("Vui lòng chọn tài khoản");
+            notify.warning("Vui lòng chọn tài khoản");
             return;
         }
 
@@ -31,7 +33,7 @@ const CreateForm = ({ onClose, reload }) => {
 
         try {
             await customerApi.create(accountId, payload);
-            alert("Thêm khách hàng thành công");
+            notify.success("Thêm khách hàng thành công");
             reload();   // ✅ OK
             onClose();  // ✅ OK
         } catch (err) {

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authUser from "../../../api/authUser";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const Login = ({ isVisible = true, onClose }) => {
     const navigate = useNavigate();
+    const notify = useNotify();
 
     const [isRightPanelActive, setRightPanelActive] = useState(false);
 
@@ -42,7 +44,7 @@ const Login = ({ isVisible = true, onClose }) => {
                 navigate("/", { replace: true });
             }
         } catch (err) {
-            alert("Đăng nhập thất bại");
+            notify.error("Đăng nhập thất bại");
         } finally {
             setLoading(false);
         }
@@ -64,7 +66,7 @@ const Login = ({ isVisible = true, onClose }) => {
                 address: regAddress
             });
 
-            alert("Đăng ký thành công, vui lòng đăng nhập");
+            notify.success("Đăng ký thành công, vui lòng đăng nhập");
 
             setRightPanelActive(false);
             setRegUsername("");
@@ -75,7 +77,7 @@ const Login = ({ isVisible = true, onClose }) => {
             setRegAddress("");
 
         } catch (err) {
-            alert(err.response?.data?.detail || "Đăng ký thất bại");
+            notify.error(err.response?.data?.detail || "Đăng ký thất bại");
         } finally {
             setLoading(false);
         }

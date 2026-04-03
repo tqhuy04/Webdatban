@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import menu_categoryApi from "../../../api/menu_categoryApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit, GetMenu_categorys, data, id }) => {
+    const notify = useNotify();
     const [CategoryName, setCategoryName] = useState("");
 
     useEffect(() => {
@@ -16,7 +18,7 @@ const EditForm = ({ setisShowFormEdit, GetMenu_categorys, data, id }) => {
         menu_categoryApi
             .update(id, { CategoryName })
             .then(() => {
-                alert("Cập nhật nhóm thành công");
+                notify.success("Cập nhật nhóm thành công");
                 GetMenu_categorys();
                 setisShowFormEdit(null);
             })

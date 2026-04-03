@@ -3,8 +3,10 @@ import promotionApi from "../../../api/promotionApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
 import { formatNumber } from "../../../components/utils/format_number";
+import { useNotify } from "../../../contexts/ToastContext";
 
 function Promotion() {
+    const notify = useNotify();
     const [promotions, setPromotions] = useState([]);
     const [showCreate, setShowCreate] = useState(false);
     const [editPromotion, setEditPromotion] = useState(null);
@@ -19,8 +21,8 @@ function Promotion() {
             .then((res) => {
                 setPromotions(res.data);
             })
-            .catch((err) => {
-                console.error("Lỗi lấy danh sách khuyến mãi:", err);
+            .catch(() => {
+                // Silently fail
             });
     }
 
@@ -30,12 +32,11 @@ function Promotion() {
         promotionApi
             .delete(id)
             .then(() => {
-                alert("Xóa thành công");
+                notify.success("Xóa thành công");
                 GetPromotions();
             })
-            .catch((err) => {
-                console.error("Lỗi xóa:", err);
-                alert("Xóa thất bại");
+            .catch(() => {
+                notify.error("Xóa thất bại");
             });
     }
 

@@ -3,8 +3,10 @@ import tableApi from "../../../api/tableApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
 import Pagination from "../../../components/shared/Pagination";
+import { useNotify } from "../../../contexts/ToastContext";
 
 function Table() {
+    const notify = useNotify();
     const [Tables, setTables] = useState([]);
     const [isShowFormCreate, setisShowFormCreate] = useState(false);
     const [editTable, setEditTable] = useState(null);
@@ -22,8 +24,8 @@ function Table() {
             .then((response) => {
                 setTables(response.data);
             })
-            .catch((error) => {
-                console.error("Lỗi lấy danh sách bàn:", error);
+            .catch(() => {
+                // Silently fail
             });
     }
 
@@ -41,11 +43,11 @@ function Table() {
             tableApi
                 .delete(id)
                 .then(() => {
-                    alert("Xóa bàn thành công");
+                    notify.success("Xóa bàn thành công");
                     GetTables();
                 })
-                .catch((error) => {
-                    console.error("Lỗi xóa bàn:", error);
+                .catch(() => {
+                    // Silently fail
                 });
         }
     }

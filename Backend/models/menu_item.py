@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Boolean
 from Backend.database import Base
 
 class MenuItem(Base):
@@ -16,3 +16,4 @@ class MenuItem(Base):
     Price = Column(Float, nullable=False)
     ImageURL = Column(String(255), nullable=False)
     Status = Column(String(255), nullable=False)
+    IsDeleted = Column(Boolean, default=False, nullable=False)

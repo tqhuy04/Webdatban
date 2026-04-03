@@ -96,6 +96,12 @@ def delete(db: Session, account_id: int) -> bool:
     if not account:
         return False
 
+    # Xóa customer liên kết trước (nếu có)
+    from Backend.models.customer import Customer
+    customer = db.query(Customer).filter(Customer.account_id == account_id).first()
+    if customer:
+        db.delete(customer)
+
     db.delete(account)
     db.commit()
     return True

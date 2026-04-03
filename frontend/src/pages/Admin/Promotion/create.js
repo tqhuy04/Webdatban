@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import promotionApi from "../../../api/promotionApi";
 import format_date from "../../../components/utils/format_date"; // ❗ GIỮ
+import { useNotify } from "../../../contexts/ToastContext";
 
 const CreateForm = ({ setisShowFormCreate, GetPromotions }) => {
+    const notify = useNotify();
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [discountPercent, setDiscountPercent] = useState("");
@@ -23,16 +25,12 @@ const CreateForm = ({ setisShowFormCreate, GetPromotions }) => {
         promotionApi
             .create(payload)
             .then(() => {
-                alert("Bạn đã thêm mã giảm giá thành công");
+                notify.success("Bạn đã thêm mã giảm giá thành công");
                 GetPromotions();
                 setisShowFormCreate(false);
             })
-            .catch((error) => {
-                console.error(
-                    "Lỗi tạo khuyến mãi:",
-                    error.response?.data || error
-                );
-                alert("Tạo khuyến mãi thất bại");
+            .catch(() => {
+                notify.error("Tạo khuyến mãi thất bại");
             });
     };
 

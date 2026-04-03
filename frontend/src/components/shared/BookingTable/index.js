@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import MenuSelection from '../../../components/shared/MenuSelection'
 import tableApi from '../../../api/tableApi';
+import { useNotify } from '../../../contexts/ToastContext';
 
 const BookingTable = ({ isVisible, onClose }) => {
+    const { warning: notifyWarning } = useNotify();
     const [showMenuModal, setShowMenuModal] = useState(false);
     const [Select_tables, setSelect_tables] = useState([]);
     const [tables, settables] = useState([]);
@@ -12,7 +14,7 @@ const BookingTable = ({ isVisible, onClose }) => {
         e.preventDefault();
 
         if (Select_tables.length === 0) {
-            alert("Vui lòng chọn ít nhất 1 bàn!");
+            notifyWarning("Vui lòng chọn ít nhất 1 bàn!");
             return;
         }
 

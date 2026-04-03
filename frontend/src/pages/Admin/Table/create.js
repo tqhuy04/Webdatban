@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import tableApi from "../../../api/tableApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const CreateForm = ({ setisShowFormCreate, GetTables }) => {
+    const notify = useNotify();
     const [TableNumber, setTableNumber] = useState("");
     const [Capacity, setCapacity] = useState("");
     const [Status, setStatus] = useState(0); // INT 0 | 1
@@ -18,13 +20,12 @@ const CreateForm = ({ setisShowFormCreate, GetTables }) => {
         tableApi
             .create(data)
             .then(() => {
-                alert("Thêm bàn thành công");
+                notify.success("Thêm bàn thành công");
                 GetTables();
                 setisShowFormCreate(false);
             })
-            .catch((err) => {
-                console.error("Lỗi thêm bàn:", err.response?.data || err);
-                alert("Thêm bàn thất bại");
+            .catch(() => {
+                notify.error("Thêm bàn thất bại");
             });
     };
 

@@ -5,17 +5,17 @@ import Pagination from '../../../components/shared/Pagination';
 import userApi from '../../../api/userApi';
 import CreateForm from "./create";
 import EditForm from "./edit";
+import { useNotify } from "../../../contexts/ToastContext";
+import "./Account.css";
 
 function Account() {
+    const notify = useNotify();
     const [users, setUsers] = useState([]);
     const [showCreate, setShowCreate] = useState(false);
-
     const [showEdit, setShowEdit] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
-
     const [showConfirm, setShowConfirm] = useState(false);
     const [deleteUser, setDeleteUser] = useState(null);
-
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
@@ -26,7 +26,7 @@ function Account() {
     const getUsers = () => {
         userApi.getAll()
             .then(res => setUsers(res.data))
-            .catch(err => console.error(err));
+            .catch(() => {});
     };
 
     const totalPages = Math.ceil(users.length / itemsPerPage);
@@ -40,10 +40,44 @@ function Account() {
 
     /* ================= TABLE CONFIG ================= */
 
+    const roleClass = (role) => {
+        const r = (role || "").toLowerCase();
+        if (r === "admin") return "role-badge admin";
+        if (r === "staff") return "role-badge staff";
+        return "role-badge customer";
+    };
+
+    const roleIcon = (role) => {
+        const r = (role || "").toLowerCase();
+        if (r === "admin") return <i className="fa fa-shield-halved"></i>;
+        if (r === "staff") return <i className="fa fa-user-gear"></i>;
+        return <i className="fa fa-user"></i>;
+    };
+
     const columns = [
-        { label: "Tên người dùng", key: "username" },
+        {
+            label: "Tên người dùng",
+            key: "username",
+            render: (row) => (
+                <div className="username-cell">
+                    <div className="username-avatar">
+                        {row.username ? row.username.charAt(0).toUpperCase() : "?"}
+                    </div>
+                    <span>{row.username}</span>
+                </div>
+            ),
+        },
         { label: "Email", key: "email" },
-        { label: "Vai trò", key: "role" },
+        {
+            label: "Vai trò",
+            key: "role",
+            render: (row) => (
+                <span className={roleClass(row.role)}>
+                    {roleIcon(row.role)}
+                    {row.role || "—"}
+                </span>
+            ),
+        },
     ];
 
     /* ================= HANDLERS ================= */
@@ -67,9 +101,15 @@ function Account() {
             .then(() => {
                 setShowConfirm(false);
                 setDeleteUser(null);
+                notify.success("Xóa tài khoản thành công");
                 getUsers();
             })
-            .catch(err => console.error(err));
+            .catch((err) => {
+                setShowConfirm(false);
+                const msg = err.response?.data?.detail
+                    || "Không thể xóa tài khoản. Tài khoản có thể đang được sử dụng.";
+                notify.error(msg);
+            });
     };
 
     return (
@@ -89,13 +129,15 @@ function Account() {
 
             <div className="admin-data-card">
                 {/* ===== TABLE ===== */}
-                <TableComponent
-                    columns={columns}
-                    data={currentUsers}
-                    onAdd={handleAdd}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                />
+                <div className="account-table-wrapper">
+                    <TableComponent
+                        columns={columns}
+                        data={currentUsers}
+                        onAdd={handleAdd}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                    />
+                </div>
 
                 {/* ===== PAGINATION ===== */}
                 <div className="pagination-wrapper">

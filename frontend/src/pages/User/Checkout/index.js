@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../../contexts/CartContext';
 import customerApi from '../../../api/customerApi';
 import tableApi from '../../../api/tableApi';
+import { useNotify } from '../../../contexts/ToastContext';
 
 function Checkout() {
     const navigate = useNavigate();
+    const notify = useNotify();
     const { cartItems, getCartTotal, clearCart } = useCart();
 
     const [customer, setCustomer] = useState(null);
@@ -30,11 +32,11 @@ function Checkout() {
                 setCustomer(res.data);
             })
             .catch(() => {
-                alert('Vui lòng cập nhật thông tin cá nhân trước!');
+                notify.warning('Vui lòng cập nhật thông tin cá nhân trước!');
                 navigate('/PersonalIn4');
             })
             .finally(() => setLoading(false));
-    }, [navigate]);
+    }, [navigate, notify]);
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return 'https://bizweb.dktcdn.net/thumb/compact/100/469/097/products/untitled1bb4fdbb3bd7845448a799-a1c5a559-3505-435f-9278-d7ba29e9c529.jpg';
@@ -63,12 +65,12 @@ function Checkout() {
 
     const handleOpenTableModal = () => {
         if (cartItems.length === 0) {
-            alert('Giỏ hàng trống!');
+            notify.warning('Giỏ hàng trống!');
             return;
         }
 
         if (!customer) {
-            alert('Vui lòng cập nhật thông tin cá nhân!');
+            notify.warning('Vui lòng cập nhật thông tin cá nhân!');
             return;
         }
 
@@ -85,12 +87,12 @@ function Checkout() {
 
     const handleSubmitOrder = () => {
         if (!bookingDate || !bookingTime) {
-            alert('Vui lòng chọn ngày và giờ đến!');
+            notify.warning('Vui lòng chọn ngày và giờ đến!');
             return;
         }
 
         if (!selectedTable) {
-            alert('Vui lòng chọn bàn trước khi đặt hàng!');
+            notify.warning('Vui lòng chọn bàn trước khi đặt hàng!');
             return;
         }
 
@@ -144,7 +146,7 @@ function Checkout() {
             );
 
             clearCart();
-            alert('Đặt bàn & chuyển sang thanh toán!');
+            notify.success('Đặt bàn & chuyển sang thanh toán!');
             setShowTableModal(false);
             setSelectedTable(null);
             setBookingDate('');
@@ -152,7 +154,7 @@ function Checkout() {
             navigate('/Bill');
         } catch (error) {
             console.error('Error preparing bill data:', error);
-            alert('Có lỗi xảy ra khi chuẩn bị thanh toán. Vui lòng thử lại!');
+            notify.error('Có lỗi xảy ra khi chuẩn bị thanh toán. Vui lòng thử lại!');
         } finally {
             setSubmitting(false);
         }

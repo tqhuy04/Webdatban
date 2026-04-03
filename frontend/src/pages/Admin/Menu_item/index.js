@@ -5,8 +5,10 @@ import CreateForm from "./create";
 import EditForm from "./edit";
 import Pagination from "../../../components/shared/Pagination";
 import { formatNumber } from "../../../components/utils/format_number";
+import { useNotify } from "../../../contexts/ToastContext";
 
 function Menu_item() {
+    const notify = useNotify();
     const [Menu_items, setMenu_items] = useState([]);
     const [Categories, setCategories] = useState([]);
     const [isShowFormCreate, setisShowFormCreate] = useState(false);
@@ -56,12 +58,12 @@ function Menu_item() {
 
         menu_itemApi.delete(id)
             .then(() => {
-                alert("Xóa thành công");
+                notify.success("Xóa thành công");
                 GetMenu_items();
             })
             .catch(err => {
                 console.error(err);
-                alert("Xóa thất bại");
+                notify.error("Xóa thất bại");
             });
     };
 

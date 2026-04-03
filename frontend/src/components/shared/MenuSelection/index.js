@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import menu_itemApi from "../../../api/menu_itemApi";
 import menu_categoryApi from "../../../api/menu_categoryApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const MenuSelection = ({ isVisible, onClose }) => {
     const navigate = useNavigate();
+    const notify = useNotify();
 
     const [Menu_categorys, setMenuCategorys] = useState([]);
     const [Menu_items, setMenuItems] = useState([]);
@@ -100,7 +102,7 @@ const MenuSelection = ({ isVisible, onClose }) => {
     // ✅ Mở modal confirm
     const handleToBill = () => {
         if (Select_menuItems.length === 0) {
-            alert("Bạn chưa chọn món!");
+            notify.warning("Bạn chưa chọn món!");
             return;
         }
         setShowConfirmModal(true);

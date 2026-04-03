@@ -5,9 +5,11 @@ import MenuSelection from "../../../components/shared/MenuSelection";
 import customerApi from "../../../api/customerApi";
 import BookingTable from "../../../components/shared/BookingTable";
 import Title from "../../../components/shared/Title";
+import { useNotify } from "../../../contexts/ToastContext";
 
 function Bookings() {
     const navigate = useNavigate();
+    const notify = useNotify();
 
     const [customer, setCustomer] = useState(null);
     const [userId, setUserId] = useState(null);
@@ -36,17 +38,17 @@ function Bookings() {
             .getByIdUser(userId)
             .then((res) => setCustomer(res.data))
             .catch(() => {
-                alert("Vui lòng nhập thông tin cá nhân trước!");
+                notify.warning("Vui lòng nhập thông tin cá nhân trước!");
                 navigate("/PersonalIn4");
             });
-    }, [userId, navigate]);
+    }, [userId, navigate, notify]);
 
     // 🔥 Submit form
     const handleBooking = (e) => {
         e.preventDefault();
 
         if (!customer || !BookingDate || !BookingTime || !People) {
-            alert("Vui lòng điền đầy đủ thông tin!");
+            notify.warning("Vui lòng điền đầy đủ thông tin!");
             return;
         }
 

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import promotionApi from "../../../api/promotionApi";
 import orderApi from "../../../api/orderApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit, GetOrders, data, id }) => {
+    const notify = useNotify();
     const [OrderDate, setOrderDate] = useState('');
     const [TotalAmount, setTotalAmount] = useState(0);
     const [PromotionID, setPromotionID] = useState();
@@ -13,9 +15,7 @@ const EditForm = ({ setisShowFormEdit, GetOrders, data, id }) => {
             .then(response => {
                 setPromotions(response.data);
             })
-            .catch(error => {
-                console.error('có lỗi trong quá trình lấy dl: ' + error);
-            });
+            .catch(() => {});
         if (data) {
             const date = new Date(data.OrderDate);
             const time = date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
@@ -36,12 +36,12 @@ const EditForm = ({ setisShowFormEdit, GetOrders, data, id }) => {
         }
         orderApi.update(id, formdata)
             .then(response => {
-                alert('bạn đã sua thong tin đơn hàng thành công');
+                notify.success("Đã cập nhật đơn hàng thành công");
                 GetOrders();
                 setisShowFormEdit(false);
             })
-            .catch(error => {
-                console.error('có lỗi trong quá trình lấy dl: ' + error);
+            .catch(() => {
+                notify.error("Cập nhật thất bại");
             })
     };
 

@@ -4,9 +4,11 @@ import CreateForm from "./create";
 import EditForm from "./edit";
 import Pagination from "../../../components/shared/Pagination";
 import { useNavigate } from "react-router-dom";
+import { useNotify } from "../../../contexts/ToastContext";
 
 function Table_booking() {
     const navigate = useNavigate();
+    const notify = useNotify();
 
     const [tableBookings, setTableBookings] = useState([]);
     const [showCreate, setShowCreate] = useState(false);
@@ -28,8 +30,8 @@ function Table_booking() {
             .then((res) => {
                 setTableBookings(res.data || []);
             })
-            .catch((err) => {
-                console.error("Lỗi lấy danh sách booking:", err);
+            .catch(() => {
+                // Silently fail
                 setTableBookings([]);
             });
     };
@@ -51,10 +53,10 @@ function Table_booking() {
 
         try {
             await table_bookingApi.delete(id);
-            alert("Xoá booking thành công");
+            notify.success("Xoá booking thành công");
             getTableBookings();
         } catch (error) {
-            console.error("Lỗi xoá booking:", error);
+            // Silently fail
         }
     };
 

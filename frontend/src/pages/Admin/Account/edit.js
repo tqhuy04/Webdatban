@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import userApi from "../../../api/userApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit, GetUsers, data, id }) => {
+    const notify = useNotify();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -9,101 +11,117 @@ const EditForm = ({ setisShowFormEdit, GetUsers, data, id }) => {
 
     useEffect(() => {
         if (data) {
-            setName(data.name || "");
+            setName(data.username || "");
             setEmail(data.email || "");
             setRole(data.role || "STAFF");
         }
     }, [data]);
 
     const handleSubmit = (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    const payload = {
-        Username: name,
-        Email: email,
-        Role: role.toUpperCase(),
+        const payload = {
+            username: name,
+            email: email,
+            role: role.toUpperCase(),
+        };
+
+        if (password.trim()) {
+            payload.password = password;
+        }
+
+        userApi.update(id, payload)
+            .then(() => {
+                notify.success("Sửa tài khoản thành công");
+                GetUsers();
+                setisShowFormEdit(false);
+            })
+            .catch(() => {
+                notify.error("Lỗi sửa tài khoản");
+            });
     };
-
-    if (password.trim()) {
-        payload.Password = password;
-    }
-
-    userApi.update(id, payload)
-        .then(() => {
-            alert("Sửa tài khoản thành công");
-            GetUsers();
-            setisShowFormEdit(false);
-        })
-        .catch(err => {
-            console.error(err.response?.data || err);
-            alert("Lỗi sửa tài khoản");
-        });
-};
 
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h4>Sửa người dùng</h4>
+                <h4>
+                    <i className="fa fa-user-pen"></i>
+                    Sửa người dùng
+                </h4>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label className="form-label">Tên</label>
+                    <div className="form-group-modal">
+                        <label><i className="fa fa-user"></i> Tên</label>
                         <input
                             type="text"
-                            className="form-control"
+                            className="modal-input"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
                         />
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Email</label>
+                    <div className="form-group-modal">
+                        <label><i className="fa fa-envelope"></i> Email</label>
                         <input
                             type="email"
-                            className="form-control"
+                            className="modal-input"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
                         />
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Mật khẩu mới</label>
+                    <div className="form-group-modal">
+                        <label><i className="fa fa-lock"></i> Mật khẩu mới</label>
                         <input
                             type="password"
-                            className="form-control"
+                            className="modal-input"
                             placeholder="Để trống nếu không đổi mật khẩu"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             minLength={6}
                         />
+                        <p className="modal-hint">Để trống nếu không muốn thay đổi mật khẩu</p>
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Vai trò</label>
-                        <select
-                            className="form-select"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            required
+                    <div className="form-group-modal">
+                        <label><i className="fa fa-shield-halved"></i> Vai trò</label>
+                        <div className="role-selector">
+                            {["STAFF", "ADMIN", "CUSTOMER"].map((r) => (
+                                <div key={r} className="role-option">
+                                    <input
+                                        type="radio"
+                                        id={`edit-role-${r}`}
+                                        value={r}
+                                        checked={role === r}
+                                        onChange={() => setRole(r)}
+                                    />
+                                    <label htmlFor={`edit-role-${r}`}>
+                                        {r === "STAFF" && <i className="fa fa-user-gear"></i>}
+                                        {r === "ADMIN" && <i className="fa fa-shield-halved"></i>}
+                                        {r === "CUSTOMER" && <i className="fa fa-user"></i>}
+                                        {r}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="modal-actions">
+                        <button type="submit" className="btn-modal-save">
+                            <i className="fa fa-check"></i>
+                            Lưu
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-modal-cancel"
+                            onClick={() => setisShowFormEdit(false)}
                         >
-                            <option value="STAFF">STAFF</option>
-                            <option value="ADMIN">ADMIN</option>
-                            <option value="CUSTOMER">CUSTOMER</option>
-                        </select>
+                            <i className="fa fa-xmark"></i>
+                            Hủy
+                        </button>
                     </div>
-
-                    <button type="submit" className="btn btn-success me-2">
-                        Lưu
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => setisShowFormEdit(false)}
-                    >
-                        Hủy
-                    </button>
                 </form>
             </div>
         </div>

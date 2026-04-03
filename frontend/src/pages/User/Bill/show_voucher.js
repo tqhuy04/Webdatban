@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import promotionApi from '../../../api/promotionApi';
 import { formatNumber } from '../../../components/utils/format_number';
+import { useNotify } from '../../../contexts/ToastContext';
 
 const VoucherShop = ({ setPromotion, onClose, Promotion }) => {
+    const notify = useNotify();
 
     const [Promotions, setPromotions] = useState([]);
     const [VoucherSelected, setVoucherSelected] = useState([]);
@@ -49,7 +51,7 @@ const VoucherShop = ({ setPromotion, onClose, Promotion }) => {
             setPromotion(VoucherSelected[0]);
             onClose();
         } else {
-            alert('vui lòng chọn 1 voucher để áp dụng hoặc ấn đóng để hủy');
+            notify.warning('Vui lòng chọn 1 voucher để áp dụng hoặc ấn đóng để hủy');
         }
     }
 

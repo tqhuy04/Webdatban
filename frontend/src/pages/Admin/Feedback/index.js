@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import feedbackApi from "../../../api/feedbackApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
+import { useNotify } from "../../../contexts/ToastContext";
 
 function Feedback() {
+    const notify = useNotify();
     const [feedbacks, setFeedbacks] = useState([]);
     const [showCreate, setShowCreate] = useState(false);
     const [editingFeedback, setEditingFeedback] = useState(null);
@@ -17,7 +19,7 @@ function Feedback() {
             const res = await feedbackApi.getAll();
             setFeedbacks(res.data);
         } catch (err) {
-            console.error("Lỗi lấy feedback:", err);
+            // Silently fail
         }
     };
 
@@ -26,10 +28,10 @@ function Feedback() {
 
         try {
             await feedbackApi.delete(id);
-            alert("Xóa thành công");
+            notify.success("Xóa thành công");
             getFeedbacks();
         } catch (err) {
-            console.error("Lỗi xóa:", err);
+            // Silently fail
         }
     };
 

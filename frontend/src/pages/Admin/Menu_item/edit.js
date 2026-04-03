@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import menu_categoryApi from "../../../api/menu_categoryApi";
 import menu_itemApi from "../../../api/menu_itemApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit, GetMenu_items, data, id }) => {
+    const notify = useNotify();
     const [CategoryID, setCategoryID] = useState("");
     const [Name, setName] = useState("");
     const [Description, setDescription] = useState("");
@@ -27,7 +29,7 @@ const EditForm = ({ setisShowFormEdit, GetMenu_items, data, id }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // 👇 GỬI OBJECT, API sẽ tự tạo FormData
+        //  GỬI OBJECT, API sẽ tự tạo FormData
         const payload = {
             CategoryID,
             Name,
@@ -40,7 +42,7 @@ const EditForm = ({ setisShowFormEdit, GetMenu_items, data, id }) => {
         menu_itemApi
             .update(id, payload)
             .then(() => {
-                alert("Cập nhật thành công");
+                notify.success("Cập nhật thành công");
                 GetMenu_items();
                 setisShowFormEdit(false);
             })

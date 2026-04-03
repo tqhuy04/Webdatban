@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import Title from '../../../components/shared/Title'
 import authUser from '../../../api/authUser'
 import feedbackApi from '../../../api/feedbackApi'
+import { useNotify } from '../../../contexts/ToastContext';
 
 function Feedback() {
+    const notify = useNotify();
 
     const [User_id, setUser_id] = useState(null);
     const [Content, setContent] = useState(null);
@@ -29,7 +31,7 @@ function Feedback() {
 
         feedbackApi.create(data)
             .then(response => {
-                alert('đã gửi phản hồi thành công');
+                notify.success('Đã gửi phản hồi thành công');
                 setContent('');
             })
             .catch(error => console.error('có lỗi: ' + error))

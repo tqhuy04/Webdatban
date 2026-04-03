@@ -8,9 +8,11 @@ import booking_tableApi from "../../../api/booking_tableApi";
 import tableApi from "../../../api/tableApi";
 import orderApi from "../../../api/orderApi";
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNotify } from '../../../contexts/ToastContext';
 
 
 function Bill() {
+    const notify = useNotify();
     const [menu_items, setmenu_items] = useState([]);
     const [table_bookings, settable_bookings] = useState(null);
     const [tables, settables] = useState([]);
@@ -201,7 +203,7 @@ function Bill() {
         if (!booking) {
             console.error("Không có dữ liệu booking!");
             setIsProcessingPayment(false);
-            alert("Không có thông tin đặt bàn. Vui lòng đặt bàn lại.");
+            notify.warning("Không có thông tin đặt bàn. Vui lòng đặt bàn lại.");
             navigate("/");
             return;
         }
@@ -252,7 +254,7 @@ function Bill() {
 
         if (!currentTables || currentTables.length === 0) {
             console.error("table_ids rỗng - Kiểm tra lại session storage");
-            alert("Không tìm thấy thông tin bàn đã chọn. Vui lòng đặt bàn lại!");
+            notify.warning("Không tìm thấy thông tin bàn đã chọn. Vui lòng đặt bàn lại!");
             setIsProcessingPayment(false);
             return;
         }
@@ -415,7 +417,7 @@ function Bill() {
 
     const HandlePayVNPay = () => {
         if (!table_bookings?.customer_id) {
-            alert("Thiếu CustomerID – vui lòng đăng nhập lại");
+            notify.warning("Thiếu CustomerID – vui lòng đăng nhập lại");
             return;
         }
 
@@ -469,7 +471,7 @@ function Bill() {
             .catch(err => {
                 console.error("Lỗi tạo booking:", err.response?.data || err);
                 setIsProcessingPayment(false);
-                alert("Không tạo được đặt bàn. Vui lòng thử lại.");
+                notify.error("Không tạo được đặt bàn. Vui lòng thử lại.");
             });
     }
 
@@ -508,7 +510,7 @@ function Bill() {
             .catch(err => {
                 console.error("Lỗi tạo order:", err.response?.data || err);
                 setIsProcessingPayment(false);
-                alert("Không tạo được đơn hàng. Vui lòng thử lại.");
+                notify.error("Không tạo được đơn hàng. Vui lòng thử lại.");
             });
     }
 
@@ -548,13 +550,13 @@ function Bill() {
                 if (res?.data?.code === "00" && res?.data?.data) {
                     window.location.href = res.data.data;
                 } else {
-                    alert(res?.data?.message || "Không tạo được link thanh toán VNPay");
+                    notify.error(res?.data?.message || "Không tạo được link thanh toán VNPay");
                     setIsProcessingPayment(false);
                 }
             })
             .catch(error => {
                 console.error("Lỗi tạo thanh toán VNPay:", error.response?.data || error);
-                alert("Không tạo được link thanh toán. Vui lòng thử lại.");
+                notify.error("Không tạo được link thanh toán. Vui lòng thử lại.");
                 setIsProcessingPayment(false);
             });
     }

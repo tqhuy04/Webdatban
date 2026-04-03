@@ -20,8 +20,8 @@ function Order_detail() {
             .then(res => {
                 setOrderDetails(res.data || []);
             })
-            .catch(err => {
-                console.error("Lỗi lấy order detail:", err);
+            .catch(() => {
+                // Silently fail
             });
     };
 

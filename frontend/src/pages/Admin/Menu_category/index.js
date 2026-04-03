@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import menu_categoryApi from "../../../api/menu_categoryApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
+import { useNotify } from "../../../contexts/ToastContext";
 
 function Menu_category() {
+    const notify = useNotify();
     const [Menu_categorys, setMenu_categorys] = useState([]);
     const [isShowFormCreate, setisShowFormCreate] = useState(false);
     const [isShowFormEdit, setisShowFormEdit] = useState(null);
@@ -18,8 +20,8 @@ function Menu_category() {
             .then((response) => {
                 setMenu_categorys(response.data);
             })
-            .catch((error) => {
-                console.error("Có lỗi:", error);
+            .catch(() => {
+                // Silently fail
             });
     }
 
@@ -28,11 +30,11 @@ function Menu_category() {
             menu_categoryApi
                 .delete(id)
                 .then(() => {
-                    alert("Xóa nhóm thành công");
+                    notify.success("Xóa nhóm thành công");
                     GetMenu_categorys();
                 })
-                .catch((error) => {
-                    console.error("Có lỗi:", error);
+                .catch(() => {
+                    notify.error("Xóa thất bại");
                 });
         }
     }

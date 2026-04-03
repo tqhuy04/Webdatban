@@ -19,7 +19,7 @@ function Booking_table() {
             const res = await booking_tableApi.getFull(BookingID);
             setBooking(res.data);
         } catch (err) {
-            console.error("Lỗi lấy booking:", err);
+            // Silently fail
             setBooking(null);
         } finally {
             setLoading(false);

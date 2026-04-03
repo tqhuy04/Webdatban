@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import customerApi from "../../../api/customerApi";
+import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ data, onClose, reload }) => {
+    const notify = useNotify();
     const [fullName, setFullName] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [address, setAddress] = useState("");
@@ -18,7 +20,7 @@ const EditForm = ({ data, onClose, reload }) => {
         e.preventDefault();
 
         if (!data?.id) {
-            alert("Không tìm thấy ID khách hàng");
+            notify.warning("Không tìm thấy ID khách hàng");
             return;
         }
 
@@ -30,7 +32,7 @@ const EditForm = ({ data, onClose, reload }) => {
 
         try {
             await customerApi.update(data.id, payload); // ✅ ID ĐÚNG
-            alert("Cập nhật thành công");
+            notify.success("Cập nhật thành công");
             reload();   // reload bảng
             onClose();  // đóng form
         } catch (err) {
