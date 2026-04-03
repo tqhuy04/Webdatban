@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import booking_tableApi from '../../../api/booking_tableApi';
+import Pagination from '../../../components/shared/Pagination';
+
+const PAGE_SIZE = 6;
 
 function Show_bookingTable() {
     const navigate = useNavigate();
-    const [tables, setTables] = useState(null);
+    const [tables, setTables] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const { BookingID } = useParams();
 
@@ -31,6 +35,10 @@ function Show_bookingTable() {
                 setLoading(false);
             });
     }, [BookingID]);
+
+    const totalPages = Math.ceil(tables.length / PAGE_SIZE);
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const currentTables = tables.slice(startIndex, startIndex + PAGE_SIZE);
 
     return (
         <div className='show-booking-container'>
@@ -70,44 +78,54 @@ function Show_bookingTable() {
                             <p>Đang tải thông tin bàn...</p>
                         </div>
                     ) : tables && tables.length > 0 ? (
-                        <div className='tables-grid'>
-                            {tables.map((table, index) => (
-                                <div
-                                    key={`${table.BookingID}-${table.TableID}`}
-                                    className={`table-card ${table.table.Status === 0 ? 'available' : 'occupied'}`}
-                                    style={{ animationDelay: `${index * 0.1}s` }}
-                                >
-                                    <div className='table-card-header'>
-                                        <div className='table-number'>
-                                            <span className="table-icon">🪑</span>
-                                            Bàn {table.table.TableNumber}
-                                        </div>
-                                        <span className={`status-badge ${table.table.Status === 0 ? 'available' : 'occupied'}`}>
-                                            {table.table.Status === 0 ? 'Còn trống' : 'Hết bàn'}
-                                        </span>
-                                    </div>
-                                    <div className='table-card-body'>
-                                        <div className='table-info-item'>
-                                            <span className="info-label">Kích thước</span>
-                                            <span className="info-value">
-                                                <span className="capacity-icon">👥</span>
-                                                {table.table.Capacity} người
+                        <>
+                            <div className='tables-grid'>
+                                {currentTables.map((table, index) => (
+                                    <div
+                                        key={`${table.BookingID}-${table.TableID}`}
+                                        className={`table-card ${table.table.Status === 0 ? 'available' : 'occupied'}`}
+                                        style={{ animationDelay: `${index * 0.1}s` }}
+                                    >
+                                        <div className='table-card-header'>
+                                            <div className='table-number'>
+                                                <span className="table-icon">🪑</span>
+                                                Bàn {table.table.TableNumber}
+                                            </div>
+                                            <span className={`status-badge ${table.table.Status === 0 ? 'available' : 'occupied'}`}>
+                                                {table.table.Status === 0 ? 'Còn trống' : 'Hết bàn'}
                                             </span>
                                         </div>
-                                        <div className='table-info-item'>
-                                            <span className="info-label">Sức chứa</span>
-                                            <span className="info-value">
-                                                <span className="capacity-icon">🍽️</span>
-                                                {table.table.Capacity} ghế
-                                            </span>
+                                        <div className='table-card-body'>
+                                            <div className='table-info-item'>
+                                                <span className="info-label">Kích thước</span>
+                                                <span className="info-value">
+                                                    <span className="capacity-icon">👥</span>
+                                                    {table.table.Capacity} người
+                                                </span>
+                                            </div>
+                                            <div className='table-info-item'>
+                                                <span className="info-label">Sức chứa</span>
+                                                <span className="info-value">
+                                                    <span className="capacity-icon">🍽️</span>
+                                                    {table.table.Capacity} ghế
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className='table-card-footer'>
+                                            <div className='table-id'>ID: {table.TableID}</div>
                                         </div>
                                     </div>
-                                    <div className='table-card-footer'>
-                                        <div className='table-id'>ID: {table.TableID}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+
+                            {tables.length > PAGE_SIZE && (
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                />
+                            )}
+                        </>
                     ) : (
                         <div className='empty-state'>
                             <span className="empty-icon">🪑</span>

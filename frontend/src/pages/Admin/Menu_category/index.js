@@ -38,14 +38,29 @@ function Menu_category() {
     }
 
     return (
-        <div className="container mt-3">
-            <div className="d-flex justify-content-between mb-3">
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setisShowFormCreate(true)}
-                >
-                    <i className="fa fa-plus"></i> Thêm
-                </button>
+        <div className="admin-menu-category">
+            <div className="admin-menu-category-header">
+                <h2>
+                    <span className="header-icon">
+                        <i className="fa fa-utensils"></i>
+                    </span>
+                    Quản lý Nhóm Món Ăn
+                </h2>
+                <p>
+                    <span className="status-dot"></span>
+                    Quản lý danh mục nhóm món ăn trong hệ thống
+                </p>
+            </div>
+
+            <div className="admin-data-card">
+                <div className="d-flex justify-content-end mb-3">
+                    <button
+                        className="admin-btn-add"
+                        onClick={() => setisShowFormCreate(true)}
+                    >
+                        <i className="fa fa-plus"></i> Thêm
+                    </button>
+                </div>
 
                 {isShowFormCreate && (
                     <CreateForm
@@ -53,50 +68,57 @@ function Menu_category() {
                         GetMenu_categorys={GetMenu_categorys}
                     />
                 )}
-            </div>
 
-            <table className="table table-bordered table-hover">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Tên nhóm món ăn</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {Menu_categorys.map((menu_category) => (
-                        <tr key={menu_category.CategoryID}>
-                            <td>{menu_category.CategoryName}</td>
-                            <td>
-                                <button
-                                    className="btn btn-warning btn-sm me-2"
-                                    onClick={() => setisShowFormEdit(menu_category)}
-                                >
-                                    Sửa
-                                </button>
-
-                                {isShowFormEdit?.CategoryID ===
-                                    menu_category.CategoryID && (
-                                        <EditForm
-                                            setisShowFormEdit={setisShowFormEdit}
-                                            GetMenu_categorys={GetMenu_categorys}
-                                            data={menu_category}
-                                            id={menu_category.CategoryID}
-                                        />
-                                    )}
-
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() =>
-                                        Deletetable(menu_category.CategoryID)
-                                    }
-                                >
-                                    Xóa
-                                </button>
-                            </td>
+                <table className="table table-bordered table-hover">
+                    <thead className="table-dark">
+                        <tr>
+                            <th>Tên nhóm món ăn</th>
+                            <th>Hành động</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {Menu_categorys.length === 0 ? (
+                            <tr>
+                                <td colSpan="2" className="text-center">
+                                    <div className="empty-state">
+                                        <i className="fa fa-utensils"></i>
+                                        <p>Không có dữ liệu nhóm món ăn</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : (
+                            Menu_categorys.map((menu_category) => (
+                                <tr key={menu_category.CategoryID}>
+                                    <td>{menu_category.CategoryName}</td>
+                                    <td>
+                                        <button
+                                            className="admin-btn-edit"
+                                            onClick={() => setisShowFormEdit(menu_category)}
+                                        >
+                                            <i className="fa fa-edit"></i> Sửa
+                                        </button>
+                                        <button
+                                            className="admin-btn-delete"
+                                            onClick={() => Deletetable(menu_category.CategoryID)}
+                                        >
+                                            <i className="fa fa-trash"></i> Xóa
+                                        </button>
+
+                                        {isShowFormEdit?.CategoryID === menu_category.CategoryID && (
+                                            <EditForm
+                                                setisShowFormEdit={setisShowFormEdit}
+                                                GetMenu_categorys={GetMenu_categorys}
+                                                data={menu_category}
+                                                id={menu_category.CategoryID}
+                                            />
+                                        )}
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

@@ -2,11 +2,15 @@ import React, { useEffect, useState } from "react";
 import tableApi from "../../../api/tableApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
+import Pagination from "../../../components/shared/Pagination";
 
 function Table() {
     const [Tables, setTables] = useState([]);
     const [isShowFormCreate, setisShowFormCreate] = useState(false);
-    const [editTable, setEditTable] = useState(null); // ✅ object bàn đang sửa
+    const [editTable, setEditTable] = useState(null);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     useEffect(() => {
         GetTables();
@@ -23,6 +27,15 @@ function Table() {
             });
     }
 
+    const totalPages = Math.ceil(Tables.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentTables = Tables.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
+
     function Deletetable(id) {
         if (window.confirm("Bạn có chắc muốn xóa bàn này không?")) {
             tableApi
@@ -38,14 +51,29 @@ function Table() {
     }
 
     return (
-        <div className="container mt-3">
-            <div className="d-flex justify-content-between mb-3">
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setisShowFormCreate(true)}
-                >
-                    <i className="fa fa-plus"></i> Thêm
-                </button>
+        <div className="admin-table">
+            <div className="admin-table-header">
+                <h2>
+                    <span className="header-icon">
+                        <i className="fa fa-chair"></i>
+                    </span>
+                    Quản lý Bàn
+                </h2>
+                <p>
+                    <span className="status-dot"></span>
+                    Quản lý thông tin bàn trong nhà hàng
+                </p>
+            </div>
+
+            <div className="admin-data-card">
+                <div className="d-flex justify-content-end mb-3">
+                    <button
+                        className="admin-btn-add"
+                        onClick={() => setisShowFormCreate(true)}
+                    >
+                        <i className="fa fa-plus"></i> Thêm
+                    </button>
+                </div>
 
                 {isShowFormCreate && (
                     <CreateForm
@@ -53,55 +81,74 @@ function Table() {
                         GetTables={GetTables}
                     />
                 )}
-            </div>
 
-            <table className="table table-bordered table-hover">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Tên bàn</th>
-                        <th>Sức chứa</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {Tables.map((table) => (
-                        <tr key={table.TableID}>
-                            <td>{table.TableNumber}</td>
-                            <td>{table.Capacity}</td>
-                            <td>
-                                {Number(table.Status) === 0
-                                    ? "Còn bàn"
-                                    : "Đã đặt"}
-                            </td>
-                            <td>
-                                <button
-                                    className="btn btn-warning btn-sm me-2"
-                                    onClick={() => setEditTable(table)} // ✅ TRUYỀN CẢ OBJECT
-                                >
-                                    <i className="fa fa-edit"></i> Sửa
-                                </button>
-
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => Deletetable(table.TableID)}
-                                >
-                                    <i className="fa fa-trash"></i> Xóa
-                                </button>
-                            </td>
+                <table className="table table-bordered table-hover">
+                    <thead className="table-dark">
+                        <tr>
+                            <th>Tên bàn</th>
+                            <th>Sức chứa</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {currentTables.length === 0 ? (
+                            <tr>
+                                <td colSpan="4" className="text-center">
+                                    <div className="empty-state">
+                                        <i className="fa fa-chair"></i>
+                                        <p>Không có dữ liệu bàn</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : (
+                            currentTables.map((table) => (
+                                <tr key={table.TableID}>
+                                    <td>{table.TableNumber}</td>
+                                    <td>{table.Capacity}</td>
+                                    <td>
+                                        <span className={`status-badge ${Number(table.Status) === 0 ? 'active' : 'pending'}`}>
+                                            {Number(table.Status) === 0 ? "Còn bàn" : "Đã đặt"}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button
+                                            className="admin-btn-edit"
+                                            onClick={() => setEditTable(table)}
+                                        >
+                                            <i className="fa fa-edit"></i> Sửa
+                                        </button>
+                                        <button
+                                            className="admin-btn-delete"
+                                            onClick={() => Deletetable(table.TableID)}
+                                        >
+                                            <i className="fa fa-trash"></i> Xóa
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
 
-            {/* FORM SỬA */}
-            {editTable && (
-                <EditForm
-                    table={editTable}
-                    setEditTable={setEditTable}
-                    GetTables={GetTables}
-                />
-            )}
+                {/* ===== PAGINATION ===== */}
+                <div className="pagination-wrapper">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                </div>
+
+                {/* FORM SỬA */}
+                {editTable && (
+                    <EditForm
+                        table={editTable}
+                        setEditTable={setEditTable}
+                        GetTables={GetTables}
+                    />
+                )}
+            </div>
         </div>
     );
 }

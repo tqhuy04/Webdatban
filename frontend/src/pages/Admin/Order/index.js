@@ -17,7 +17,6 @@ function Order() {
         if (BookingID) {
             getOrders();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [BookingID]);
 
     const getOrders = () => {
@@ -50,102 +49,122 @@ function Order() {
     };
 
     return (
-        <div className="container mt-3">
-            <div className="d-flex justify-content-between mb-3">
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setIsShowFormCreate(true)}
-                >
-                    <i className="fa fa-plus"></i> Thêm
-                </button>
+        <div className="admin-order">
+            <div className="admin-order-header">
+                <h2>
+                    <span className="header-icon">
+                        <i className="fa fa-receipt"></i>
+                    </span>
+                    Quản lý Đơn hàng
+                </h2>
+                <p>
+                    <span className="status-dot"></span>
+                    Quản lý danh sách đơn hàng trong hệ thống
+                </p>
             </div>
 
-            {isShowFormCreate && (
-                <CreateForm
-                    setisShowFormCreate={setIsShowFormCreate}
-                    GetOrders={getOrders}
-                    BookingID={BookingID}
-                    CustomerID={CustomerID}
-                />
-            )}
+            <div className="admin-data-card">
+                <div className="d-flex justify-content-end mb-3">
+                    <button
+                        className="admin-btn-add"
+                        onClick={() => setIsShowFormCreate(true)}
+                    >
+                        <i className="fa fa-plus"></i> Thêm
+                    </button>
+                </div>
 
-            <table className="table table-bordered table-hover">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Ngày tạo</th>
-                        <th>Khuyến mãi</th>
-                        <th>Tổng tiền</th>
-                        <th>Hành động</th>
-                        <th>Chi tiết</th>
-                    </tr>
-                </thead>
+                {isShowFormCreate && (
+                    <CreateForm
+                        setisShowFormCreate={setIsShowFormCreate}
+                        GetOrders={getOrders}
+                        BookingID={BookingID}
+                        CustomerID={CustomerID}
+                    />
+                )}
 
-                <tbody>
-                    {orders.length === 0 && (
+                <table className="table table-bordered table-hover">
+                    <thead className="table-dark">
                         <tr>
-                            <td colSpan="5" className="text-center">
-                                Không có đơn hàng
-                            </td>
+                            <th>Ngày tạo</th>
+                            <th>Khuyến mãi</th>
+                            <th>Tổng tiền</th>
+                            <th>Hành động</th>
+                            <th>Chi tiết</th>
                         </tr>
-                    )}
+                    </thead>
 
-                    {orders.map(order => (
-                        <tr key={order.OrderID}>
-                            <td>
-                                {new Date(order.OrderDate).toLocaleString("vi-VN")}
-                            </td>
+                    <tbody>
+                        {orders.length === 0 && (
+                            <tr>
+                                <td colSpan="5" className="text-center">
+                                    <div className="empty-state">
+                                        <i className="fa fa-receipt"></i>
+                                        <p>Không có đơn hàng</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
 
-                            <td>
-                                {order.PromotionID ? `#${order.PromotionID}` : "Không"}
-                            </td>
+                        {orders.map(order => (
+                            <tr key={order.OrderID}>
+                                <td>
+                                    {new Date(order.OrderDate).toLocaleString("vi-VN")}
+                                </td>
 
-                            <td>
-                                {formatNumber(order.TotalAmount)}
-                            </td>
+                                <td>
+                                    {order.PromotionID ? `#${order.PromotionID}` : "Không"}
+                                </td>
 
-                            <td>
-                                <button
-                                    className="btn btn-warning btn-sm me-2"
-                                    onClick={() => setEditingOrder(order)}
-                                >
-                                    <i className="fa fa-edit"></i> Sửa
-                                </button>
+                                <td>
+                                    {formatNumber(order.TotalAmount)}
+                                </td>
 
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => deleteOrder(order.OrderID)}
-                                >
-                                    <i className="fa fa-trash"></i> Xóa
-                                </button>
+                                <td>
+                                    <button
+                                        className="admin-btn-edit"
+                                        onClick={() => setEditingOrder(order)}
+                                    >
+                                        <i className="fa fa-edit"></i> Sửa
+                                    </button>
 
-                                {editingOrder?.OrderID === order.OrderID && (
-                                    <EditForm
-                                        setisShowFormEdit={setEditingOrder}
-                                        GetOrders={getOrders}
-                                        id={order.OrderID}
-                                        data={{
-                                            OrderDate: order.OrderDate,
-                                            TotalAmount: order.TotalAmount,
-                                            BookingID: Number(BookingID),
-                                            CustomerID: Number(CustomerID),
-                                            PromotionID: order.PromotionID ?? null,
-                                            Discount: 0,
-                                        }}
-                                    />
-                                )}
-                            </td>
+                                    <button
+                                        className="admin-btn-delete"
+                                        onClick={() => deleteOrder(order.OrderID)}
+                                    >
+                                        <i className="fa fa-trash"></i> Xóa
+                                    </button>
 
-                            <td className="text-center">
-                                <i
-                                    className="fa-solid fa-eye"
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() => handleToOrderDetail(order.OrderID)}
-                                />
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                                    {editingOrder?.OrderID === order.OrderID && (
+                                        <EditForm
+                                            setisShowFormEdit={setEditingOrder}
+                                            GetOrders={getOrders}
+                                            id={order.OrderID}
+                                            data={{
+                                                OrderDate: order.OrderDate,
+                                                TotalAmount: order.TotalAmount,
+                                                BookingID: Number(BookingID),
+                                                CustomerID: Number(CustomerID),
+                                                PromotionID: order.PromotionID ?? null,
+                                                Discount: 0,
+                                            }}
+                                        />
+                                    )}
+                                </td>
+
+                                <td className="text-center">
+                                    <button
+                                        className="admin-btn-action view"
+                                        onClick={() => handleToOrderDetail(order.OrderID)}
+                                        title="Xem chi tiết"
+                                    >
+                                        <i className="fa-solid fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

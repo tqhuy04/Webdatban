@@ -34,79 +34,96 @@ function Feedback() {
     };
 
     return (
-        <div className="container mt-3">
-            <div className="d-flex justify-content-between mb-3">
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setShowCreate(true)}
-                >
-                    <i className="fa fa-plus"></i> Thêm
-                </button>
+        <div className="admin-feedback">
+            <div className="admin-feedback-header">
+                <h2>
+                    <span className="header-icon">
+                        <i className="fa fa-comments"></i>
+                    </span>
+                    Quản lý Phản Hồi
+                </h2>
+                <p>
+                    <span className="status-dot"></span>
+                    Quản lý phản hồi và đánh giá từ khách hàng
+                </p>
             </div>
 
-            {/* CREATE */}
-            {showCreate && (
-                <CreateForm
-                    onClose={() => setShowCreate(false)}
-                    refresh={getFeedbacks}
-                />
-            )}
+            <div className="admin-data-card">
+                <div className="d-flex justify-content-end mb-3">
+                    <button
+                        className="admin-btn-add"
+                        onClick={() => setShowCreate(true)}
+                    >
+                        <i className="fa fa-plus"></i> Thêm
+                    </button>
+                </div>
 
-            {/* EDIT – chỉ render 1 form */}
-            {editingFeedback && (
-                <EditForm
-                    id={editingFeedback.FeedbackID}
-                    data={editingFeedback}
-                    onClose={() => setEditingFeedback(null)}
-                    refresh={getFeedbacks}
-                />
-            )}
+                {/* CREATE */}
+                {showCreate && (
+                    <CreateForm
+                        onClose={() => setShowCreate(false)}
+                        refresh={getFeedbacks}
+                    />
+                )}
 
-            <table className="table table-bordered table-hover">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Tên tài khoản</th>
-                        <th>Nội dung</th>
-                        <th>Ngày tạo</th>
-                        <th width="180">Hành động</th>
-                    </tr>
-                </thead>
+                {/* EDIT - chỉ render 1 form */}
+                {editingFeedback && (
+                    <EditForm
+                        id={editingFeedback.FeedbackID}
+                        data={editingFeedback}
+                        onClose={() => setEditingFeedback(null)}
+                        refresh={getFeedbacks}
+                    />
+                )}
 
-                <tbody>
-                    {feedbacks.length === 0 && (
+                <table className="table table-bordered table-hover">
+                    <thead className="table-dark">
                         <tr>
-                            <td colSpan="4" className="text-center">
-                                Không có dữ liệu
-                            </td>
+                            <th>Tên tài khoản</th>
+                            <th>Nội dung</th>
+                            <th>Ngày tạo</th>
+                            <th width="180">Hành động</th>
                         </tr>
-                    )}
+                    </thead>
 
-                    {feedbacks.map((fb, index) => (
-                        <tr key={`${fb.FeedbackID}-${index}`}>
-                            <td>{fb.full_name || "Ẩn danh"}</td>
-                            <td>{fb.Content}</td>
-                            <td>
-                                {new Date(fb.CreateAt).toLocaleDateString()}
-                            </td>
-                            <td>
-                                <button
-                                    className="btn btn-warning btn-sm me-2"
-                                    onClick={() => setEditingFeedback(fb)}
-                                >
-                                    <i className="fa fa-edit"></i> Sửa
-                                </button>
+                    <tbody>
+                        {feedbacks.length === 0 && (
+                            <tr>
+                                <td colSpan="4" className="text-center">
+                                    <div className="empty-state">
+                                        <i className="fa fa-comments"></i>
+                                        <p>Không có dữ liệu phản hồi</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
 
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => deleteFeedback(fb.FeedbackID)}
-                                >
-                                    <i className="fa fa-trash"></i> Xóa
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                        {feedbacks.map((fb, index) => (
+                            <tr key={`${fb.FeedbackID}-${index}`}>
+                                <td>{fb.full_name || "Ẩn danh"}</td>
+                                <td>{fb.Content}</td>
+                                <td>
+                                    {new Date(fb.CreateAt).toLocaleDateString()}
+                                </td>
+                                <td>
+                                    <button
+                                        className="admin-btn-edit"
+                                        onClick={() => setEditingFeedback(fb)}
+                                    >
+                                        <i className="fa fa-edit"></i> Sửa
+                                    </button>
+                                    <button
+                                        className="admin-btn-delete"
+                                        onClick={() => deleteFeedback(fb.FeedbackID)}
+                                    >
+                                        <i className="fa fa-trash"></i> Xóa
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

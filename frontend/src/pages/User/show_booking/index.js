@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import table_bookingApi from "../../../api/booking_tableApi";
+import Pagination from "../../../components/shared/Pagination";
+
+const PAGE_SIZE = 4;
 
 function Show_booking() {
     const navigate = useNavigate();
     const [bookings, setBookings] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(true);
 
     const handleToOrder = (BookingID) => {
@@ -41,6 +45,10 @@ function Show_booking() {
         });
     };
 
+    const totalPages = Math.ceil(bookings.length / PAGE_SIZE);
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const currentBookings = bookings.slice(startIndex, startIndex + PAGE_SIZE);
+
     return (
         <div className='show-booking-container'>
             <div className='show-booking-hero'>
@@ -68,52 +76,62 @@ function Show_booking() {
                         <p>Đang tải thông tin...</p>
                     </div>
                 ) : bookings.length > 0 ? (
-                    <div className='bookings-list'>
-                        {bookings.map((booking, index) => (
-                            <div
-                                key={booking.BookingID}
-                                className={`booking-card ${booking.Status ? 'completed' : 'pending'}`}
-                                style={{ animationDelay: `${index * 0.1}s` }}
-                            >
-                                <div className='booking-card-header'>
-                                    <div className='booking-time'>
-                                        <span className="time-icon">🕐</span>
-                                        <span className="time-text">{formatDate(booking.BookingTime)}</span>
+                    <>
+                        <div className='bookings-list'>
+                            {currentBookings.map((booking, index) => (
+                                <div
+                                    key={booking.BookingID}
+                                    className={`booking-card ${booking.Status ? 'completed' : 'pending'}`}
+                                    style={{ animationDelay: `${index * 0.1}s` }}
+                                >
+                                    <div className='booking-card-header'>
+                                        <div className='booking-time'>
+                                            <span className="time-icon">🕐</span>
+                                            <span className="time-text">{formatDate(booking.BookingTime)}</span>
+                                        </div>
+                                        <span className={`status-badge ${booking.Status ? 'completed' : 'pending'}`}>
+                                            {booking.Status ? '✓ Hoàn thành' : '⏳ Chưa hoàn thành'}
+                                        </span>
                                     </div>
-                                    <span className={`status-badge ${booking.Status ? 'completed' : 'pending'}`}>
-                                        {booking.Status ? '✓ Hoàn thành' : '⏳ Chưa hoàn thành'}
-                                    </span>
-                                </div>
 
-                                <div className='booking-card-body'>
-                                    <div className='booking-info'>
-                                        <div className='info-row'>
-                                            <span className="info-icon">🆔</span>
-                                            <span className="info-label">Mã đặt bàn:</span>
-                                            <span className="info-value">#{booking.BookingID}</span>
+                                    <div className='booking-card-body'>
+                                        <div className='booking-info'>
+                                            <div className='info-row'>
+                                                <span className="info-icon">🆔</span>
+                                                <span className="info-label">Mã đặt bàn:</span>
+                                                <span className="info-value">#{booking.BookingID}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className='booking-card-footer'>
-                                    <button
-                                        className='btn-action btn-tables'
-                                        onClick={() => handleToTable(booking.BookingID)}
-                                    >
-                                        <span className="btn-icon">🪑</span>
-                                        <span className="btn-text">Xem các bàn đã đặt</span>
-                                    </button>
-                                    <button
-                                        className='btn-action btn-orders'
-                                        onClick={() => handleToOrder(booking.BookingID)}
-                                    >
-                                        <span className="btn-icon">📦</span>
-                                        <span className="btn-text">Chi tiết đơn hàng</span>
-                                    </button>
+                                    <div className='booking-card-footer'>
+                                        <button
+                                            className='btn-action btn-tables'
+                                            onClick={() => handleToTable(booking.BookingID)}
+                                        >
+                                            <span className="btn-icon">🪑</span>
+                                            <span className="btn-text">Xem các bàn đã đặt</span>
+                                        </button>
+                                        <button
+                                            className='btn-action btn-orders'
+                                            onClick={() => handleToOrder(booking.BookingID)}
+                                        >
+                                            <span className="btn-icon">📦</span>
+                                            <span className="btn-text">Chi tiết đơn hàng</span>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+
+                        {bookings.length > PAGE_SIZE && (
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
+                        )}
+                    </>
                 ) : (
                     <div className='empty-state'>
                         <span className="empty-icon">📋</span>

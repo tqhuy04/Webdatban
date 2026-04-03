@@ -14,7 +14,6 @@ function Header() {
         setIsOpen(!isOpen);
     };
 
-    // Ẩn dropdown khi click ra ngoài
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -29,46 +28,49 @@ function Header() {
 
     const handleLogout = () => {
         localStorage.clear();
-        navigate('/Login')
-
+        navigate('/Login');
     };
 
     return (
-        <div className='container' style={{ width: '100%', height: '80px', background: '#fff', position: 'fixed', boxShadow: '0px 1px 10px rgba(0, 0, 0, 0.2)' }}>
-            <div className='row align-items-center justify-content-center h-100'>
-                <div className='col-md-2'>
-                    <div className="search-box shadow-sm">
-                        <input type="text" className="form-control" placeholder="Search..." />
-                        <i className="fas fa-search"></i>
-                    </div>
+        <header className="admin-top-header">
+            <div className="admin-top-header__inner">
+                <div className="admin-top-header__search">
+                    <i className="fas fa-search" aria-hidden />
+                    <input type="search" placeholder="Tìm kiếm..." autoComplete="off" />
                 </div>
-                <div className='col-md-7'></div>
-                <div className='col-md-3 row'>
-                    <div className="notification col-md-3">
+                <div className="admin-top-header__actions">
+                    <button type="button" className="admin-top-header__notify" aria-label="Thông báo">
                         <i className="fa-solid fa-bell" />
-                        <span className="badge">1</span>
-                    </div>
-                    <div className='col-md-9 d-flex align-items-center account dropdown-container ' ref={dropdownRef} onClick={toggleDropdown}>
-                        <img src='https://coderthemes.com/upvex/layouts/light/assets/images/users/user-1.jpg' alt="User avatar" style={{ marginRight: '4px', width: '40px', borderRadius: '50%' }} />
-                        <p className='m-0'>Lupin</p>
-                        <i class="fa-solid fa-chevron-down" style={{ fontSize: '1rem', marginLeft: '4px' }}></i>
+                        <span className="admin-top-header__badge">1</span>
+                    </button>
+                    <div
+                        className="admin-top-header__user"
+                        ref={dropdownRef}
+                        onClick={toggleDropdown}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && toggleDropdown()}
+                    >
+                        <img
+                            src="https://coderthemes.com/upvex/layouts/light/assets/images/users/user-1.jpg"
+                            alt=""
+                            className="admin-top-header__avatar"
+                        />
+                        <span className="admin-top-header__name">Lupin</span>
+                        <i className={`fa-solid fa-chevron-down admin-top-header__chev ${isOpen ? 'is-open' : ''}`} />
 
                         {isOpen && (
-                            <div className="user-dropdown">
-                                <Link to=''>Thông tin cá nhân</Link>
-                                <Link to=''>Cài đặt</Link>
-                                <span onClick={() => handleLogout()}>Đăng xuất</span>
+                            <div className="admin-top-header__menu" onClick={(e) => e.stopPropagation()}>
+                                <Link to="">Thông tin cá nhân</Link>
+                                <Link to="">Cài đặt</Link>
+                                <button type="button" onClick={handleLogout}>Đăng xuất</button>
                             </div>
                         )}
-
                     </div>
-
                 </div>
-
             </div>
-
-        </div>
-    )
+        </header>
+    );
 }
 
-export default Header
+export default Header;

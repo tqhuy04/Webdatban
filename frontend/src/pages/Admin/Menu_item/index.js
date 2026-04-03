@@ -3,6 +3,7 @@ import menu_itemApi from "../../../api/menu_itemApi";
 import menu_categoryApi from "../../../api/menu_categoryApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
+import Pagination from "../../../components/shared/Pagination";
 import { formatNumber } from "../../../components/utils/format_number";
 
 function Menu_item() {
@@ -10,6 +11,9 @@ function Menu_item() {
     const [Categories, setCategories] = useState([]);
     const [isShowFormCreate, setisShowFormCreate] = useState(false);
     const [isShowFormEdit, setisShowFormEdit] = useState(null);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     useEffect(() => {
         GetMenu_items();
@@ -27,6 +31,15 @@ function Menu_item() {
         menu_categoryApi.getAll()
             .then(res => setCategories(res.data))
             .catch(err => console.error(err));
+    };
+
+    const totalPages = Math.ceil(Menu_items.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentMenuItems = Menu_items.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
     };
 
     // ===== MAP CategoryID -> CategoryName =====
@@ -60,88 +73,124 @@ function Menu_item() {
     };
 
     return (
-        <div className="container mt-3">
-            <button
-                className="btn btn-primary mb-3"
-                onClick={() => setisShowFormCreate(true)}
-            >
-                + Thêm
-            </button>
+        <div className="admin-menu-item">
+            <div className="admin-menu-item-header">
+                <h2>
+                    <span className="header-icon">
+                        <i className="fa fa-hamburger"></i>
+                    </span>
+                    Quản lý Món Ăn
+                </h2>
+                <p>
+                    <span className="status-dot"></span>
+                    Quản lý danh sách món ăn trong hệ thống
+                </p>
+            </div>
 
-            {isShowFormCreate && (
-                <CreateForm
-                    setisShowFormCreate={setisShowFormCreate}
-                    GetMenu_items={GetMenu_items}
-                />
-            )}
+            <div className="admin-data-card">
+                <div className="d-flex justify-content-end mb-3">
+                    <button
+                        className="admin-btn-add"
+                        onClick={() => setisShowFormCreate(true)}
+                    >
+                        <i className="fa fa-plus"></i> Thêm
+                    </button>
+                </div>
 
-            <table className="table table-bordered table-hover">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Tên nhóm</th>
-                        <th>Tên món</th>
-                        <th>Mô tả</th>
-                        <th>Giá</th>
-                        <th>Ảnh</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
+                {isShowFormCreate && (
+                    <CreateForm
+                        setisShowFormCreate={setisShowFormCreate}
+                        GetMenu_items={GetMenu_items}
+                    />
+                )}
 
-                <tbody>
-                    {Menu_items.map(item => (
-                        <tr key={item.MenuItemID}>
-                            {/* ✅ TÊN NHÓM */}
-                            <td>{getCategoryName(item.CategoryID)}</td>
-
-                            <td>{item.Name}</td>
-                            <td>{item.Description}</td>
-                            <td>{formatNumber(item.Price)}</td>
-
-                            <td>
-                                <img
-                                    src={getImagePath(item.ImageURL)}
-                                    alt={item.Name}
-                                    width={130}
-                                />
-                            </td>
-
-                            <td>{item.Status}</td>
-
-                            <td>
-                                <button
-                                    className="btn btn-warning btn-sm me-2"
-                                    onClick={() => setisShowFormEdit(item)}
-                                >
-                                    Sửa
-                                </button>
-
-                                <button
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => handleDelete(item.MenuItemID)}
-                                >
-                                    Xóa
-                                </button>
-
-                                {isShowFormEdit?.MenuItemID === item.MenuItemID && (
-                                    <EditForm
-                                        setisShowFormEdit={setisShowFormEdit}
-                                        GetMenu_items={GetMenu_items}
-                                        id={item.MenuItemID}
-                                        data={{
-                                            CategoryID: item.CategoryID,
-                                            Name: item.Name,
-                                            Description: item.Description,
-                                            Price: item.Price,
-                                            Status: item.Status,
-                                        }}
-                                    />
-                                )}
-                            </td>
+                <table className="table table-bordered table-hover">
+                    <thead className="table-dark">
+                        <tr>
+                            <th>Tên nhóm</th>
+                            <th>Tên món</th>
+                            <th>Mô tả</th>
+                            <th>Giá</th>
+                            <th>Ảnh</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+
+                    <tbody>
+                        {currentMenuItems.length === 0 ? (
+                            <tr>
+                                <td colSpan="7" className="text-center">
+                                    <div className="empty-state">
+                                        <i className="fa fa-hamburger"></i>
+                                        <p>Không có dữ liệu món ăn</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : (
+                            currentMenuItems.map(item => (
+                                <tr key={item.MenuItemID}>
+                                    <td>{getCategoryName(item.CategoryID)}</td>
+                                    <td>{item.Name}</td>
+                                    <td>{item.Description}</td>
+                                    <td>{formatNumber(item.Price)}</td>
+                                    <td>
+                                        <img
+                                            src={getImagePath(item.ImageURL)}
+                                            alt={item.Name}
+                                            width={80}
+                                            style={{ borderRadius: '8px', objectFit: 'cover' }}
+                                        />
+                                    </td>
+                                    <td>
+                                        <span className={`status-badge ${item.Status === 'Còn món' ? 'active' : 'inactive'}`}>
+                                            {item.Status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button
+                                            className="admin-btn-edit"
+                                            onClick={() => setisShowFormEdit(item)}
+                                        >
+                                            <i className="fa fa-edit"></i> Sửa
+                                        </button>
+                                        <button
+                                            className="admin-btn-delete"
+                                            onClick={() => handleDelete(item.MenuItemID)}
+                                        >
+                                            <i className="fa fa-trash"></i> Xóa
+                                        </button>
+
+                                        {isShowFormEdit?.MenuItemID === item.MenuItemID && (
+                                            <EditForm
+                                                setisShowFormEdit={setisShowFormEdit}
+                                                GetMenu_items={GetMenu_items}
+                                                id={item.MenuItemID}
+                                                data={{
+                                                    CategoryID: item.CategoryID,
+                                                    Name: item.Name,
+                                                    Description: item.Description,
+                                                    Price: item.Price,
+                                                    Status: item.Status,
+                                                }}
+                                            />
+                                        )}
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+
+                {/* ===== PAGINATION ===== */}
+                <div className="pagination-wrapper">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                </div>
+            </div>
         </div>
     );
 }
