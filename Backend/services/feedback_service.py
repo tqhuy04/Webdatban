@@ -34,6 +34,46 @@ def get_all_feedbacks(db: Session):
     ]
 
 
+# =========================
+# USER GET PUBLIC FEEDBACKS
+# =========================
+def get_public_feedbacks(db: Session, skip: int = 0, limit: int = 6):
+    total = (
+        db.query(Feedback.FeedbackID)
+        .join(Account, Feedback.UserID == Account.id)
+        .count()
+    )
+
+    results = (
+        db.query(
+            Feedback.FeedbackID,
+            Feedback.UserID,
+            Feedback.Content,
+            Feedback.CreateAt,
+            Customer.full_name
+        )
+        .join(Account, Feedback.UserID == Account.id)
+        .outerjoin(Customer, Customer.account_id == Account.id)
+        .order_by(Feedback.CreateAt.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    items = [
+        {
+            "FeedbackID": r.FeedbackID,
+            "UserID": r.UserID,
+            "Content": r.Content,
+            "CreateAt": r.CreateAt,
+            "full_name": r.full_name or "Khách hàng"
+        }
+        for r in results
+    ]
+
+    return {"items": items, "total": total}
+
+
 
 # =========================
 # CREATE
@@ -64,4 +104,23 @@ def delete_feedback(db: Session, feedback_id: int):
 
     db.delete(feedback)
     db.commit()
+    return True
+
+
+# =========================
+# UPDATE
+# =========================
+def update_feedback(db: Session, feedback_id: int, content: str):
+    feedback = (
+        db.query(Feedback)
+        .filter(Feedback.FeedbackID == feedback_id)
+        .first()
+    )
+
+    if not feedback:
+        return False
+
+    feedback.Content = content
+    db.commit()
+    db.refresh(feedback)
     return True

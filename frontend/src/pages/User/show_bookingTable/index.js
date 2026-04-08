@@ -80,19 +80,19 @@ function Show_bookingTable() {
                     ) : tables && tables.length > 0 ? (
                         <>
                             <div className='tables-grid'>
-                                {currentTables.map((table, index) => (
+                                {currentTables.map((item, index) => (
                                     <div
-                                        key={`${table.BookingID}-${table.TableID}`}
-                                        className={`table-card ${table.table.Status === 0 ? 'available' : 'occupied'}`}
+                                        key={`${item.BookingID}-${item.TableID}`}
+                                        className={`table-card ${item.table?.Status === 0 ? 'available' : 'occupied'}`}
                                         style={{ animationDelay: `${index * 0.1}s` }}
                                     >
                                         <div className='table-card-header'>
                                             <div className='table-number'>
                                                 <span className="table-icon">🪑</span>
-                                                Bàn {table.table.TableNumber}
+                                                Bàn {item.table?.TableNumber}
                                             </div>
-                                            <span className={`status-badge ${table.table.Status === 0 ? 'available' : 'occupied'}`}>
-                                                {table.table.Status === 0 ? 'Còn trống' : 'Hết bàn'}
+                                            <span className={`status-badge ${item.table?.Status === 0 ? 'available' : 'occupied'}`}>
+                                                {item.table?.Status === 0 ? 'Còn trống' : 'Hết bàn'}
                                             </span>
                                         </div>
                                         <div className='table-card-body'>
@@ -100,19 +100,19 @@ function Show_bookingTable() {
                                                 <span className="info-label">Kích thước</span>
                                                 <span className="info-value">
                                                     <span className="capacity-icon">👥</span>
-                                                    {table.table.Capacity} người
+                                                    {item.table?.Capacity} người
                                                 </span>
                                             </div>
                                             <div className='table-info-item'>
                                                 <span className="info-label">Sức chứa</span>
                                                 <span className="info-value">
                                                     <span className="capacity-icon">🍽️</span>
-                                                    {table.table.Capacity} ghế
+                                                    {item.table?.Capacity} ghế
                                                 </span>
                                             </div>
                                         </div>
                                         <div className='table-card-footer'>
-                                            <div className='table-id'>ID: {table.TableID}</div>
+                                            <div className='table-id'>ID: {item.TableID}</div>
                                         </div>
                                     </div>
                                 ))}

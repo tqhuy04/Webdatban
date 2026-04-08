@@ -1,0 +1,160 @@
+/* ==========================================
+   USER FEEDBACK PAGE STYLES
+   ========================================== */
+
+.user-feedback-page {
+  min-height: calc(100vh - 80px);
+  padding: 0 0 60px;
+  background: linear-gradient(180deg, #10302c 0%, #1a4740 100%);
+}
+
+.user-feedback-form-box {
+  width: 600px;
+  border-radius: 10px;
+  background: rgba(16, 48, 44, 0.88);
+  padding: 24px 24px 20px;
+}
+
+.user-feedback-list {
+  width: 100%;
+  max-width: 600px;
+  margin-top: 28px;
+  padding: 0 4px;
+}
+
+.user-feedback-list-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #d69c52;
+  font-weight: 800;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.user-feedback-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(214, 156, 82, 0.25);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+
+.user-feedback-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(214, 156, 82, 0.5);
+}
+
+.user-feedback-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.user-feedback-item-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: #d69c52;
+  font-size: 14px;
+}
+
+.user-feedback-item-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #bd8133, #d4a456);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.user-feedback-item-date {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.user-feedback-item-content {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.65;
+  padding-left: 42px;
+}
+
+@media (max-width: 768px) {
+  .user-feedback-form-box {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .user-feedback-item-content {
+    padding-left: 0;
+    margin-top: 8px;
+  }
+
+  .user-feedback-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ==========================================
+   PAGINATION
+   ========================================== */
+.user-feedback-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(214, 156, 82, 0.2);
+}
+
+.pagination-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(214, 156, 82, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: rgba(214, 156, 82, 0.25);
+  border-color: #d69c52;
+  color: #d69c52;
+}
+
+.pagination-btn.active {
+  background: linear-gradient(135deg, #bd8133, #d4a456);
+  border-color: #d69c52;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(189, 129, 51, 0.4);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pagination-btn i {
+  font-size: 11px;
+}

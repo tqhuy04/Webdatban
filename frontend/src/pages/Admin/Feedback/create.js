@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import feedbackApi from "../../../api/feedbackApi";
 import userApi from "../../../api/userApi";
 import { useNotify } from "../../../contexts/ToastContext";
+import "./Feedback.css";
 
 const CreateForm = ({ onClose, refresh }) => {
     const notify = useNotify();
@@ -51,22 +52,23 @@ const CreateForm = ({ onClose, refresh }) => {
 
                 <form onSubmit={handleSubmit}>
                     {/* CONTENT */}
-                    <div className="mb-3">
-                        <label className="form-label">Nội dung đánh giá</label>
-                        <input
+                    <div className="form-group-modal">
+                        <label><i className="fa fa-comment"></i> Nội dung đánh giá</label>
+                        <textarea
                             type="text"
-                            className="form-control"
+                            className="modal-textarea"
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
+                            placeholder="Nhập nội dung đánh giá..."
                             required
                         />
                     </div>
 
                     {/* USER */}
-                    <div className="mb-3">
-                        <label className="form-label">Thuộc tài khoản</label>
+                    <div className="form-group-modal">
+                        <label><i className="fa fa-user"></i> Thuộc tài khoản</label>
                         <select
-                            className="form-select"
+                            className="modal-select"
                             value={userId}
                             onChange={(e) => setUserId(e.target.value)}
                             required
@@ -81,16 +83,17 @@ const CreateForm = ({ onClose, refresh }) => {
                         </select>
                     </div>
 
-                    <div className="text-end">
-                        <button type="submit" className="btn btn-success me-2">
-                            Lưu
+                    <div className="modal-actions">
+                        <button type="submit" className="btn-modal-save">
+                            <i className="fa fa-plus"></i> Thêm đánh giá
                         </button>
+
                         <button
                             type="button"
-                            className="btn btn-secondary"
+                            className="btn-modal-cancel"
                             onClick={onClose}
                         >
-                            Hủy
+                            <i className="fa fa-times"></i> Hủy
                         </button>
                     </div>
                 </form>

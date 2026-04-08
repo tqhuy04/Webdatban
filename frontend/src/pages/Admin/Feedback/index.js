@@ -3,6 +3,7 @@ import feedbackApi from "../../../api/feedbackApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
 import { useNotify } from "../../../contexts/ToastContext";
+import "./Feedback.css";
 
 function Feedback() {
     const notify = useNotify();

@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from Backend.database import get_db
 from Backend.schemas.feedback import (
@@ -9,8 +9,10 @@ from Backend.schemas.feedback import (
 )
 from Backend.controllers.feedback_controller import (
     get_all,
+    get_public,
     create,
-    delete
+    delete,
+    update
 )
 from Backend.core.dependencies import get_current_user, admin_required
 
@@ -45,6 +47,37 @@ def get_feedbacks_api(
     _: dict = Depends(admin_required)
 ):
     return get_all(db)
+
+
+# =========================
+# USER GET PUBLIC FEEDBACKS (PAGINATED)
+# =========================
+@router.get("/public")
+def get_public_feedbacks_api(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(6, ge=1, le=20),
+    db: Session = Depends(get_db)
+):
+    return get_public(db, skip, limit)
+
+
+# =========================
+# ADMIN UPDATE
+# =========================
+@router.put("/{feedback_id}")
+def update_feedback_api(
+    feedback_id: int,
+    data: FeedbackCreate,
+    db: Session = Depends(get_db),
+    _: dict = Depends(admin_required)
+):
+    success = update(db, feedback_id, data.Content)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Feedback not found"
+        )
+    return {"message": "Update feedback successfully"}
 
 
 # =========================

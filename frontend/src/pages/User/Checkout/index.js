@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../../contexts/CartContext';
 import customerApi from '../../../api/customerApi';
+import userApi from '../../../api/userApi';
 import tableApi from '../../../api/tableApi';
 import { useNotify } from '../../../contexts/ToastContext';
 
@@ -11,6 +12,8 @@ function Checkout() {
     const { cartItems, getCartTotal, clearCart } = useCart();
 
     const [customer, setCustomer] = useState(null);
+    /** Email nằm trên Account (/accounts/me), không có trong Customer */
+    const [accountEmail, setAccountEmail] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [showTableModal, setShowTableModal] = useState(false);
@@ -36,6 +39,10 @@ function Checkout() {
                 navigate('/PersonalIn4');
             })
             .finally(() => setLoading(false));
+
+        userApi.getMe()
+            .then(res => setAccountEmail(res.data?.email || ''))
+            .catch(() => {});
     }, [navigate, notify]);
 
     const getImagePath = (imageUrl) => {
@@ -102,12 +109,14 @@ function Checkout() {
             // Lưu thông tin sang sessionStorage để trang Bill sử dụng
             const customerId = customer?.id || customer?.CustomerID;
 
+            const emailForOrder = accountEmail || customer?.email || '';
+
             const bookingInfo = {
                 booking_date: bookingDate,
                 booking_time: bookingTime,
                 customer_id: customerId,
                 full_name: customer?.full_name,
-                email: customer?.email,
+                email: emailForOrder,
                 phone_number: customer?.phone_number,
                 address: customer?.address,
                 people: selectedTable?.Capacity || 1,
@@ -129,7 +138,7 @@ function Checkout() {
                 JSON.stringify({
                     CustomerID: customerId,
                     full_name: customer?.full_name,
-                    email: customer?.email,
+                    email: emailForOrder,
                     phone_number: customer?.phone_number,
                     address: customer?.address,
                 })
@@ -139,7 +148,7 @@ function Checkout() {
                 JSON.stringify({
                     CustomerID: customerId,
                     full_name: customer?.full_name,
-                    email: customer?.email,
+                    email: emailForOrder,
                     phone_number: customer?.phone_number,
                     address: customer?.address,
                 })
@@ -261,7 +270,7 @@ function Checkout() {
                                     <p><strong>SĐT:</strong> {customer?.phone_number}</p>
                                 </div>
                                 <div className='col-md-6'>
-                                    <p><strong>Email:</strong> {customer?.email || 'Chưa cập nhật'}</p>
+                                    <p><strong>Email:</strong> {(accountEmail || customer?.email) || 'Chưa cập nhật'}</p>
                                     <p><strong>Địa chỉ:</strong> {customer?.address}</p>
                                 </div>
                             </div>
