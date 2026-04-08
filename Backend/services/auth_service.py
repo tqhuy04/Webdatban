@@ -43,6 +43,11 @@ def authenticate_user(
     return user
 
 
+# Chuẩn hóa email: loại bỏ khoảng trắng, chuyển về lowercase
+def normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
 # =========================
 # Register (CREATE ACCOUNT)
 # =========================
@@ -53,6 +58,9 @@ def register_user(
     password: str,
     role: str = "STAFF"
 ) -> Account:
+    # Chuẩn hóa email
+    email = normalize_email(email)
+    
     if db.query(Account).filter(Account.Username == username).first():
         raise ValueError("Username đã tồn tại")
 

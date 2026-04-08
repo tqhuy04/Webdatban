@@ -23,3 +23,27 @@ class AuthResponse(BaseModel):
     access_token: str
     user_id: int
     role: str
+
+
+# =========================
+# FORGOT PASSWORD SCHEMAS
+# =========================
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class VerifyOtpRequest(BaseModel):
+    email: EmailStr
+    otp_code: Annotated[str, Field(min_length=6, max_length=6)]
+    new_password: Password
+
+
+class ResendOtpRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    success: bool
+    message: str
+    email: str | None = None
+    otp_demo: str | None = None

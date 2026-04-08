@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+from dotenv import load_dotenv
+
+# Load environment variables từ .env file
+load_dotenv()
 
 from Backend.database import Base, engine
 
@@ -18,6 +22,7 @@ from Backend.models.order import Order
 from Backend.models.order_detail import OrderDetail
 from Backend.models.promotion import Promotion
 from Backend.models.cart import Cart
+from Backend.models.otp import OTP
 
 # CREATE TABLES
 Base.metadata.create_all(bind=engine)

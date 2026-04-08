@@ -2,12 +2,16 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authUser from "../../../api/authUser";
 import { useNotify } from "../../../contexts/ToastContext";
+import ForgotPassword from "./ForgotPassword";
 
 const Login = ({ isVisible = true, onClose }) => {
     const navigate = useNavigate();
     const notify = useNotify();
 
     const [isRightPanelActive, setRightPanelActive] = useState(false);
+
+    // Trạng thái hiển thị ForgotPassword
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
 
     // ===== LOGIN =====
     const [username, setUsername] = useState("");
@@ -84,23 +88,30 @@ const Login = ({ isVisible = true, onClose }) => {
     };
 
     return (
-        <div>
-            {/* Overlay */}
-            <div
-                onClick={onClose}
-                style={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    background: "rgba(0,0,0,0.5)",
-                    zIndex: 999,
-                }}
-            />
+        <>
+            {showForgotPassword ? (
+                <ForgotPassword 
+                    onClose={onClose}
+                    onBackToLogin={() => setShowForgotPassword(false)}
+                />
+            ) : (
+                <>
+                    {/* Overlay */}
+                    <div
+                        onClick={onClose}
+                        style={{
+                            position: "fixed",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            background: "rgba(0,0,0,0.5)",
+                            zIndex: 999,
+                        }}
+                    />
 
-            <div className="login-container">
-                <div className={`container1 ${isRightPanelActive ? "right-panel-active" : ""}`}>
+                    <div className="login-container">
+                        <div className={`container1 ${isRightPanelActive ? "right-panel-active" : ""}`}>
 
                     {/* ===== REGISTER ===== */}
                     <div className="form-container sign-up-container">
@@ -195,6 +206,22 @@ const Login = ({ isVisible = true, onClose }) => {
                             <button disabled={loading}>
                                 {loading ? "Loading..." : "Sign In"}
                             </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowForgotPassword(true)}
+                                style={{
+                                    marginTop: "10px",
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "#666",
+                                    fontSize: "13px",
+                                    cursor: "pointer",
+                                    textDecoration: "underline"
+                                }}
+                            >
+                                Quên mật khẩu?
+                            </button>
                         </form>
                     </div>
 
@@ -224,9 +251,11 @@ const Login = ({ isVisible = true, onClose }) => {
                         </div>
                     </div>
 
-                </div>
-            </div>
-        </div>
+                        </div>
+                    </div>
+                </>
+            )}
+        </>
     );
 };
 
