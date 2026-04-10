@@ -16,21 +16,18 @@ function Order() {
     const [editingOrder, setEditingOrder] = useState(null);
 
     useEffect(() => {
-        if (BookingID) {
-            getOrders();
-        }
+        const getOrders = () => {
+            orderApi
+                .getByBooking(BookingID)
+                .then(res => {
+                    setOrders(res.data ?? []);
+                })
+                .catch(() => {});
+        };
+        getOrders();
     }, [BookingID]);
 
-    const getOrders = () => {
-        orderApi
-            .getByBooking(BookingID)
-            .then(res => {
-                setOrders(res.data ?? []);
-            })
-            .catch(() => {
-                // Silently fail
-            });
-    };
+    const deleteOrder = (id) => {
 
     const deleteOrder = (id) => {
         if (!window.confirm("Bạn có chắc muốn xóa đơn hàng này không?")) return;

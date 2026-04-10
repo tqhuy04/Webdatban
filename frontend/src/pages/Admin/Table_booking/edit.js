@@ -10,7 +10,6 @@ const EditForm = ({ setisShowFormEdit, GetTable_bookings, data, id }) => {
     const [Status, setStatus] = useState("");
     const [Customers, setCustomers] = useState([]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (data) {
             const date = new Date(data.BookingTime);
@@ -24,7 +23,7 @@ const EditForm = ({ setisShowFormEdit, GetTable_bookings, data, id }) => {
         customerApi.getAll()
             .then(res => setCustomers(res.data || []))
             .catch(() => {});
-    }, []);
+    }, [data]);
 
     const handleSubmit = (e) => {
         e.preventDefault();

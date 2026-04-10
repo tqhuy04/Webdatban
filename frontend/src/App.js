@@ -12,6 +12,8 @@ import User from "./components/layout/User";
 import Admin from "./components/layout/Admin";
 import { CartProvider } from "./contexts/CartContext";
 import { ToastProvider } from "./contexts/ToastContext";
+import { ChatProvider } from "./contexts/ChatContext";
+import { AuthProvider } from "./contexts/AuthContext";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
@@ -36,11 +38,13 @@ const RequireAuth = ({ children, role }) => {
 
 function App() {
   return (
+    <AuthProvider>
     <Router>
       <ToastProvider>
         <CartProvider>
-          <ScrollToTop />
-          <Routes>
+          <ChatProvider>
+            <ScrollToTop />
+            <Routes>
             {/* ================= PUBLIC ROUTES ================= */}
             {publicRoutes.map(({ path, component: Page, layout }, index) => {
               const Layout = layout ?? User;
@@ -80,9 +84,11 @@ function App() {
             {/* ================= FALLBACK ================= */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </ChatProvider>
         </CartProvider>
       </ToastProvider>
     </Router>
+    </AuthProvider>
   );
 }
 

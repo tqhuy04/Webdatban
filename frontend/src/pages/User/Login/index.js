@@ -2,11 +2,15 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authUser from "../../../api/authUser";
 import { useNotify } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useChatContext } from "../../../contexts/ChatContext";
 import ForgotPassword from "./ForgotPassword";
 
 const Login = ({ isVisible = true, onClose }) => {
     const navigate = useNavigate();
     const notify = useNotify();
+    const { updateLoginStatus } = useAuth();
+    const { refreshUser } = useChatContext();
 
     const [isRightPanelActive, setRightPanelActive] = useState(false);
 
@@ -39,6 +43,8 @@ const Login = ({ isVisible = true, onClose }) => {
 
             localStorage.setItem("token", res.access_token);
             localStorage.setItem("role", res.role);
+            updateLoginStatus(true);  // Cập nhật header
+            refreshUser();            // Cập nhật bong bóng chat
 
             onClose && onClose();
 

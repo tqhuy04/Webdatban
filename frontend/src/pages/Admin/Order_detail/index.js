@@ -11,19 +11,15 @@ function Order_detail() {
     const [isShowFormCreate, setIsShowFormCreate] = useState(false);
 
     useEffect(() => {
-        GetOrderDetails();
-    }, [OrderID]);
-
-    const GetOrderDetails = () => {
+        const GetOrderDetails = () => {
         orderDetailApi
             .getByOrder(OrderID)
             .then(res => {
                 setOrderDetails(res.data || []);
             })
-            .catch(() => {
-                // Silently fail
-            });
-    };
+            .catch(() => {});
+        GetOrderDetails();
+    }, [OrderID]);
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return '';

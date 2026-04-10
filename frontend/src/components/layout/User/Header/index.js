@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Zalo from "../../../shared/Zalo/Zalo";
 import { useCart } from "../../../../contexts/CartContext";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { useChatContext } from "../../../../contexts/ChatContext";
 
 function Header() {
     const navigate = useNavigate();
     const { getCartItemCount } = useCart();
+    const { isLogin, updateLoginStatus } = useAuth();
+    const { refreshUser } = useChatContext();
 
     const [isOpen, setIsOpen] = useState(false);
-    const [isLogin, setIsLogin] = useState(false);
     const [cartCount, setCartCount] = useState(0);
-
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        setIsLogin(!!token);
-    }, []);
 
     useEffect(() => {
         setCartCount(getCartItemCount());
@@ -30,10 +27,12 @@ function Header() {
     };
 
     const handleLogout = () => {
-        localStorage.clear();
-        setIsLogin(false);
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        updateLoginStatus(false);
+        refreshUser();
         setIsOpen(false);
-        navigate("/Login");
+        navigate("/");
     };
 
     const handleScroll = (id) => {
@@ -47,10 +46,7 @@ function Header() {
     };
 
     return (
-        <>
-            <Zalo />
-
-            <div className="p-0" id="header">
+        <div className="p-0" id="header">
                 <div className="container-fluid header p-0">
                     <div className="container h-100">
                         <div className="row d-flex align-items-center h-100">
@@ -212,7 +208,6 @@ function Header() {
                     </div>
                 </div>
             </div>
-        </>
     );
 }
 

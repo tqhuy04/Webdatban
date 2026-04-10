@@ -1,5 +1,4 @@
 import axios from "axios";
-import axiosClient from "./axiosClient";
 
 const API_BASE_URL = "http://localhost:8000/api/banking";
 

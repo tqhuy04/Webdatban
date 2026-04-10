@@ -8,12 +8,7 @@ function Booking_table() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (BookingID) {
-            fetchBooking();
-        }
-    }, [BookingID]);
-
-    const fetchBooking = async () => {
+        const fetchBooking = async () => {
         try {
             setLoading(true);
             const res = await booking_tableApi.getFull(BookingID);
@@ -21,10 +16,18 @@ function Booking_table() {
         } catch (err) {
             // Silently fail
             setBooking(null);
-        } finally {
-            setLoading(false);
-        }
-    };
+            try {
+                setLoading(true);
+                const res = await booking_tableApi.getFull(BookingID);
+                setBooking(res.data);
+            } catch (err) {
+                setBooking(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchBooking();
+    }, [BookingID]);
 
     if (loading) {
         return <div className="admin-booking-table">

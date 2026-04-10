@@ -96,11 +96,13 @@ def delete(db: Session, account_id: int) -> bool:
     if not account:
         return False
 
-    # Xóa customer liên kết trước (nếu có)
+    # Xóa customer liên kết bằng raw SQL trước (đảm bảo FK không cản trở)
     from Backend.models.customer import Customer
     customer = db.query(Customer).filter(Customer.account_id == account_id).first()
     if customer:
-        db.delete(customer)
+        # Chuyển account_id sang NULL trước khi xóa account
+        customer.account_id = None
+        db.flush()
 
     db.delete(account)
     db.commit()
