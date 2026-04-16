@@ -71,7 +71,7 @@ function Order() {
                                             <td className='order-amount'>{order.TotalAmount.toLocaleString()} VNĐ</td>
                                             <td>
                                                 {order.promotion?.DiscountPercent ? (
-                                                    <span className='order-discount'>{order.promotion.DiscountPercent}%</span>
+                                                    <span className='order-discount'>{order.promotion.DiscountPercent} VND</span>
                                                 ) : (
                                                     <span className='order-discount-none'>Không có</span>
                                                 )}

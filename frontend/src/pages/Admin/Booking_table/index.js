@@ -9,13 +9,6 @@ function Booking_table() {
 
     useEffect(() => {
         const fetchBooking = async () => {
-        try {
-            setLoading(true);
-            const res = await booking_tableApi.getFull(BookingID);
-            setBooking(res.data);
-        } catch (err) {
-            // Silently fail
-            setBooking(null);
             try {
                 setLoading(true);
                 const res = await booking_tableApi.getFull(BookingID);

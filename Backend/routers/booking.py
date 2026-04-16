@@ -102,7 +102,7 @@ def add_table(
     if not table_ids:
         return {"error": "table_ids is required"}
 
-    return booking_service.add_tables_to_booking(db, booking_id, table_ids)
+    return add_tables(booking_id, {"table_ids": table_ids}, db)
 # =========================
 # GET FULL BOOKING
 # =========================

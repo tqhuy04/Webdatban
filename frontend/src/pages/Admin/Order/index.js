@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import orderApi from "../../../api/orderApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
@@ -15,19 +15,19 @@ function Order() {
     const [isShowFormCreate, setIsShowFormCreate] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
 
-    useEffect(() => {
-        const getOrders = () => {
-            orderApi
-                .getByBooking(BookingID)
-                .then(res => {
-                    setOrders(res.data ?? []);
-                })
-                .catch(() => {});
-        };
-        getOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const getOrders = useCallback(() => {
+        orderApi
+            .getByBooking(BookingID)
+            .then(res => {
+                setOrders(res.data ?? []);
+            })
+            .catch(() => {});
     }, [BookingID]);
 
-    const deleteOrder = (id) => {
+    useEffect(() => {
+        getOrders();
+    }, [getOrders]);
 
     const deleteOrder = (id) => {
         if (!window.confirm("Bạn có chắc muốn xóa đơn hàng này không?")) return;
@@ -38,9 +38,7 @@ function Order() {
                 notify.success("Xóa đơn hàng thành công");
                 getOrders();
             })
-            .catch(() => {
-                // Silently fail
-            });
+            .catch(() => {});
     };
 
     const handleToOrderDetail = (orderID) => {

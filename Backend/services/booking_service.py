@@ -70,8 +70,7 @@ def _add_tables_to_booking_internal(db: Session, booking_id: int, table_ids: Lis
     for table_id in new_table_ids:
         bt = BookingTable(
             BookingID=booking_id,
-            TableID=table_id,
-            TableNumber=None
+            TableID=table_id
         )
         booking_tables.append(bt)
 

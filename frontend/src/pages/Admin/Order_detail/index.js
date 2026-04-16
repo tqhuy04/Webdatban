@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import orderDetailApi from "../../../api/order_detailApi";
 import CreateForm from "./create";
 import { useParams } from "react-router-dom";
@@ -10,16 +10,19 @@ function Order_detail() {
     const [orderDetails, setOrderDetails] = useState([]);
     const [isShowFormCreate, setIsShowFormCreate] = useState(false);
 
-    useEffect(() => {
-        const GetOrderDetails = () => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const GetOrderDetails = useCallback(() => {
         orderDetailApi
             .getByOrder(OrderID)
             .then(res => {
                 setOrderDetails(res.data || []);
             })
             .catch(() => {});
-        GetOrderDetails();
     }, [OrderID]);
+
+    useEffect(() => {
+        GetOrderDetails();
+    }, [GetOrderDetails]);
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return '';
