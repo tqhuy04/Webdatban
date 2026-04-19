@@ -97,6 +97,9 @@ app.include_router(order_detail)
 app.include_router(cart)
 app.include_router(chat)
 
+# Create uploads directory if not exists
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 # COMBINE FASTAPI + SOCKET.IO
 socket_app = socketio.ASGIApp(sio, app)
 

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: restaurant-booking
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn Backend.main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        value: mysql+pymysql://root:aBFKwjPHqMYieiGNIXEikFAVrqFdgQaf@roundhouse.proxy.rlwy.net:39960/restaurant_booking
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USER
+        value: tranquanghuy0413@gmail.com
+      - key: EMAIL_PASSWORD
+        value: qconmbvjuwmbsloz
+      - key: EMAIL_FROM_NAME
+        value: Restaurant Booking
