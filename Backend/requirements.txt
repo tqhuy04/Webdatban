@@ -5,7 +5,6 @@ pymysql
 python-jose
 passlib[bcrypt]
 pydantic
-pydantic-email
 python-multipart
 python-socketio[asyncio]
 eventlet
