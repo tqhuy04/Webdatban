@@ -1,23 +1,28 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
+import bcrypt
 from typing import Optional
 
 from Backend.models.account import Account
 from Backend.core.security import create_access_token, decode_token
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 # =========================
 # Password utils
 # =========================
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8')[:72],
+            hashed_password.encode('utf-8')
+        )
+    except Exception:
+        return False
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8')[:72], salt).decode('utf-8')
 
 
 # =========================
