@@ -45,10 +45,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS
+# CORS - Cho phép tất cả origins (bao gồm Vercel frontend)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origin_regex=r"https://.*\.vercel\.app|https://webdatbandola-phi\.vercel\.app|https://.*\.onrender\.com|http://localhost:*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
