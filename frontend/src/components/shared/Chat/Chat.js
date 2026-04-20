@@ -18,10 +18,11 @@ const Chat = ({ user, onClose }) => {
   const messagesEndRef = useRef(null);
   const adminId = 1; // Admin ID mặc định
 
-  // Kết nối Socket.IO
+  // Kết nối Socket.IO - Dùng Polling (Render Free không hỗ trợ WS)
   useEffect(() => {
     const socketInstance = io(SOCKET_URL, {
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],  // polling ưu tiên
+      upgrade: false,  // không thử upgrade lên websocket
     });
 
     socketInstance.on("connect", () => {

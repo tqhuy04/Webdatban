@@ -32,10 +32,18 @@ from Backend.core.datetime_utils import isoformat_utc_z
 # CREATE TABLES
 Base.metadata.create_all(bind=engine)
 
-# SOCKET.IO SERVER
+# SOCKET.IO SERVER - CORS cho phép Vercel
 sio = socketio.AsyncServer(
     async_mode='asgi',
-    cors_allowed_origins='*'
+    cors_allowed_origins=[
+        "https://webdatbandola-phi.vercel.app",
+        "https://*.vercel.app",
+        "https://webdatbann.onrender.com",
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ],
+    ping_timeout=60000,
+    ping_interval=25000,
 )
 
 # FASTAPI APP

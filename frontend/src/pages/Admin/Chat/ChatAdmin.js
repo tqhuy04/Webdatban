@@ -4,10 +4,10 @@ import chatApi from "../../../api/chatApi";
 import { formatChatDateTime } from "../../../components/utils/formatChatTime";
 import "./ChatAdmin.css";
 
-// Localhost
-// const SOCKET_URL = "http://localhost:8000";
+// Localhost - WebSocket hoạt động
+const SOCKET_URL = "http://localhost:8000";
 // Deploy
-const SOCKET_URL = "https://webdatbann.onrender.com";
+// const SOCKET_URL = "https://webdatbann.onrender.com";
 
 const ChatAdmin = ({ adminInfo, onClose }) => {
   const [conversations, setConversations] = useState([]);
@@ -25,10 +25,11 @@ const ChatAdmin = ({ adminInfo, onClose }) => {
     selectedCustomerRef.current = selectedCustomer;
   }, [selectedCustomer]);
 
-  // Kết nối Socket.IO (không phụ thuộc selectedCustomer để tránh reconnect liên tục)
+  // Kết nối Socket.IO - Dùng Polling thay vì WebSocket (Render Free không hỗ trợ WS)
   useEffect(() => {
     const socketInstance = io(SOCKET_URL, {
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],  // polling ưu tiên
+      upgrade: false,  // không thử upgrade lên websocket
     });
 
     socketInstance.on("connect", () => {
