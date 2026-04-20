@@ -4,8 +4,8 @@ sqlalchemy
 pymysql
 python-jose
 passlib[bcrypt]
-pydantic
+pydantic[email]
 python-multipart
-python-socketio[asyncio]
+python-socketio
 eventlet
 python-dotenv
