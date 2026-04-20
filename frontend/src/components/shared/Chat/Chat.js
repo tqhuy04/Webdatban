@@ -4,7 +4,10 @@ import chatApi from "../../../api/chatApi";
 import { formatChatTime } from "../../utils/formatChatTime";
 import "./Chat.css";
 
-const SOCKET_URL = "http://localhost:8000";
+// Localhost
+// const SOCKET_URL = "http://localhost:8000";
+// Deploy
+const SOCKET_URL = "https://webdatbann.onrender.com";
 
 const Chat = ({ user, onClose }) => {
   const [messages, setMessages] = useState([]);

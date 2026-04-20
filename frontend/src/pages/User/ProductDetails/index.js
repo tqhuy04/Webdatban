@@ -67,7 +67,10 @@ function ProductDetails() {
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return '';
-        return `http://localhost:8000/uploads/Categories/${imageUrl}`;
+        // Localhost
+        // return `http://localhost:8000/uploads/Categories/${imageUrl}`;
+        // Deploy
+        return `https://webdatbann.onrender.com/uploads/Categories/${imageUrl}`;
     };
 
     const formatPrice = (price) => {

@@ -22,7 +22,10 @@ function OrderDetail() {
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return "";
-        return encodeURI(`http://localhost:8000/uploads/Categories/${imageUrl}`);
+        // Localhost
+        // return encodeURI(`http://localhost:8000/uploads/Categories/${imageUrl}`);
+        // Deploy
+        return encodeURI(`https://webdatbann.onrender.com/uploads/Categories/${imageUrl}`);
     };
 
     const handleBackToOrder = () => {

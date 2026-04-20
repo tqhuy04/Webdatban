@@ -18,7 +18,10 @@ function Cart() {
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return 'https://bizweb.dktcdn.net/thumb/compact/100/469/097/products/untitled1bb4fdbb3bd7845448a799-a1c5a559-3505-435f-9278-d7ba29e9c529.jpg';
-        return `http://localhost:8000/uploads/Categories/${imageUrl}`;
+        // Localhost
+        // return `http://localhost:8000/uploads/Categories/${imageUrl}`;
+        // Deploy
+        return `https://webdatbann.onrender.com/uploads/Categories/${imageUrl}`;
     };
 
     const formatNumber = (num) => {

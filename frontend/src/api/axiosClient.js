@@ -2,7 +2,10 @@
 import axios from 'axios';
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8000/api",
+  // Localhost
+  // baseURL: "http://localhost:8000/api",
+  // Deploy
+  baseURL: "https://webdatbann.onrender.com/api",
   headers: {
     'Content-Type': 'application/json',
   },

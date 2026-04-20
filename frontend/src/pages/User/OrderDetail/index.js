@@ -26,7 +26,10 @@ function OrderDetail() {
     }, [OrderID]);
 
     const getImagePath = (productImg) => {
-        return `http://localhost:8000/uploads/Categories/${productImg}`;
+        // Localhost
+        // return `http://localhost:8000/uploads/Categories/${productImg}`;
+        // Deploy
+        return `https://webdatbann.onrender.com/uploads/Categories/${productImg}`;
     };
 
     return (
