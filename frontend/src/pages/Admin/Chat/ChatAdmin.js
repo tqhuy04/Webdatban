@@ -4,10 +4,10 @@ import chatApi from "../../../api/chatApi";
 import { formatChatDateTime } from "../../../components/utils/formatChatTime";
 import "./ChatAdmin.css";
 
-// Localhost - WebSocket hoạt động
-const SOCKET_URL = "http://localhost:8000";
+// Localhost
+// const SOCKET_URL = "http://localhost:8000";
 // Deploy
-// const SOCKET_URL = "https://webdatbann.onrender.com";
+const SOCKET_URL = "https://webdatbann.onrender.com";
 
 const ChatAdmin = ({ adminInfo, onClose }) => {
   const [conversations, setConversations] = useState([]);

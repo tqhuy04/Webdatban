@@ -5,8 +5,10 @@ VNPAY_CONFIG = {
     # URL thanh toán VNPay (sandbox hoặc production)
     "vnp_Url": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
     
-    # URL nhận kết quả thanh toán (return URL)
-    "vnp_ReturnUrl": "http://localhost:8000/api/banking/vnpay/vnpay_return",
+    #  # URL nhận kết quả thanh toán (return URL)
+    # "vnp_ReturnUrl": "http://localhost:8000/api/banking/vnpay/vnpay_return"
+    # # URL nhận kết quả thanh toán (return URL) - Deploy
+    "vnp_ReturnUrl": "https://webdatbann.onrender.com/api/banking/vnpay/vnpay_return",
     
     # Mã website của bạn trên VNPay
     "vnp_TmnCode": "3ROZIVO6",

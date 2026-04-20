@@ -65,8 +65,8 @@ async def vnpay_return(request: Request):
     response_code = result.get("code", "99")
     payment_message = urllib.parse.quote(result.get("message", ""))
     
-    # Redirect về trang Bill của frontend với kết quả thanh toán
-    frontend_url = "http://localhost:3000/Bill"
+    # Redirect về trang Bill của frontend - Deploy
+    frontend_url = "https://webdatbandola-phi.vercel.app/Bill"
     redirect_url = f"{frontend_url}?payment_status={response_code}&payment_message={payment_message}"
 
     print(f"[DEBUG] Redirecting to: {redirect_url[:200]}...")
