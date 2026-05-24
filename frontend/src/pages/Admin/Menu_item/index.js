@@ -4,6 +4,7 @@ import menu_categoryApi from "../../../api/menu_categoryApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
 import Pagination from "../../../components/shared/Pagination";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { formatNumber } from "../../../components/utils/format_number";
 import { useNotify } from "../../../contexts/ToastContext";
 
@@ -13,6 +14,7 @@ function Menu_item() {
     const [Categories, setCategories] = useState([]);
     const [isShowFormCreate, setisShowFormCreate] = useState(false);
     const [isShowFormEdit, setisShowFormEdit] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
@@ -53,10 +55,12 @@ function Menu_item() {
     };
 
     // ===== DELETE =====
-    const handleDelete = (id) => {
-        if (!window.confirm("Bạn có chắc muốn xóa món này?")) return;
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ show: true, id });
+    };
 
-        menu_itemApi.delete(id)
+    const handleConfirmDelete = () => {
+        menu_itemApi.delete(deleteModal.id)
             .then(() => {
                 notify.success("Xóa thành công");
                 GetMenu_items();
@@ -65,14 +69,20 @@ function Menu_item() {
                 console.error(err);
                 notify.error("Xóa thất bại");
             });
+        setDeleteModal({ show: false, id: null });
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModal({ show: false, id: null });
     };
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return "";
+        // Encode URL de xu ly ky tu dac biet (dau cach, tieng Viet)
+        const encodedPath = imageUrl.split('/').map(part => encodeURIComponent(part)).join('/');
         // Localhost
-        // return encodeURI(`http://localhost:8000/uploads/Categories/${imageUrl}`);
+        return `http://localhost:8000/uploads/Categories/${encodedPath}`;
         // Deploy
-        return encodeURI(`https://webdatbann.onrender.com/uploads/Categories/${imageUrl}`);
     };
 
     return (
@@ -159,7 +169,7 @@ function Menu_item() {
                                         </button>
                                         <button
                                             className="admin-btn-delete"
-                                            onClick={() => handleDelete(item.MenuItemID)}
+                                            onClick={() => handleDeleteClick(item.MenuItemID)}
                                         >
                                             <i className="fa fa-trash"></i> Xóa
                                         </button>
@@ -194,6 +204,14 @@ function Menu_item() {
                     />
                 </div>
             </div>
+
+            <ConfirmModal
+                isVisible={deleteModal.show}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa món ăn này không?"
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+            />
         </div>
     );
 }

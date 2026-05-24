@@ -105,6 +105,31 @@ def delete_booking(db: Session, booking_id: int):
     if not booking:
         return False
 
+    # Import here to avoid circular import
+    from Backend.models.booking_table import BookingTable
+    from Backend.models.order_detail import OrderDetail
+
+    # 1. Xóa order_details của các orders liên quan trước
+    # Lấy danh sách order_ids
+    orders = db.query(Order).filter(Order.BookingID == booking_id).all()
+    order_ids = [o.OrderID for o in orders]
+    
+    if order_ids:
+        db.query(OrderDetail).filter(
+            OrderDetail.OrderID.in_(order_ids)
+        ).delete(synchronize_session=False)
+
+    # 2. Xóa các orders
+    db.query(Order).filter(
+        Order.BookingID == booking_id
+    ).delete(synchronize_session=False)
+
+    # 3. Xóa booking_tables
+    db.query(BookingTable).filter(
+        BookingTable.BookingID == booking_id
+    ).delete(synchronize_session=False)
+
+    # 4. Cuối cùng xóa booking
     db.delete(booking)
     db.commit()
     return True

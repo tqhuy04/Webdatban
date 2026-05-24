@@ -14,5 +14,11 @@ class TableBooking(Base):
     BookingTime = Column(DateTime, nullable=False)
     Status = Column(Integer, nullable=False)
 
-    # relationship
+    # Quan hệ với Customer
     customer = relationship("Customer", back_populates="bookings")
+
+    # Quan hệ ngược với BookingTable (để load danh sách bàn của booking)
+    booking_tables = relationship("BookingTable", back_populates="booking")
+
+    # Quan hệ ngược với Order (để load danh sách đơn hàng của booking)
+    orders = relationship("Order", back_populates="booking")

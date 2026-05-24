@@ -2,10 +2,12 @@ import order_detailApi from "../../../api/order_detailApi";
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatNumber } from "../../../components/utils/format_number";
+import { useNotify } from "../../../contexts/ToastContext";
 import './index.css';
 
 function OrderDetail() {
     const navigate = useNavigate();
+    const notify = useNotify();
     const [order_details, setorder_details] = useState(null);
     const [loading, setLoading] = useState(true);
     const { OrderID } = useParams();
@@ -16,20 +18,24 @@ function OrderDetail() {
 
         order_detailApi.getByOrder(OrderID)
             .then(response => {
+                console.log('OrderDetail API Response:', response.data);
                 setorder_details(response.data);
                 setLoading(false);
             })
             .catch(error => {
-                console.error('có lỗi trong quá trình lấy dl: ' + error);
+                console.error('Lỗi khi lấy chi tiết đơn hàng:', error);
+                notify.error("Không thể tải chi tiết đơn hàng");
                 setLoading(false);
             });
     }, [OrderID]);
 
     const getImagePath = (productImg) => {
+        if (!productImg) return '';
+        // Encode URL de xu ly ky tu dac biet (dau cach, tieng Viet)
+        const encodedPath = productImg.split('/').map(part => encodeURIComponent(part)).join('/');
         // Localhost
-        // return `http://localhost:8000/uploads/Categories/${productImg}`;
+        return `http://localhost:8000/uploads/Categories/${encodedPath}`;
         // Deploy
-        return `https://webdatbann.onrender.com/uploads/Categories/${productImg}`;
     };
 
     return (

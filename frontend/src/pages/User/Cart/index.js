@@ -18,10 +18,12 @@ function Cart() {
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return 'https://bizweb.dktcdn.net/thumb/compact/100/469/097/products/untitled1bb4fdbb3bd7845448a799-a1c5a559-3505-435f-9278-d7ba29e9c529.jpg';
+        // Encode URL de xu ly ky tu dac biet (dau cach, tieng Viet)
+        const encodedPath = imageUrl.split('/').map(part => encodeURIComponent(part)).join('/');
         // Localhost
-        // return `http://localhost:8000/uploads/Categories/${imageUrl}`;
+        return `http://localhost:8000/uploads/Categories/${encodedPath}`;
         // Deploy
-        return `https://webdatbann.onrender.com/uploads/Categories/${imageUrl}`;
+        // return `https://webdatbann.onrender.com/uploads/Categories/${encodedPath}`;
     };
 
     const formatNumber = (num) => {

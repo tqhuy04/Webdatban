@@ -4,10 +4,7 @@ import chatApi from "../../../api/chatApi";
 import { formatChatTime } from "../../utils/formatChatTime";
 import "./Chat.css";
 
-// Localhost
-// const SOCKET_URL = "http://localhost:8000";
-// Deploy
-const SOCKET_URL = "https://webdatbann.onrender.com";
+const SOCKET_URL = "http://localhost:8000";
 
 const Chat = ({ user, onClose }) => {
   const [messages, setMessages] = useState([]);
@@ -18,11 +15,10 @@ const Chat = ({ user, onClose }) => {
   const messagesEndRef = useRef(null);
   const adminId = 1; // Admin ID mặc định
 
-  // Kết nối Socket.IO - Dùng Polling (Render Free không hỗ trợ WS)
+  // Kết nối Socket.IO
   useEffect(() => {
     const socketInstance = io(SOCKET_URL, {
-      transports: ["polling", "websocket"],  // polling ưu tiên
-      upgrade: false,  // không thử upgrade lên websocket
+      transports: ["websocket", "polling"],
     });
 
     socketInstance.on("connect", () => {

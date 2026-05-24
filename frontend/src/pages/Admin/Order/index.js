@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import orderApi from "../../../api/orderApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { useParams, useNavigate } from "react-router-dom";
 import { formatNumber } from "../../../components/utils/format_number";
 import { useNotify } from "../../../contexts/ToastContext";
@@ -14,6 +15,7 @@ function Order() {
     const [orders, setOrders] = useState([]);
     const [isShowFormCreate, setIsShowFormCreate] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const getOrders = useCallback(() => {
@@ -29,16 +31,24 @@ function Order() {
         getOrders();
     }, [getOrders]);
 
-    const deleteOrder = (id) => {
-        if (!window.confirm("Bạn có chắc muốn xóa đơn hàng này không?")) return;
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ show: true, id });
+    };
 
-        orderApi
-            .delete(id)
+    const handleConfirmDelete = () => {
+        orderApi.delete(deleteModal.id)
             .then(() => {
                 notify.success("Xóa đơn hàng thành công");
                 getOrders();
             })
-            .catch(() => {});
+            .catch(() => {
+                notify.error("Xóa đơn hàng thất bại");
+            });
+        setDeleteModal({ show: false, id: null });
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModal({ show: false, id: null });
     };
 
     const handleToOrderDetail = (orderID) => {
@@ -126,7 +136,7 @@ function Order() {
 
                                     <button
                                         className="admin-btn-delete"
-                                        onClick={() => deleteOrder(order.OrderID)}
+                                        onClick={() => handleDeleteClick(order.OrderID)}
                                     >
                                         <i className="fa fa-trash"></i> Xóa
                                     </button>
@@ -162,6 +172,14 @@ function Order() {
                     </tbody>
                 </table>
             </div>
+
+            <ConfirmModal
+                isVisible={deleteModal.show}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa đơn hàng này không?"
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+            />
         </div>
     );
 }

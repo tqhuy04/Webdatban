@@ -3,6 +3,7 @@ import customerApi from "../../../api/customerApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
 import Pagination from "../../../components/shared/Pagination";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { useNotify } from "../../../contexts/ToastContext";
 
 function Customer() {
@@ -10,6 +11,7 @@ function Customer() {
     const [customers, setCustomers] = useState([]);
     const [isShowFormCreate, setIsShowFormCreate] = useState(false);
     const [editCustomer, setEditCustomer] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
@@ -37,17 +39,24 @@ function Customer() {
         setCurrentPage(page);
     };
 
-    const deleteCustomer = (id) => {
-        if (!window.confirm("Bạn có chắc muốn xóa khách hàng này?")) return;
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ show: true, id });
+    };
 
-        customerApi.delete(id)
+    const handleConfirmDelete = () => {
+        customerApi.delete(deleteModal.id)
             .then(() => {
                 notify.success("Xóa khách hàng thành công");
                 getCustomers();
             })
             .catch(() => {
-                // Silently fail
+                notify.error("Xóa khách hàng thất bại");
             });
+        setDeleteModal({ show: false, id: null });
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModal({ show: false, id: null });
     };
 
     return (
@@ -124,7 +133,7 @@ function Customer() {
                                         </button>
                                         <button
                                             className="admin-btn-delete"
-                                            onClick={() => deleteCustomer(customer.id)}
+                                            onClick={() => handleDeleteClick(customer.id)}
                                         >
                                             <i className="fa fa-trash"></i> Xóa
                                         </button>
@@ -144,6 +153,14 @@ function Customer() {
                     />
                 </div>
             </div>
+
+            <ConfirmModal
+                isVisible={deleteModal.show}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa khách hàng này không?"
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+            />
         </div>
     );
 }

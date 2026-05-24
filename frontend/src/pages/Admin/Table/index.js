@@ -3,6 +3,7 @@ import tableApi from "../../../api/tableApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
 import Pagination from "../../../components/shared/Pagination";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { useNotify } from "../../../contexts/ToastContext";
 
 function Table() {
@@ -10,6 +11,7 @@ function Table() {
     const [Tables, setTables] = useState([]);
     const [isShowFormCreate, setisShowFormCreate] = useState(false);
     const [editTable, setEditTable] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
@@ -38,19 +40,25 @@ function Table() {
         setCurrentPage(page);
     };
 
-    function Deletetable(id) {
-        if (window.confirm("Bạn có chắc muốn xóa bàn này không?")) {
-            tableApi
-                .delete(id)
-                .then(() => {
-                    notify.success("Xóa bàn thành công");
-                    GetTables();
-                })
-                .catch(() => {
-                    // Silently fail
-                });
-        }
-    }
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ show: true, id });
+    };
+
+    const handleConfirmDelete = () => {
+        tableApi.delete(deleteModal.id)
+            .then(() => {
+                notify.success("Xóa bàn thành công");
+                GetTables();
+            })
+            .catch(() => {
+                notify.error("Xóa bàn thất bại");
+            });
+        setDeleteModal({ show: false, id: null });
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModal({ show: false, id: null });
+    };
 
     return (
         <div className="admin-table">
@@ -122,7 +130,7 @@ function Table() {
                                         </button>
                                         <button
                                             className="admin-btn-delete"
-                                            onClick={() => Deletetable(table.TableID)}
+                                            onClick={() => handleDeleteClick(table.TableID)}
                                         >
                                             <i className="fa fa-trash"></i> Xóa
                                         </button>
@@ -151,6 +159,14 @@ function Table() {
                     />
                 )}
             </div>
+
+            <ConfirmModal
+                isVisible={deleteModal.show}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa bàn này không?"
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+            />
         </div>
     );
 }

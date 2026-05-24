@@ -1,9 +1,9 @@
 import axios from "axios";
 
 // Localhost
-// const API_BASE_URL = "http://localhost:8000/api/banking";
+const API_BASE_URL = "http://localhost:8000/api/banking";
 // Deploy
-const API_BASE_URL = "https://webdatbann.onrender.com/api/banking";
+// const API_BASE_URL = "https://webdatbann.onrender.com/api/banking";
 
 const bankingApi = {
     // Legacy check banking

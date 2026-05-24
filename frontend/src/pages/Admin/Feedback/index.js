@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import feedbackApi from "../../../api/feedbackApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { useNotify } from "../../../contexts/ToastContext";
 import "./Feedback.css";
 
@@ -10,6 +11,7 @@ function Feedback() {
     const [feedbacks, setFeedbacks] = useState([]);
     const [showCreate, setShowCreate] = useState(false);
     const [editingFeedback, setEditingFeedback] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     useEffect(() => {
         getFeedbacks();
@@ -24,16 +26,23 @@ function Feedback() {
         }
     };
 
-    const deleteFeedback = async (id) => {
-        if (!window.confirm("Bạn có chắc muốn xóa đánh giá này?")) return;
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ show: true, id });
+    };
 
+    const handleConfirmDelete = async () => {
         try {
-            await feedbackApi.delete(id);
+            await feedbackApi.delete(deleteModal.id);
             notify.success("Xóa thành công");
             getFeedbacks();
         } catch (err) {
-            // Silently fail
+            notify.error("Xóa thất bại");
         }
+        setDeleteModal({ show: false, id: null });
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModal({ show: false, id: null });
     };
 
     return (
@@ -117,7 +126,7 @@ function Feedback() {
                                     </button>
                                     <button
                                         className="admin-btn-delete"
-                                        onClick={() => deleteFeedback(fb.FeedbackID)}
+                                        onClick={() => handleDeleteClick(fb.FeedbackID)}
                                     >
                                         <i className="fa fa-trash"></i> Xóa
                                     </button>
@@ -127,6 +136,14 @@ function Feedback() {
                     </tbody>
                 </table>
             </div>
+
+            <ConfirmModal
+                isVisible={deleteModal.show}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa đánh giá này không?"
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+            />
         </div>
     );
 }

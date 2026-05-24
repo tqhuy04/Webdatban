@@ -15,4 +15,8 @@ class BookingTable(Base):
         ForeignKey("tables.TableID"),
         primary_key=True
     )
-    table: Mapped["Table"] = relationship("Table")
+    # Quan hệ với Table để load thông tin bàn khi query
+    table: Mapped["Table"] = relationship("Table", back_populates="booking_tables")
+
+    # Quan hệ với TableBooking (để load thông tin booking)
+    booking: Mapped["TableBooking"] = relationship("TableBooking", back_populates="booking_tables")

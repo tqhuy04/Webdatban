@@ -9,10 +9,12 @@ const ProductFrame = ({ products }) => {
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return '';
+        // Encode URL de xu ly ky tu dac biet (dau cach, tieng Viet)
+        const encodedPath = imageUrl.split('/').map(part => encodeURIComponent(part)).join('/');
         // Localhost
-        // return encodeURI(`http://localhost:8000/uploads/Categories/${imageUrl}`);
+        return `http://localhost:8000/uploads/Categories/${encodedPath}`;
         // Deploy
-        return encodeURI(`https://webdatbann.onrender.com/uploads/Categories/${imageUrl}`);
+
     };
 
 

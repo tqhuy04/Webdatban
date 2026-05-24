@@ -1,18 +1,28 @@
 from sqlalchemy.orm import Session
 from Backend.models.order_detail import OrderDetail
 from Backend.models.menu_item import MenuItem
-from sqlalchemy.orm import joinedload
+
 
 # =========================
 # GET BY ORDER
 # =========================
 def get_by_order(db: Session, order_id: int):
-    return (
-        db.query(OrderDetail)
-        .options(joinedload(OrderDetail.menu_item))
-        .filter(OrderDetail.OrderID == order_id)
-        .all()
-    )
+    results = db.query(OrderDetail).filter(OrderDetail.OrderID == order_id).all()
+
+    print(f"[DEBUG] Found {len(results)} order details for OrderID={order_id}")
+
+    # Load menu_item cho mỗi result
+    for result in results:
+        if result.menu_item is None:
+            menu_item = db.query(MenuItem).filter(
+                MenuItem.MenuItemID == result.MenuItemID
+            ).first()
+            result.menu_item = menu_item
+            print(f"[DEBUG] Loaded menu_item: {menu_item.Name if menu_item else 'None'}")
+        else:
+            print(f"[DEBUG] menu_item already loaded: {result.menu_item.Name}")
+
+    return results
 
 
 # =========================

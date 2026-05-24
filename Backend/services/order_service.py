@@ -90,10 +90,10 @@ def delete_order(db: Session, order_id: int):
     if not order:
         return False
 
-    # xóa chi tiết trước
+    # Xóa chi tiết trước (sử dụng synchronize_session=False để tránh lỗi)
     db.query(OrderDetail).filter(
         OrderDetail.OrderID == order_id
-    ).delete()
+    ).delete(synchronize_session=False)
 
     db.delete(order)
     db.commit()

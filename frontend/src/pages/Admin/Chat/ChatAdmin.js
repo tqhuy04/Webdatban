@@ -5,9 +5,7 @@ import { formatChatDateTime } from "../../../components/utils/formatChatTime";
 import "./ChatAdmin.css";
 
 // Localhost
-// const SOCKET_URL = "http://localhost:8000";
-// Deploy
-const SOCKET_URL = "https://webdatbann.onrender.com";
+const SOCKET_URL = "http://localhost:8000";
 
 const ChatAdmin = ({ adminInfo, onClose }) => {
   const [conversations, setConversations] = useState([]);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import promotionApi from "../../../api/promotionApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { formatNumber } from "../../../components/utils/format_number";
 import { useNotify } from "../../../contexts/ToastContext";
 
@@ -10,6 +11,7 @@ function Promotion() {
     const [promotions, setPromotions] = useState([]);
     const [showCreate, setShowCreate] = useState(false);
     const [editPromotion, setEditPromotion] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     useEffect(() => {
         GetPromotions();
@@ -26,11 +28,12 @@ function Promotion() {
             });
     }
 
-    function DeletePromotion(id) {
-        if (!window.confirm("Bạn có chắc muốn xóa mã giảm giá này không?")) return;
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ show: true, id });
+    };
 
-        promotionApi
-            .delete(id)
+    const handleConfirmDelete = () => {
+        promotionApi.delete(deleteModal.id)
             .then(() => {
                 notify.success("Xóa thành công");
                 GetPromotions();
@@ -38,7 +41,12 @@ function Promotion() {
             .catch(() => {
                 notify.error("Xóa thất bại");
             });
-    }
+        setDeleteModal({ show: false, id: null });
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModal({ show: false, id: null });
+    };
 
     return (
         <div className="admin-promotion">
@@ -115,7 +123,7 @@ function Promotion() {
                                         </button>
                                         <button
                                             className="admin-btn-delete"
-                                            onClick={() => DeletePromotion(promotion.PromotionID)}
+                                            onClick={() => handleDeleteClick(promotion.PromotionID)}
                                         >
                                             <i className="fa fa-trash"></i> Xóa
                                         </button>
@@ -135,6 +143,14 @@ function Promotion() {
                     </tbody>
                 </table>
             </div>
+
+            <ConfirmModal
+                isVisible={deleteModal.show}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa mã giảm giá này không?"
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+            />
         </div>
     );
 }

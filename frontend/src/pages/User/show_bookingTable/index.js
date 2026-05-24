@@ -89,7 +89,7 @@ function Show_bookingTable() {
                                         <div className='table-card-header'>
                                             <div className='table-number'>
                                                 <span className="table-icon">🪑</span>
-                                                Bàn {item.table?.TableNumber}
+                                                 {item.table?.TableNumber}
                                             </div>
                                             <span className={`status-badge ${item.table?.Status === 0 ? 'available' : 'occupied'}`}>
                                                 {item.table?.Status === 0 ? 'Còn trống' : 'Hết bàn'}

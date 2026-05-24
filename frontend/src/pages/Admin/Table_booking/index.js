@@ -3,6 +3,7 @@ import table_bookingApi from "../../../api/table_bookingApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
 import Pagination from "../../../components/shared/Pagination";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { useNavigate } from "react-router-dom";
 import { useNotify } from "../../../contexts/ToastContext";
 
@@ -13,6 +14,7 @@ function Table_booking() {
     const [tableBookings, setTableBookings] = useState([]);
     const [showCreate, setShowCreate] = useState(false);
     const [editingBooking, setEditingBooking] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
@@ -48,16 +50,23 @@ function Table_booking() {
     // =====================
     // DELETE
     // =====================
-    const deleteTableBooking = async (id) => {
-        if (!window.confirm("Bạn có chắc muốn xoá booking này không?")) return;
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ show: true, id });
+    };
 
+    const handleConfirmDelete = async () => {
         try {
-            await table_bookingApi.delete(id);
-            notify.success("Xoá booking thành công");
+            await table_bookingApi.delete(deleteModal.id);
+            notify.success("Xóa booking thành công");
             getTableBookings();
         } catch (error) {
-            // Silently fail
+            notify.error("Xóa booking thất bại");
         }
+        setDeleteModal({ show: false, id: null });
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModal({ show: false, id: null });
     };
 
     // =====================
@@ -156,7 +165,7 @@ function Table_booking() {
                                     </button>
                                     <button
                                         className="admin-btn-delete"
-                                        onClick={() => deleteTableBooking(tb.BookingID)}
+                                        onClick={() => handleDeleteClick(tb.BookingID)}
                                     >
                                         <i className="fa fa-trash"></i> Xóa
                                     </button>
@@ -212,6 +221,14 @@ function Table_booking() {
                     />
                 </div>
             </div>
+
+            <ConfirmModal
+                isVisible={deleteModal.show}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa booking này không?"
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+            />
         </div>
     );
 }

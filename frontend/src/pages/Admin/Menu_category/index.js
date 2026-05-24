@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import menu_categoryApi from "../../../api/menu_categoryApi";
 import CreateForm from "./create";
 import EditForm from "./edit";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { useNotify } from "../../../contexts/ToastContext";
 
 function Menu_category() {
@@ -9,6 +10,7 @@ function Menu_category() {
     const [Menu_categorys, setMenu_categorys] = useState([]);
     const [isShowFormCreate, setisShowFormCreate] = useState(false);
     const [isShowFormEdit, setisShowFormEdit] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     useEffect(() => {
         GetMenu_categorys();
@@ -25,19 +27,25 @@ function Menu_category() {
             });
     }
 
-    function Deletetable(id) {
-        if (window.confirm("Bạn có chắc muốn xóa nhóm này không?")) {
-            menu_categoryApi
-                .delete(id)
-                .then(() => {
-                    notify.success("Xóa nhóm thành công");
-                    GetMenu_categorys();
-                })
-                .catch(() => {
-                    notify.error("Xóa thất bại");
-                });
-        }
-    }
+    const handleDeleteClick = (id) => {
+        setDeleteModal({ show: true, id });
+    };
+
+    const handleConfirmDelete = () => {
+        menu_categoryApi.delete(deleteModal.id)
+            .then(() => {
+                notify.success("Xóa nhóm thành công");
+                GetMenu_categorys();
+            })
+            .catch(() => {
+                notify.error("Xóa thất bại");
+            });
+        setDeleteModal({ show: false, id: null });
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModal({ show: false, id: null });
+    };
 
     return (
         <div className="admin-menu-category">
@@ -101,7 +109,7 @@ function Menu_category() {
                                         </button>
                                         <button
                                             className="admin-btn-delete"
-                                            onClick={() => Deletetable(menu_category.CategoryID)}
+                                            onClick={() => handleDeleteClick(menu_category.CategoryID)}
                                         >
                                             <i className="fa fa-trash"></i> Xóa
                                         </button>
@@ -121,6 +129,14 @@ function Menu_category() {
                     </tbody>
                 </table>
             </div>
+
+            <ConfirmModal
+                isVisible={deleteModal.show}
+                title="Xác nhận xóa"
+                message="Bạn có chắc muốn xóa nhóm món ăn này không?"
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+            />
         </div>
     );
 }
