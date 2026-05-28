@@ -1,0 +1,241 @@
+/* ==========================================
+   ADMIN SETTINGS PAGE
+   ========================================== */
+
+.admin-settings {
+  padding: 28px 32px;
+  min-height: calc(100vh - 70px);
+}
+
+.admin-settings-header {
+  margin-bottom: 28px;
+}
+
+.admin-settings-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 26px;
+  font-weight: 800;
+  color: #1a202c;
+  margin: 0 0 6px;
+}
+
+.admin-settings-header h2 .header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(129, 140, 248, 0.08) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4f46e5;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+.admin-settings-header p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.admin-settings-header .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+
+/* ---- Loading ---- */
+.settings-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px;
+  color: #64748b;
+  font-size: 15px;
+}
+
+.settings-loading i {
+  font-size: 20px;
+  color: #bd8133;
+}
+
+/* ---- Grid Layout ---- */
+.settings-content {
+  max-width: 900px;
+}
+
+.settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---- Card ---- */
+.settings-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px 36px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+  transition: box-shadow 0.25s ease;
+}
+
+.settings-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+  position: relative;
+}
+
+.settings-card-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, #4f46e5, #818cf8);
+  border-radius: 2px;
+}
+
+.settings-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(129, 140, 248, 0.08) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4f46e5;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+  flex-shrink: 0;
+}
+
+.settings-card-icon.password-icon {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(252, 211, 77, 0.08) 100%);
+  color: #d97706;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.settings-card-header h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1a202c;
+  margin: 0 0 4px;
+}
+
+.settings-card-header p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ---- Form ---- */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ---- Password Input Wrapper ---- */
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper .modal-input {
+  padding-right: 46px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 4px;
+  font-size: 14px;
+  transition: color 0.2s;
+  outline: none;
+}
+
+.password-toggle:hover {
+  color: #475569;
+}
+
+/* ---- Password Strength Indicator ---- */
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.password-strength-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.password-strength-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.password-strength-text {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* ---- Save Button ---- */
+.settings-form .modal-actions {
+  margin-top: 24px;
+}
+
+.settings-form .btn-modal-save {
+  background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.35);
+}
+
+.settings-form .btn-modal-save:hover {
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.45);
+  color: #fff;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .admin-settings {
+    padding: 20px 16px;
+  }
+
+  .settings-card {
+    padding: 24px 20px;
+  }
+
+  .admin-settings-header h2 {
+    font-size: 22px;
+  }
+}

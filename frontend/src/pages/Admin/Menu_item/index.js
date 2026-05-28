@@ -18,6 +18,7 @@ function Menu_item() {
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
+    const [filterCategory, setFilterCategory] = useState("");
 
     useEffect(() => {
         GetMenu_items();
@@ -37,10 +38,15 @@ function Menu_item() {
             .catch(err => console.error(err));
     };
 
-    const totalPages = Math.ceil(Menu_items.length / itemsPerPage);
+    // ===== FILTER BY CATEGORY =====
+    const filteredMenuItems = filterCategory
+        ? Menu_items.filter(item => item.CategoryID === parseInt(filterCategory))
+        : Menu_items;
+
+    const totalPages = Math.ceil(filteredMenuItems.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentMenuItems = Menu_items.slice(indexOfFirstItem, indexOfLastItem);
+    const currentMenuItems = filteredMenuItems.slice(indexOfFirstItem, indexOfLastItem);
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
@@ -101,7 +107,26 @@ function Menu_item() {
             </div>
 
             <div className="admin-data-card">
-                <div className="d-flex justify-content-end mb-3">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div className="filter-group">
+                        <label htmlFor="filterCategory">Lọc theo nhóm món:</label>
+                        <select
+                            id="filterCategory"
+                            className="form-control"
+                            value={filterCategory}
+                            onChange={(e) => {
+                                setFilterCategory(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <option value="">Tất cả nhóm món</option>
+                            {Categories.map(cat => (
+                                <option key={cat.CategoryID} value={cat.CategoryID}>
+                                    {cat.CategoryName}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <button
                         className="admin-btn-add"
                         onClick={() => setisShowFormCreate(true)}

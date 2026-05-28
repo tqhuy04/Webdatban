@@ -35,6 +35,7 @@ def login(db: Session, data: LoginRequest) -> AuthResponse:
     return AuthResponse(
         access_token=access_token,
         user_id=user.id,
+        username=user.Username,
         role=user.Role
     )
 

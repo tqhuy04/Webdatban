@@ -32,6 +32,8 @@ import Booking_tableAdmin from "../pages/Admin/Booking_table";
 import OrderAdmin from "../pages/Admin/Order";
 import Order_detail from "../pages/Admin/Order_detail";
 import Feedback from "../pages/Admin/Feedback";
+import Settings from "../pages/Admin/Settings";
+import Profile from "../pages/Admin/Profile";
 
 // ================== USER ROUTES ==================
 export const publicRoutes = [
@@ -115,6 +117,16 @@ export const adminRoutes = [
   {
     path: "/Admin/Feedback",
     component: Feedback,
+    layout: Admin,
+  },
+  {
+    path: "/Admin/Settings",
+    component: Settings,
+    layout: Admin,
+  },
+  {
+    path: "/Admin/Profile",
+    component: Profile,
     layout: Admin,
   },
 ];

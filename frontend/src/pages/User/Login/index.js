@@ -41,8 +41,9 @@ const Login = ({ isVisible = true, onClose }) => {
         try {
             const res = await authUser.login({ username, password });
 
-            localStorage.setItem("token", res.access_token);
-            localStorage.setItem("role", res.role);
+            localStorage.setItem("token", res.data.access_token);
+            localStorage.setItem("role", res.data.role);
+            localStorage.setItem("admin_name", res.data.username || "");
             updateLoginStatus(true);  // Cập nhật header
             refreshUser();            // Cập nhật bong bóng chat
 
@@ -51,7 +52,7 @@ const Login = ({ isVisible = true, onClose }) => {
 
             onClose && onClose();
 
-            if (res.role === "ADMIN") {
+            if (res.data.role === "ADMIN") {
                 navigate("/Admin/Home", { replace: true });
             } else {
                 navigate("/", { replace: true });

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import menu_itemApi from "../../../../api/menu_itemApi";
@@ -6,18 +5,44 @@ import booking_tableApi from "../../../../api/booking_tableApi";
 import orderApi from "../../../../api/orderApi";
 import customerApi from "../../../../api/customerApi";
 import notificationApi from "../../../../api/notificationApi";
+import profileApi from "../../../../api/profileApi";
 
 
 function Header() {
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const [adminName, setAdminName] = useState("");
 
     // Notification state
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const notificationRef = useRef(null);
+
+    // Load admin name
+    useEffect(() => {
+        const loadAdminName = () => {
+            const savedName = localStorage.getItem("admin_name");
+            if (savedName) {
+                setAdminName(savedName);
+            }
+        };
+
+        loadAdminName();
+
+        const handleLoginSuccess = () => {
+            profileApi.getMe()
+                .then((res) => {
+                    setAdminName(res.username || "Admin");
+                    localStorage.setItem("admin_name", res.username || "Admin");
+                })
+                .catch(() => {});
+        };
+
+        window.addEventListener("loginSuccess", handleLoginSuccess);
+        return () => window.removeEventListener("loginSuccess", handleLoginSuccess);
+    }, []);
 
     // Fetch notifications
     const fetchNotifications = async () => {
@@ -152,7 +177,9 @@ function Header() {
     };
 
     const handleLogout = () => {
-        localStorage.clear();
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("admin_name");
         navigate('/Login');
     };
 
@@ -375,13 +402,13 @@ function Header() {
                             alt=""
                             className="admin-top-header__avatar"
                         />
-                        <span className="admin-top-header__name">Lupin</span>
+                        <span className="admin-top-header__name">{adminName || "Admin"}</span>
                         <i className={`fa-solid fa-chevron-down admin-top-header__chev ${isOpen ? 'is-open' : ''}`} />
 
                         {isOpen && (
                             <div className="admin-top-header__menu" onClick={(e) => e.stopPropagation()}>
-                                <Link to="">Thông tin cá nhân</Link>
-                                <Link to="">Cài đặt</Link>
+                                <Link to="/Admin/Profile">Thông tin cá nhân</Link>
+                                <Link to="/Admin/Settings">Cài đặt</Link>
                                 <button type="button" onClick={handleLogout}>Đăng xuất</button>
                             </div>
                         )}

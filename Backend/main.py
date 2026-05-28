@@ -89,9 +89,11 @@ from Backend.routers.order_detail import router as order_detail
 from Backend.routers.cart import router as cart
 from Backend.routers.chat import router as chat
 from Backend.routers.notification import router as notification
+from Backend.routers.profile import router as profile
 
 app.include_router(auth)
 app.include_router(account)
+app.include_router(profile)
 app.include_router(customer)
 app.include_router(feedback)
 app.include_router(menu_category)

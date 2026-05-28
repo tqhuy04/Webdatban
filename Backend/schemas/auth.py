@@ -22,6 +22,7 @@ class LoginRequest(BaseModel):
 class AuthResponse(BaseModel):
     access_token: str
     user_id: int
+    username: str
     role: str
 
 
