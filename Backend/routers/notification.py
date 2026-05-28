@@ -10,8 +10,18 @@ from Backend.services.notification_service import (
 )
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime, timezone, timedelta
 
 router = APIRouter(prefix="/api/notifications", tags=["Notifications"])
+
+
+def convert_to_vietnam_time(dt):
+    """Chuyển datetime sang giờ Việt Nam (UTC+7)"""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone(timedelta(hours=7)))
 
 
 class NotificationResponse(BaseModel):
@@ -39,18 +49,23 @@ def get_all_notifications(
 ):
     """Lấy danh sách thông báo của admin hoặc user"""
     notifications = get_notifications(db, user_id, user_type, limit)
-    return [NotificationResponse(
-        id=n.id,
-        user_id=n.user_id,
-        user_type=n.user_type,
-        title=n.title,
-        message=n.message,
-        type=n.type,
-        reference_id=n.reference_id,
-        reference_type=n.reference_type,
-        is_read=n.is_read,
-        created_at=n.created_at.isoformat() if n.created_at else None
-    ) for n in notifications]
+    result = []
+    for n in notifications:
+        # Chuyển created_at sang giờ Việt Nam
+        created_at_vn = convert_to_vietnam_time(n.created_at)
+        result.append(NotificationResponse(
+            id=n.id,
+            user_id=n.user_id,
+            user_type=n.user_type,
+            title=n.title,
+            message=n.message,
+            type=n.type,
+            reference_id=n.reference_id,
+            reference_type=n.reference_type,
+            is_read=n.is_read,
+            created_at=created_at_vn.isoformat() if created_at_vn else None
+        ))
+    return result
 
 
 @router.get("/unread-count")

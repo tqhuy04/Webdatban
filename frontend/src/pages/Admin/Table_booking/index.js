@@ -24,6 +24,39 @@ function Table_booking() {
     // =====================
     useEffect(() => {
         getTableBookings();
+
+        // Lắng nghe sự kiện checkin từ Socket.IO để cập nhật real-time
+        if (window.socket) {
+            const handleBookingCheckin = (data) => {
+                console.log("[Admin] Nhận sự kiện checkin booking:", data);
+                // Cập nhật trạng thái booking trong danh sách
+                setTableBookings(prev => {
+                    const updated = prev.map(booking => {
+                        if (booking.BookingID === data.BookingID) {
+                            return { ...booking, Status: data.Status };
+                        }
+                        return booking;
+                    });
+                    return updated;
+                });
+                // Hiển thị thông báo cho admin
+                if (data.action === "CHECKIN" || data.action === "ADMIN_CHECKIN") {
+                    notify.info(`Khách hàng ${data.CustomerName || 'N/A'} (ID: #${data.BookingID}) đã check-in!`);
+                }
+                // Re-fetch để đảm bảo dữ liệu chính xác từ database
+                getTableBookings();
+            };
+
+            window.socket.on("booking_checkin", handleBookingCheckin);
+            window.socket.on("booking_status_changed", handleBookingCheckin);
+
+            return () => {
+                if (window.socket) {
+                    window.socket.off("booking_checkin", handleBookingCheckin);
+                    window.socket.off("booking_status_changed", handleBookingCheckin);
+                }
+            };
+        }
     }, []);
 
     const getTableBookings = () => {
@@ -33,7 +66,6 @@ function Table_booking() {
                 setTableBookings(res.data || []);
             })
             .catch(() => {
-                // Silently fail
                 setTableBookings([]);
             });
     };
@@ -151,8 +183,16 @@ function Table_booking() {
                                 </td>
 
                                 <td>
-                                    <span className={`status-badge ${tb.Status === 1 ? 'confirmed' : 'pending'}`}>
-                                        {tb.Status === 1 ? "Đã xác nhận" : "Chưa xác nhận"}
+                                    <span className={`status-badge ${
+                                        tb.Status === 1 ? 'confirmed' :
+                                        tb.Status === 2 ? 'completed' :
+                                        tb.Status === 3 ? 'cancelled' :
+                                        'pending'
+                                    }`}>
+                                        {tb.Status === 0 ? "Chờ xác nhận" :
+                                         tb.Status === 1 ? "Đã xác nhận" :
+                                         tb.Status === 2 ? "Đã checkin" :
+                                         tb.Status === 3 ? "Đã hủy" : "Không xác định"}
                                     </span>
                                 </td>
 

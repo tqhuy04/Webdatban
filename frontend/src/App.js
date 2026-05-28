@@ -14,6 +14,7 @@ import { CartProvider } from "./contexts/CartContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ChatProvider } from "./contexts/ChatContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { SocketProvider } from "./contexts/SocketContext";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
@@ -39,6 +40,7 @@ const RequireAuth = ({ children, role }) => {
 function App() {
   return (
     <AuthProvider>
+    <SocketProvider>
     <Router>
       <ToastProvider>
         <CartProvider>
@@ -88,6 +90,7 @@ function App() {
         </CartProvider>
       </ToastProvider>
     </Router>
+    </SocketProvider>
     </AuthProvider>
   );
 }

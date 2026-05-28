@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
 from http.client import HTTPException
 from typing import List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from Backend.models.customer import Customer
 from Backend.models.table_booking import TableBooking
 from Backend.models.booking_table import BookingTable
 from Backend.schemas.booking import BookingTableCreate
-from sqlalchemy.orm import Session, joinedload
 from Backend.models.table import Table
 
 # Thời gian chờ tối đa (phút) sau giờ đặt
@@ -64,12 +63,12 @@ def get_all_bookings(db: Session):
             "CustomerID": booking.CustomerID,
             "CustomerName": booking.customer.full_name if booking.customer else None,
             "BookingTime": booking.BookingTime,
-            "Status": booking.Status,
+            "Status": int(booking.Status) if booking.Status is not None else 0,
             "People": booking.People,
             "TotalAmount": booking.TotalAmount,
             "RemainingAmount": booking.RemainingAmount,
-            "PaymentStatus": booking.PaymentStatus,
-            "DepositStatus": booking.DepositStatus,
+            "PaymentStatus": int(booking.PaymentStatus) if booking.PaymentStatus is not None else 0,
+            "DepositStatus": int(booking.DepositStatus) if booking.DepositStatus is not None else 0,
             "customer": customer_data
         })
 
@@ -153,12 +152,12 @@ def get_bookings_of_account(account_id: int, db: Session):
             "CustomerID": booking.CustomerID,
             "CustomerName": customer.full_name,
             "BookingTime": booking.BookingTime,
-            "Status": booking.Status,
+            "Status": int(booking.Status) if booking.Status is not None else 0,
             "People": booking.People,
             "TotalAmount": booking.TotalAmount,
             "RemainingAmount": booking.RemainingAmount,
-            "PaymentStatus": booking.PaymentStatus,
-            "DepositStatus": booking.DepositStatus,
+            "PaymentStatus": int(booking.PaymentStatus) if booking.PaymentStatus is not None else 0,
+            "DepositStatus": int(booking.DepositStatus) if booking.DepositStatus is not None else 0,
             "TableCount": booking.TableCount,
             "customer": {
                 "full_name": customer.full_name,
@@ -395,11 +394,12 @@ def get_booking_with_tables(db: Session, booking_id: int):
     }
 
 # =========================
-# CHECKIN BOOKING
+# CHECKIN BOOKING (Admin)
 # =========================
 def checkin_booking(db: Session, booking_id: int, account_id: int = None):
     """
     Admin checkin booking - Đánh dấu khách đã đến.
+    Sau khi checkin thành công, emit sự kiện qua Socket.IO để admin cập nhật real-time.
     """
     booking = (
         db.query(TableBooking)
@@ -415,6 +415,7 @@ def checkin_booking(db: Session, booking_id: int, account_id: int = None):
     if booking.Status == 3:
         raise HTTPException(status_code=400, detail="Đặt bàn đã bị hủy")
 
+    old_status = booking.Status
     # Cập nhật status = 2 (Hoàn thành/Đang sử dụng)
     booking.Status = 2
 
@@ -433,6 +434,16 @@ def checkin_booking(db: Session, booking_id: int, account_id: int = None):
     db.commit()
     db.refresh(booking)
 
+    # Lấy customer info
+    customer = (
+        db.query(Customer)
+        .filter(Customer.id == booking.CustomerID)
+        .first()
+    )
+
+    # === GỬI SỰ KIỆN SOCKET.IO CHO ADMIN ===
+    _emit_booking_status_change(db, booking, customer, "ADMIN_CHECKIN", old_status)
+
     return booking
 
 
@@ -443,6 +454,7 @@ def customer_self_checkin(db: Session, booking_id: int, account_id: int):
     """
     Khách tự checkin khi đến nhà hàng.
     Chỉ cho phép nếu booking thuộc về customer của account_id.
+    Sau khi checkin thành công, emit sự kiện qua Socket.IO để admin cập nhật real-time.
     """
     # Tìm customer theo account_id
     customer = (
@@ -472,6 +484,7 @@ def customer_self_checkin(db: Session, booking_id: int, account_id: int):
     if booking.Status == 3:
         raise HTTPException(status_code=400, detail="Đặt bàn đã bị hủy")
 
+    old_status = booking.Status
     # Cập nhật status = 2 (Hoàn thành/Đang sử dụng)
     booking.Status = 2
 
@@ -490,7 +503,75 @@ def customer_self_checkin(db: Session, booking_id: int, account_id: int):
     db.commit()
     db.refresh(booking)
 
+    # === GỬI SỰ KIỆN SOCKET.IO CHO ADMIN ===
+    _emit_booking_status_change(db, booking, customer, "CHECKIN", old_status)
+
     return booking
+
+
+def _emit_booking_status_change(db: Session, booking, customer, action: str, old_status: int = None):
+    """
+    Helper: emit booking status change tới tất cả admin qua Socket.IO
+    """
+    # Build dữ liệu booking để gửi
+    booking_data = {
+        "BookingID": booking.BookingID,
+        "CustomerID": booking.CustomerID,
+        "CustomerName": customer.full_name if customer else None,
+        "BookingTime": booking.BookingTime.isoformat() if booking.BookingTime else None,
+        "Status": booking.Status,
+        "People": booking.People,
+        "TotalAmount": booking.TotalAmount,
+        "RemainingAmount": booking.RemainingAmount,
+        "PaymentStatus": booking.PaymentStatus,
+        "DepositStatus": booking.DepositStatus,
+        "customer": {
+            "full_name": customer.full_name if customer else None,
+            "phone": customer.phone_number if customer else None
+        },
+        "action": action,
+        "old_status": old_status
+    }
+
+    # Emit qua Socket.IO - KHÔNG tạo notification riêng vì frontend đã hiển thị toast từ event này
+    try:
+        import asyncio
+        from Backend.main import sio, online_users
+
+        # Lấy danh sách admin SIDs
+        admin_sids = [
+            sid for sid, user_info in online_users.items()
+            if user_info.get("user_type") == "ADMIN"
+        ]
+        print(f"[Socket.IO] Emitting booking_status_changed to {len(admin_sids)} admins")
+
+        # Tạo coroutine để emit
+        async def _do_emit():
+            for sid in admin_sids:
+                await sio.emit("booking_status_changed", booking_data, room=sid)
+            print(f"[Socket.IO] Done emitting for booking #{booking.BookingID}")
+
+        # Lấy event loop hiện tại và schedule task
+        try:
+            loop = asyncio.get_running_loop()
+            # Schedule coroutine để chạy ngay
+            asyncio.ensure_future(_do_emit())
+            print("[Socket.IO] Task scheduled")
+        except RuntimeError:
+            # Không có event loop, tạo event loop tạm
+            print("[Socket.IO] No running loop, creating new one")
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(_do_emit())
+                loop.close()
+            except Exception as e2:
+                print(f"[Socket.IO] Loop error: {e2}")
+
+    except Exception as e:
+        print(f"[Socket.IO] Error: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 # =========================

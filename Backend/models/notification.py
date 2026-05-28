@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from Backend.database import Base
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 
 class Notification(Base):
@@ -16,9 +16,17 @@ class Notification(Base):
     reference_id = Column(Integer, nullable=True)  # ID của đối tượng liên quan (OrderID, BookingID)
     reference_type = Column(String(50), nullable=True)  # order, booking, feedback
     is_read = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, nullable=True)
 
     def to_dict(self):
+        # Chuyển đổi created_at sang giờ Việt Nam (UTC+7)
+        created_at_vn = self.created_at
+        if created_at_vn:
+            if created_at_vn.tzinfo is None:
+                # Nếu là naive datetime, coi như UTC và chuyển sang Vietnam
+                created_at_vn = created_at_vn.replace(tzinfo=timezone.utc)
+            created_at_vn = created_at_vn.astimezone(timezone(timedelta(hours=7)))
+
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -29,5 +37,5 @@ class Notification(Base):
             "reference_id": self.reference_id,
             "reference_type": self.reference_type,
             "is_read": self.is_read,
-            "created_at": self.created_at.isoformat() if self.created_at else None
+            "created_at": created_at_vn.isoformat() if created_at_vn else None
         }

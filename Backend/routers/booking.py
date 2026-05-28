@@ -86,11 +86,26 @@ def user_create_booking(
             if customer:
                 customer_name = customer.full_name
 
+        # Format thời gian đặt bàn (BookingTime là datetime object hoặc string)
+        booking_time_display = ""
+        if result.BookingTime:
+            if hasattr(result.BookingTime, 'strftime'):
+                # result.BookingTime là datetime object
+                booking_time_display = result.BookingTime.strftime("%d/%m/%Y %H:%M")
+            else:
+                # result.BookingTime là string hoặc đã format sẵn
+                booking_time_display = str(result.BookingTime)
+
+        # Tạo message với thời gian đặt bàn
+        message = f"Khách hàng {customer_name} vừa đặt bàn mới (ID: #{result.BookingID})"
+        if booking_time_display:
+            message += f" - Thời gian: {booking_time_display}"
+
         notif = create_notification(
             db=db,
             user_id=0,
             title="Yêu cầu đặt bàn mới",
-            message=f"Khách hàng {customer_name} vừa đặt bàn mới (ID: {result.BookingID})",
+            message=message,
             notif_type="booking",
             reference_id=result.BookingID,
             reference_type="booking"

@@ -1,6 +1,14 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from Backend.models.notification import Notification
+
+# Timezone cho Việt Nam (UTC+7)
+VIETNAM_TZ = timezone(timedelta(hours=7))
+
+
+def get_vietnam_time():
+    """Lấy thời gian hiện tại theo múi giờ Việt Nam"""
+    return datetime.now(VIETNAM_TZ)
 
 
 def emit_notification_to_admins(notification_data: dict):
@@ -10,8 +18,14 @@ def emit_notification_to_admins(notification_data: dict):
         import asyncio
 
         async def _emit():
-            for sid, user_info in sio.manager.users.items():
-                if user_info.get("user_type") == "ADMIN":
+            # Lấy danh sách admin SIDs
+            admin_sids = [
+                sid for sid, user_info in sio.manager.users.items()
+                if user_info.get("user_type") == "ADMIN"
+            ]
+            # Emit MỘT LẦN cho tất cả admin rooms
+            if admin_sids:
+                for sid in admin_sids:
                     await sio.emit("new_notification", notification_data, room=sid)
 
         try:
@@ -44,7 +58,7 @@ def create_notification(
         reference_type=reference_type,
         user_type=user_type,
         is_read=False,
-        created_at=datetime.utcnow()
+        created_at=get_vietnam_time()  # Dùng giờ Việt Nam
     )
     db.add(notification)
     db.commit()
