@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import feedbackApi from "../../../api/feedbackApi";
-import CreateForm from "./create";
-import EditForm from "./edit";
 import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { useNotify } from "../../../contexts/ToastContext";
 import "./Feedback.css";
@@ -9,8 +7,6 @@ import "./Feedback.css";
 function Feedback() {
     const notify = useNotify();
     const [feedbacks, setFeedbacks] = useState([]);
-    const [showCreate, setShowCreate] = useState(false);
-    const [editingFeedback, setEditingFeedback] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     useEffect(() => {
@@ -45,6 +41,18 @@ function Feedback() {
         setDeleteModal({ show: false, id: null });
     };
 
+    const renderStars = (rating) => {
+        return (
+            <div className="admin-star-display">
+                {[1, 2, 3, 4, 5].map((star) => (
+                    <span key={star} className={`star ${star <= rating ? 'filled' : ''}`}>
+                        <i className={`fa ${star <= rating ? 'fa-star' : 'fa-star-o'}`}></i>
+                    </span>
+                ))}
+            </div>
+        );
+    };
+
     return (
         <div className="admin-feedback">
             <div className="admin-feedback-header">
@@ -61,47 +69,21 @@ function Feedback() {
             </div>
 
             <div className="admin-data-card">
-                <div className="d-flex justify-content-end mb-3">
-                    <button
-                        className="admin-btn-add"
-                        onClick={() => setShowCreate(true)}
-                    >
-                        <i className="fa fa-plus"></i> Thêm
-                    </button>
-                </div>
-
-                {/* CREATE */}
-                {showCreate && (
-                    <CreateForm
-                        onClose={() => setShowCreate(false)}
-                        refresh={getFeedbacks}
-                    />
-                )}
-
-                {/* EDIT - chỉ render 1 form */}
-                {editingFeedback && (
-                    <EditForm
-                        id={editingFeedback.FeedbackID}
-                        data={editingFeedback}
-                        onClose={() => setEditingFeedback(null)}
-                        refresh={getFeedbacks}
-                    />
-                )}
-
                 <table className="table table-bordered table-hover">
                     <thead className="table-dark">
                         <tr>
                             <th>Tên tài khoản</th>
+                            <th>Đánh giá</th>
                             <th>Nội dung</th>
                             <th>Ngày tạo</th>
-                            <th width="180">Hành động</th>
+                            <th width="100">Hành động</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         {feedbacks.length === 0 && (
                             <tr>
-                                <td colSpan="4" className="text-center">
+                                <td colSpan="5" className="text-center">
                                     <div className="empty-state">
                                         <i className="fa fa-comments"></i>
                                         <p>Không có dữ liệu phản hồi</p>
@@ -113,17 +95,12 @@ function Feedback() {
                         {feedbacks.map((fb, index) => (
                             <tr key={`${fb.FeedbackID}-${index}`}>
                                 <td>{fb.full_name || "Ẩn danh"}</td>
+                                <td>{renderStars(fb.Rating || 5)}</td>
                                 <td>{fb.Content}</td>
                                 <td>
                                     {new Date(fb.CreateAt).toLocaleDateString()}
                                 </td>
                                 <td>
-                                    <button
-                                        className="admin-btn-edit"
-                                        onClick={() => setEditingFeedback(fb)}
-                                    >
-                                        <i className="fa fa-edit"></i> Sửa
-                                    </button>
                                     <button
                                         className="admin-btn-delete"
                                         onClick={() => handleDeleteClick(fb.FeedbackID)}

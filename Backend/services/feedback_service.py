@@ -13,6 +13,7 @@ def get_all_feedbacks(db: Session):
             Feedback.FeedbackID,
             Feedback.UserID,          # ⭐ THÊM DÒNG NÀY
             Feedback.Content,
+            Feedback.Rating,          # ⭐ THÊM DÒNG NÀY
             Feedback.CreateAt,
             Customer.full_name
         )
@@ -27,6 +28,7 @@ def get_all_feedbacks(db: Session):
             "FeedbackID": r.FeedbackID,
             "UserID": r.UserID,       # ⭐ THÊM DÒNG NÀY
             "Content": r.Content,
+            "Rating": r.Rating,       # ⭐ THÊM DÒNG NÀY
             "CreateAt": r.CreateAt,
             "full_name": r.full_name
         }
@@ -49,6 +51,7 @@ def get_public_feedbacks(db: Session, skip: int = 0, limit: int = 6):
             Feedback.FeedbackID,
             Feedback.UserID,
             Feedback.Content,
+            Feedback.Rating,
             Feedback.CreateAt,
             Customer.full_name
         )
@@ -65,6 +68,7 @@ def get_public_feedbacks(db: Session, skip: int = 0, limit: int = 6):
             "FeedbackID": r.FeedbackID,
             "UserID": r.UserID,
             "Content": r.Content,
+            "Rating": r.Rating,
             "CreateAt": r.CreateAt,
             "full_name": r.full_name or "Khách hàng"
         }
@@ -78,10 +82,11 @@ def get_public_feedbacks(db: Session, skip: int = 0, limit: int = 6):
 # =========================
 # CREATE
 # =========================
-def create_feedback(db: Session, user_id: int, content: str):
+def create_feedback(db: Session, user_id: int, content: str, rating: int = 5):
     feedback = Feedback(
         UserID=user_id,
-        Content=content
+        Content=content,
+        Rating=rating
     )
     db.add(feedback)
     db.commit()
@@ -110,7 +115,7 @@ def delete_feedback(db: Session, feedback_id: int):
 # =========================
 # UPDATE
 # =========================
-def update_feedback(db: Session, feedback_id: int, content: str):
+def update_feedback(db: Session, feedback_id: int, content: str, rating: int = None):
     feedback = (
         db.query(Feedback)
         .filter(Feedback.FeedbackID == feedback_id)
@@ -121,6 +126,8 @@ def update_feedback(db: Session, feedback_id: int, content: str):
         return False
 
     feedback.Content = content
+    if rating is not None:
+        feedback.Rating = rating
     db.commit()
     db.refresh(feedback)
     return True

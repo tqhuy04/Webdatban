@@ -5,6 +5,7 @@ from typing import Optional
 
 class FeedbackBase(BaseModel):
     Content: str
+    Rating: Optional[int] = 5  # Mặc định 5 sao
 
 
 class FeedbackCreate(FeedbackBase):

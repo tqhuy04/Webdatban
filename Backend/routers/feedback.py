@@ -71,7 +71,7 @@ def update_feedback_api(
     db: Session = Depends(get_db),
     _: dict = Depends(admin_required)
 ):
-    success = update(db, feedback_id, data.Content)
+    success = update(db, feedback_id, data.Content, data.Rating)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

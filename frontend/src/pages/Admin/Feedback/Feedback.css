@@ -2,6 +2,57 @@
    FEEDBACK — ADMIN & USER STYLES
    ========================================== */
 
+/* ---- Admin Star Rating ---- */
+.admin-star-display {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.admin-star-display .star {
+  font-size: 14px;
+  color: #e2e8f0;
+}
+
+.admin-star-display .star.filled {
+  color: #f5b731;
+}
+
+.admin-star-rating {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.admin-star-rating .star {
+  font-size: 22px;
+  color: #e2e8f0;
+  transition: all 0.15s ease;
+}
+
+.admin-star-rating .star.filled {
+  color: #f5b731;
+}
+
+.admin-star-rating.interactive .star.clickable {
+  cursor: pointer;
+}
+
+.admin-star-rating.interactive .star.clickable:hover {
+  transform: scale(1.15);
+}
+
+.admin-rating-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.admin-rating-text {
+  font-size: 14px;
+  color: #f5b731;
+  font-weight: 600;
+}
+
 /* ---- Feedback Card ---- */
 .admin-feedback {
   padding: 24px;

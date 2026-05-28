@@ -7,6 +7,7 @@ import "./Feedback.css";
 const CreateForm = ({ onClose, refresh }) => {
     const notify = useNotify();
     const [content, setContent] = useState("");
+    const [rating, setRating] = useState(5);
     const [userId, setUserId] = useState("");
     const [users, setUsers] = useState([]);
 
@@ -23,6 +24,22 @@ const CreateForm = ({ onClose, refresh }) => {
         fetchUsers();
     }, []);
 
+    const renderStars = (r, interactive = false, onSelect = null) => {
+        return (
+            <div className={`admin-star-rating ${interactive ? 'interactive' : ''}`}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                        key={star}
+                        className={`star ${star <= r ? 'filled' : ''} ${interactive ? 'clickable' : ''}`}
+                        onClick={() => interactive && onSelect && onSelect(star)}
+                    >
+                        <i className={`fa ${star <= r ? 'fa-star' : 'fa-star-o'}`}></i>
+                    </span>
+                ))}
+            </div>
+        );
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -35,6 +52,7 @@ const CreateForm = ({ onClose, refresh }) => {
             await feedbackApi.create({
                 UserID: userId,
                 Content: content,
+                Rating: rating,
             });
 
             notify.success("Thêm đánh giá thành công");
@@ -51,19 +69,6 @@ const CreateForm = ({ onClose, refresh }) => {
                 <h4 className="mb-3">Thêm đánh giá</h4>
 
                 <form onSubmit={handleSubmit}>
-                    {/* CONTENT */}
-                    <div className="form-group-modal">
-                        <label><i className="fa fa-comment"></i> Nội dung đánh giá</label>
-                        <textarea
-                            type="text"
-                            className="modal-textarea"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            placeholder="Nhập nội dung đánh giá..."
-                            required
-                        />
-                    </div>
-
                     {/* USER */}
                     <div className="form-group-modal">
                         <label><i className="fa fa-user"></i> Thuộc tài khoản</label>
@@ -81,6 +86,28 @@ const CreateForm = ({ onClose, refresh }) => {
                                 </option>
                             ))}
                         </select>
+                    </div>
+
+                    {/* RATING */}
+                    <div className="form-group-modal">
+                        <label><i className="fa fa-star"></i> Đánh giá (sao)</label>
+                        <div className="admin-rating-selector">
+                            {renderStars(rating, true, setRating)}
+                            <span className="admin-rating-text">{rating}/5 sao</span>
+                        </div>
+                    </div>
+
+                    {/* CONTENT */}
+                    <div className="form-group-modal">
+                        <label><i className="fa fa-comment"></i> Nội dung đánh giá</label>
+                        <textarea
+                            type="text"
+                            className="modal-textarea"
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            placeholder="Nhập nội dung đánh giá..."
+                            required
+                        />
                     </div>
 
                     <div className="modal-actions">

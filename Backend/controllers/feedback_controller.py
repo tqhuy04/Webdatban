@@ -18,12 +18,12 @@ def get_public(db: Session, skip: int = 0, limit: int = 6):
 
 
 def create(db: Session, user_id: int, data: FeedbackCreate):
-    return create_feedback(db, user_id, data.Content)
+    return create_feedback(db, user_id, data.Content, data.Rating or 5)
 
 
 def delete(db: Session, feedback_id: int):
     return delete_feedback(db, feedback_id)
 
 
-def update(db: Session, feedback_id: int, content: str):
-    return update_feedback(db, feedback_id, content)
+def update(db: Session, feedback_id: int, content: str, rating: int = None):
+    return update_feedback(db, feedback_id, content, rating)

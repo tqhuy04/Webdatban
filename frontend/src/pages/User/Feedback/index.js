@@ -12,6 +12,8 @@ function Feedback() {
 
     const [User_id, setUser_id] = useState(null);
     const [Content, setContent] = useState('');
+    const [Rating, setRating] = useState(5);
+    const [hoverRating, setHoverRating] = useState(0);
     const [publicFeedbacks, setPublicFeedbacks] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(0);
@@ -43,6 +45,7 @@ function Feedback() {
         const data = {
             UserID: User_id,
             Content,
+            Rating,
             CreateAt: datetime,
         }
 
@@ -50,6 +53,8 @@ function Feedback() {
             .then(() => {
                 notify.success('Đã gửi phản hồi thành công');
                 setContent('');
+                setRating(5);
+                setHoverRating(0);
                 loadPublicFeedbacks(page);
             })
             .catch(error => console.error('có lỗi: ' + error))
@@ -71,6 +76,24 @@ function Feedback() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const renderStars = (rating, interactive = false, onSelect = null, onHover = null, onLeave = null) => {
+        return (
+            <div className={`star-rating ${interactive ? 'interactive' : ''}`}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                        key={star}
+                        className={`star ${star <= (hoverRating || rating) ? 'filled' : ''} ${interactive ? 'clickable' : ''}`}
+                        onClick={() => interactive && onSelect && onSelect(star)}
+                        onMouseEnter={() => interactive && onHover && onHover(star)}
+                        onMouseLeave={() => interactive && onLeave && onLeave()}
+                    >
+                        <i className={`fa ${star <= (hoverRating || rating) ? 'fa-star' : 'fa-star-o'}`}></i>
+                    </span>
+                ))}
+            </div>
+        );
+    };
+
     return (
         <div className='container-fluid w-100 pb-5' style={{ background: '#10302c', padding: '80px 0 0 0' }}>
             <div className='container-fluid p-0' style={{ height: '50px', background: '#000' }}>
@@ -84,6 +107,13 @@ function Feedback() {
                     <Title title='Đánh giá'></Title>
                     <form>
                         <div className='row text-white p-3'>
+                            <div className='col-md-12'>
+                                <label style={{ marginTop: '12px' }}>Đánh giá của bạn</label>
+                                <div className="rating-selector">
+                                    {renderStars(Rating, true, setRating, setHoverRating, () => setHoverRating(0))}
+                                    <span className="rating-text">{Rating}/5 sao</span>
+                                </div>
+                            </div>
                             <div className='col-md-12'>
                                 <label style={{ marginTop: '12px' }}>Nội dung phản hồi</label>
                                 <input
@@ -124,7 +154,10 @@ function Feedback() {
                                             </div>
                                             <span>{fb.full_name || 'Khách hàng'}</span>
                                         </div>
-                                        <span className='user-feedback-item-date'>{formattedDate}</span>
+                                        <div className="user-feedback-item-meta">
+                                            <span className='user-feedback-item-date'>{formattedDate}</span>
+                                            {renderStars(fb.Rating || 5)}
+                                        </div>
                                     </div>
                                     <div className='user-feedback-item-content'>{fb.Content}</div>
                                 </div>
