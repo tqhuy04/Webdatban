@@ -7,6 +7,10 @@ const customerApi = {
   },
 
   getById(id) {
+    if (!id || id === 'undefined' || id === 'null') {
+      console.error("[customerApi] getById called with invalid id:", id);
+      return Promise.reject(new Error("Invalid customer ID"));
+    }
     return axiosClient.get(`/customers/${id}`);
   },
 
@@ -16,10 +20,18 @@ const customerApi = {
   },
 
   update(id, data) {
+    if (!id || id === 'undefined' || id === 'null') {
+      console.error("[customerApi] update called with invalid id:", id);
+      return Promise.reject(new Error("Invalid customer ID"));
+    }
     return axiosClient.put(`/customers/${id}`, data);
   },
 
   delete(id) {
+    if (!id || id === 'undefined' || id === 'null') {
+      console.error("[customerApi] delete called with invalid id:", id);
+      return Promise.reject(new Error("Invalid customer ID"));
+    }
     return axiosClient.delete(`/customers/${id}`);
   },
 

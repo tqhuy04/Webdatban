@@ -66,7 +66,10 @@ function Menu_item() {
     };
 
     const handleConfirmDelete = () => {
-        menu_itemApi.delete(deleteModal.id)
+        const idToDelete = deleteModal.id;
+        setDeleteModal({ show: false, id: null });
+        
+        menu_itemApi.delete(idToDelete)
             .then(() => {
                 notify.success("Xóa thành công");
                 GetMenu_items();
@@ -75,7 +78,6 @@ function Menu_item() {
                 console.error(err);
                 notify.error("Xóa thất bại");
             });
-        setDeleteModal({ show: false, id: null });
     };
 
     const handleCancelDelete = () => {

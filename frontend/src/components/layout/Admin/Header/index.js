@@ -62,10 +62,14 @@ function Header() {
 
         // Lắng nghe thông báo mới qua Socket.IO
         if (window.socket) {
-            window.socket.on("new_notification", (data) => {
+            const handleNewNotification = (data) => {
                 setNotifications(prev => [data, ...prev]);
                 setUnreadCount(prev => prev + 1);
-            });
+            };
+            window.socket.on("new_notification", handleNewNotification);
+            return () => {
+                window.socket.off("new_notification", handleNewNotification);
+            };
         }
     }, []);
 

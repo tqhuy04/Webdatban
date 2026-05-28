@@ -12,6 +12,10 @@ const booking_tableApi = {
     // GET BOOKING BY ID
     // =====================
     getById(id) {
+        if (!id || id === 'undefined' || id === 'null') {
+            console.error("[booking_tableApi] getById called with invalid id:", id);
+            return Promise.reject(new Error("Invalid booking ID"));
+        }
         return axiosClient.get(`/booking-tables/${id}`);
     },
 
@@ -52,6 +56,10 @@ const booking_tableApi = {
     // DELETE BOOKING (Admin)
     // =====================
     delete(id) {
+        if (!id || id === 'undefined' || id === 'null') {
+            console.error("[booking_tableApi] delete called with invalid id:", id);
+            return Promise.reject(new Error("Invalid booking ID"));
+        }
         return axiosClient.delete(`/booking-tables/${id}`);
     },
 

@@ -27,6 +27,7 @@ def get_my_customer(
     db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
+    print(f"[DEBUG] /customers/me called by user: {user.Username} (ID: {user.id})")
     return get_customer_by_user(db, user.id)
 
 

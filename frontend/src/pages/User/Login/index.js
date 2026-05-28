@@ -39,11 +39,11 @@ const Login = ({ isVisible = true, onClose }) => {
         setLoading(true);
 
         try {
-            const res = await authUser.login({ username, password });
+            const data = await authUser.login({ username, password });
 
-            localStorage.setItem("token", res.data.access_token);
-            localStorage.setItem("role", res.data.role);
-            localStorage.setItem("admin_name", res.data.username || "");
+            localStorage.setItem("token", data.access_token);
+            localStorage.setItem("role", data.role);
+            localStorage.setItem("admin_name", data.username || "");
             updateLoginStatus(true);  // Cập nhật header
             refreshUser();            // Cập nhật bong bóng chat
 
@@ -52,7 +52,7 @@ const Login = ({ isVisible = true, onClose }) => {
 
             onClose && onClose();
 
-            if (res.data.role === "ADMIN") {
+            if (data.role === "ADMIN") {
                 navigate("/Admin/Home", { replace: true });
             } else {
                 navigate("/", { replace: true });

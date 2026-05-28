@@ -32,7 +32,10 @@ function Menu_category() {
     };
 
     const handleConfirmDelete = () => {
-        menu_categoryApi.delete(deleteModal.id)
+        const idToDelete = deleteModal.id;
+        setDeleteModal({ show: false, id: null });
+        
+        menu_categoryApi.delete(idToDelete)
             .then(() => {
                 notify.success("Xóa nhóm thành công");
                 GetMenu_categorys();
@@ -40,7 +43,6 @@ function Menu_category() {
             .catch(() => {
                 notify.error("Xóa thất bại");
             });
-        setDeleteModal({ show: false, id: null });
     };
 
     const handleCancelDelete = () => {

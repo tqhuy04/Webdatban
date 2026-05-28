@@ -44,7 +44,10 @@ function Customer() {
     };
 
     const handleConfirmDelete = () => {
-        customerApi.delete(deleteModal.id)
+        const idToDelete = deleteModal.id;
+        setDeleteModal({ show: false, id: null });
+        
+        customerApi.delete(idToDelete)
             .then(() => {
                 notify.success("Xóa khách hàng thành công");
                 getCustomers();
@@ -52,7 +55,6 @@ function Customer() {
             .catch(() => {
                 notify.error("Xóa khách hàng thất bại");
             });
-        setDeleteModal({ show: false, id: null });
     };
 
     const handleCancelDelete = () => {
@@ -120,7 +122,7 @@ function Customer() {
                             </tr>
                         ) : (
                             currentCustomers.map(customer => (
-                                <tr key={customer.id}>
+                                <tr key={customer.CustomerID || customer.id}>
                                     <td>{customer.full_name}</td>
                                     <td>{customer.phone_number}</td>
                                     <td>{customer.address}</td>
@@ -133,7 +135,7 @@ function Customer() {
                                         </button>
                                         <button
                                             className="admin-btn-delete"
-                                            onClick={() => handleDeleteClick(customer.id)}
+                                            onClick={() => handleDeleteClick(customer.CustomerID || customer.id)}
                                         >
                                             <i className="fa fa-trash"></i> Xóa
                                         </button>

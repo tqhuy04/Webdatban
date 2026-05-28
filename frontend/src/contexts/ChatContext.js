@@ -9,6 +9,7 @@ export const ChatProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const loadCountRef = useRef(0);
+  const hasTriedRef = useRef(false); // Đánh dấu đã thử load rồi
 
   // Hàm load user — gọi lại sau khi đăng nhập thành công
   const loadUser = useCallback(async () => {
@@ -16,10 +17,19 @@ export const ChatProvider = ({ children }) => {
     const currentLoad = loadCountRef.current;
     
     const token = localStorage.getItem("token");
-    console.log(`[ChatContext] loadUser called (#${currentLoad}), token exists:`, !!token);
+    const userRole = localStorage.getItem("role");
+    console.log(`[ChatContext] loadUser called (#${currentLoad}), token exists:`, !!token, ", role:", userRole);
     
     if (!token) {
       console.log("[ChatContext] No token, clearing user");
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+    
+    // Nếu là ADMIN thì không cần load customer
+    if (userRole === "ADMIN") {
+      console.log("[ChatContext] Admin user, skipping customer load");
       setUser(null);
       setLoading(false);
       return;
@@ -54,9 +64,10 @@ export const ChatProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("[ChatContext] Error loading user:", error);
-      // Nếu lỗi 401/403, có thể token hết hạn
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        console.log("[ChatContext] Auth error, clearing token");
+      // Nếu lỗi 401/403/404, có thể token hết hạn hoặc chưa có customer
+      if (error.response?.status === 401 || error.response?.status === 403 || error.response?.status === 404) {
+        console.log("[ChatContext] Auth error or no customer, marking as tried");
+        hasTriedRef.current = true; // Đánh dấu đã thử rồi
         localStorage.removeItem("token");
         setUser(null);
       }
@@ -75,18 +86,20 @@ export const ChatProvider = ({ children }) => {
 
   // Lắng nghe thay đổi token → load lại user (sau khi đăng nhập / đăng xuất)
   useEffect(() => {
-    // Poll thường xuyên hơn (500ms)
+    // Poll thường xuyên hơn (500ms) - NHƯNG chỉ khi CHƯA thử
     const interval = setInterval(() => {
       const token = localStorage.getItem("token");
+      const userRole = localStorage.getItem("role");
       
-      if (token && !user && !loading) {
-        // Có token nhưng chưa có user → thử load lại
+      // Nếu là ADMIN thì không cần load customer
+      if (userRole === "ADMIN") {
+        return;
+      }
+      
+      // Chỉ load nếu CÓ token VÀ CHƯA CÓ user VÀ ĐANG KHÔNG LOAD VÀ CHƯA THỬ rồi
+      if (token && !user && !loading && !hasTriedRef.current) {
         console.log("[ChatContext] Token exists but no user, loading...");
         loadUser();
-      } else if (!token && user) {
-        // Không có token nhưng có user → đăng xuất
-        console.log("[ChatContext] Token removed, clearing user");
-        setUser(null);
       }
     }, 500);
     
@@ -97,6 +110,7 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     const handleLogin = () => {
       console.log("[ChatContext] Login event received, reloading user...");
+      hasTriedRef.current = false; // Reset để thử lại
       setTimeout(() => loadUser(), 100); // Delay nhỏ để đảm bảo token đã được lưu
     };
 

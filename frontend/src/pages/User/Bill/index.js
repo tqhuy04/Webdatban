@@ -26,6 +26,7 @@ function Bill() {
     const location = useLocation();
 
     const hasProcessedPayment = useRef(false);
+    const customerFetchedRef = useRef(false);
 
     // Reload data khi location thay đổi (ví dụ: user quay lại từ Cart)
     useEffect(() => {
@@ -153,22 +154,34 @@ function Bill() {
                     customerId = customer.customer_id;
                 }
                 
-                // Nếu không có trong storage, thử lấy từ API
-                if (!customerId) {
-                    console.log("[DEBUG BILL] No customer_id in storage, fetching from API...");
-                    try {
-                        const res = await fetch("http://localhost:8000/api/customers/me", {
-                            headers: {
-                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                // Nếu không có trong storage, thử lấy từ API (chỉ gọi 1 lần)
+                if (!customerId && !customerFetchedRef.current) {
+                    const token = localStorage.getItem('token');
+                    // Chỉ gọi API nếu có token (đã đăng nhập)
+                    if (token) {
+                        customerFetchedRef.current = true; // Đánh dấu đã gọi
+                        console.log("[DEBUG BILL] No customerId in storage, fetching from API...");
+                        try {
+                            const res = await fetch("http://localhost:8000/api/customers/me", {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            });
+                            if (res.ok) {
+                                const customerData = await res.json();
+                                customerId = customerData.CustomerID || customerData.id;
+                                console.log("[DEBUG BILL] Got customerId from API:", customerId);
+                            } else if (res.status === 401 || res.status === 404) {
+                                // Không có customer hoặc chưa đăng nhập - không retry
+                                console.log("[DEBUG BILL] No customer found or not authenticated");
                             }
-                        });
-                        if (res.ok) {
-                            const customerData = await res.json();
-                            customerId = customerData.CustomerID || customerData.id;
-                            console.log("[DEBUG BILL] Got customerId from API:", customerId);
+                        } catch (e) {
+                            console.error("[DEBUG BILL] Error fetching customer:", e);
                         }
-                    } catch (e) {
-                        console.error("[DEBUG BILL] Error fetching customer:", e);
+                    } else {
+                        // Không có token - đánh dấu đã xử lý để không retry
+                        customerFetchedRef.current = true;
+                        console.log("[DEBUG BILL] No token - skipping customer fetch");
                     }
                 }
                 

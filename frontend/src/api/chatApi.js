@@ -6,6 +6,10 @@ const chatApi = {
   },
 
   getChatHistory: (customerId, params = {}) => {
+    if (!customerId || customerId === 'undefined' || customerId === 'null') {
+      console.error("[chatApi] getChatHistory called with invalid customerId:", customerId);
+      return Promise.reject(new Error("Invalid customerId"));
+    }
     return axiosClient.get(`/chat/history/${customerId}`, { params });
   },
 
@@ -26,6 +30,10 @@ const chatApi = {
   },
 
   getCustomerInfo: (customerId) => {
+    if (!customerId || customerId === 'undefined' || customerId === 'null') {
+      console.error("[chatApi] getCustomerInfo called with invalid customerId:", customerId);
+      return Promise.reject(new Error("Invalid customerId"));
+    }
     return axiosClient.get(`/chat/customer/${customerId}/info`);
   },
 
@@ -34,6 +42,10 @@ const chatApi = {
   },
 
   deleteConversation: (customerId) => {
+    if (!customerId || customerId === 'undefined' || customerId === 'null') {
+      console.error("[chatApi] deleteConversation called with invalid customerId:", customerId);
+      return Promise.reject(new Error("Invalid customerId"));
+    }
     return axiosClient.delete(`/chat/conversation/${customerId}`);
   },
 };

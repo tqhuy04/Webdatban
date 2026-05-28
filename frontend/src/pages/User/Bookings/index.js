@@ -37,8 +37,8 @@ function Bookings() {
         if (!userId) return;
 
         customerApi
-            .getByIdUser(userId)
-            .then((res) => setCustomer(res.data))
+            .getByIdUser()
+            .then((res) => setCustomer(res.data || res))
             .catch(() => {
                 notify.warning("Vui lòng nhập thông tin cá nhân trước!");
                 navigate("/PersonalIn4");
