@@ -17,6 +17,7 @@ import Show_booking from "../pages/User/show_booking";
 import Show_bookingTable from "../pages/User/show_bookingTable";
 import OrderDetail from "../pages/User/OrderDetail";
 import FeedbackOFUser from "../pages/User/Feedback";
+import Search from "../pages/User/Search";
 
 // ================== ADMIN PAGES ==================
 import HomeAd from "../pages/Admin/Home";
@@ -51,6 +52,7 @@ export const publicRoutes = [
   { path: "/Show_booking", component: Show_booking },
   { path: "/Show_bookingTable/:BookingID", component: Show_bookingTable },
   { path: "/Feedback", component: FeedbackOFUser },
+  { path: "/Search", component: Search },
 ];
 
 // ================== ADMIN ROUTES ==================

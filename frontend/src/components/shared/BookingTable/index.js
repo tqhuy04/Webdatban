@@ -3,11 +3,16 @@ import MenuSelection from '../../../components/shared/MenuSelection'
 import tableApi from '../../../api/tableApi';
 import { useNotify } from '../../../contexts/ToastContext';
 
-const BookingTable = ({ isVisible, onClose }) => {
+const BookingTable = ({ isVisible, onClose, people }) => {
     const { warning: notifyWarning } = useNotify();
     const [showMenuModal, setShowMenuModal] = useState(false);
     const [Select_tables, setSelect_tables] = useState([]);
     const [tables, settables] = useState([]);
+
+    // Tính tổng sức chứa của các bàn đã chọn
+    const totalCapacity = Select_tables.reduce((sum, table) => sum + (table.Capacity || 0), 0);
+    // Kiểm tra xem tổng sức chứa có đủ cho số người không
+    const isCapacityValid = totalCapacity >= Number(people);
 
     // ❌ bỏ window.confirm
     const handleBooking = (e) => {
@@ -15,6 +20,12 @@ const BookingTable = ({ isVisible, onClose }) => {
 
         if (Select_tables.length === 0) {
             notifyWarning("Vui lòng chọn ít nhất 1 bàn!");
+            return;
+        }
+
+        // Kiểm tra sức chứa
+        if (!isCapacityValid) {
+            notifyWarning(`Tổng sức chứa của bàn đã chọn (${totalCapacity} người) không đủ cho ${people} người! Vui lòng chọn thêm bàn.`);
             return;
         }
 
@@ -75,6 +86,21 @@ const BookingTable = ({ isVisible, onClose }) => {
             <div className='menu-select' style={{ background: '#ebe8e8' }}>
                 <h2>Chọn bàn</h2>
 
+                {/* Thông tin sức chứa */}
+                <div className='container'>
+                    <div className='alert alert-info d-flex align-items-center justify-content-between' role='alert'>
+                        <div>
+                            <strong>Số người cần đặt: <span className='text-danger'>{people || 0}</span> người</strong>
+                        </div>
+                        <div>
+                            <strong>Sức chứa đã chọn: <span className={isCapacityValid ? 'text-success' : 'text-danger'}>{totalCapacity}</span> người</strong>
+                            {!isCapacityValid && totalCapacity > 0 && (
+                                <span className='ms-2 text-danger'> - Cần thêm bàn!</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 <div className='container mt-3'>
                     <div className='row'>
                         <div className='col-md-8' style={{ border: '1px solid rgb(195, 194, 194)' }}>
@@ -105,7 +131,7 @@ const BookingTable = ({ isVisible, onClose }) => {
                                                 />
                                                 <h5>{table.TableNumber}</h5>
                                                 <p className="text-danger">
-                                                    Kích thước: {table.Capacity}
+                                                    Kích thước: {table.Capacity} người
                                                 </p>
                                                 <p className="text-danger">
                                                     {table.Status === 1 ? 'đã được đặt' : ''}
@@ -167,7 +193,7 @@ const BookingTable = ({ isVisible, onClose }) => {
                                                 alt={`Bàn ${select_table.TableNumber}`}
                                             />
                                             <p style={{ marginLeft: '4px', fontSize: '12px' }}>
-                                                Bàn: {select_table.TableNumber}
+                                                Bàn: {select_table.TableNumber} ({select_table.Capacity} người)
                                             </p>
                                         </div>
 
@@ -191,7 +217,14 @@ const BookingTable = ({ isVisible, onClose }) => {
                 </div>
 
                 <div className='menu-bt'>
-                    <button onClick={handleBooking}>
+                    <button
+                        onClick={handleBooking}
+                        disabled={!isCapacityValid && totalCapacity > 0}
+                        style={{
+                            opacity: (!isCapacityValid && totalCapacity > 0) ? 0.5 : 1,
+                            cursor: (!isCapacityValid && totalCapacity > 0) ? 'not-allowed' : 'pointer'
+                        }}
+                    >
                         Tiến hành đặt món
                     </button>
 

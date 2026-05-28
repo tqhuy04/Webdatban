@@ -46,6 +46,9 @@ const Login = ({ isVisible = true, onClose }) => {
             updateLoginStatus(true);  // Cập nhật header
             refreshUser();            // Cập nhật bong bóng chat
 
+            // Dispatch event để các component khác biết
+            window.dispatchEvent(new Event("loginSuccess"));
+
             onClose && onClose();
 
             if (res.role === "ADMIN") {

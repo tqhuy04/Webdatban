@@ -84,6 +84,24 @@ function PersonalIn4() {
 
     return (
         <>
+            <div className="back-button-container" style={{ padding: '80px 20px 0 20px' }}>
+                <button
+                    onClick={() => navigate(-1)}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#d69c52',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '14px',
+                        padding: '10px 0'
+                    }}
+                >
+                    ← Quay lại
+                </button>
+            </div>
             <Header />
             <div className="personal-info-container">
                 <div className="row justify-content-center">

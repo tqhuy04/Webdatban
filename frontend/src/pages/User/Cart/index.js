@@ -52,7 +52,24 @@ function Cart() {
             <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0' }}>
                 <div className='container-fluid p-0' style={{ height: '50px', background: '#000' }}>
                     <div className='container h-100 d-flex align-items-center'>
-                        <p className='m-0' style={{ color: '#fff' }}>Trang chủ / </p>
+                        <button
+                            onClick={() => navigate(-1)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#fff',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '14px',
+                                padding: '0',
+                                marginRight: '8px'
+                            }}
+                        >
+                            ← Quay lại
+                        </button>
+                        <p className='m-0' style={{ color: '#fff' }}> / </p>
                         <p className='m-0' style={{ color: '#d69c52' }}> Giỏ hàng</p>
                     </div>
                 </div>
@@ -84,7 +101,24 @@ function Cart() {
         <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0' }}>
             <div className='container-fluid p-0' style={{ height: '50px', background: '#000' }}>
                 <div className='container h-100 d-flex align-items-center'>
-                    <p className='m-0' style={{ color: '#fff' }}>Trang chủ / </p>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontSize: '14px',
+                            padding: '0',
+                            marginRight: '8px'
+                        }}
+                    >
+                        ← Quay lại
+                    </button>
+                    <p className='m-0' style={{ color: '#fff' }}> / </p>
                     <p className='m-0' style={{ color: '#d69c52' }}> Giỏ hàng</p>
                 </div>
             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import promotionApi from '../../../api/promotionApi';
 import { formatNumber } from '../../../components/utils/format_number';
 import { useNotify } from '../../../contexts/ToastContext';
+import './show_voucher.css';
 
 const VoucherShop = ({ setPromotion, onClose, Promotion }) => {
     const notify = useNotify();
@@ -56,20 +57,14 @@ const VoucherShop = ({ setPromotion, onClose, Promotion }) => {
     }
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h4 style={{ color: 'black' }}>Chọn voucher</h4>
+        <div className="voucher-modal-overlay">
+            <div className="voucher-modal-content">
+                <h4>Chọn voucher</h4>
 
                 {Promotions.length > 0 ? Promotions.map((promiton) => (
                     <div
-                        key={promiton.PromotionID}   // ✅ FIX KEY
-                        className='row'
-                        style={{
-                            border: '1px solid',
-                            alignItems: 'center',
-                            marginBottom: '12px',
-                            cursor: 'pointer'
-                        }}
+                        key={promiton.PromotionID}
+                        className={`row voucher-item ${VoucherSelected.some(v => v.PromotionID === promiton.PromotionID) ? 'selected' : ''}`}
                         onClick={() => toggleVoucher(promiton)}
                     >
                         <div className='col-md-4 col-4'>
@@ -102,7 +97,7 @@ const VoucherShop = ({ setPromotion, onClose, Promotion }) => {
                     <p style={{ color: 'black' }}>Không có voucher nào cả</p>
                 )}
 
-                <div style={{ position: 'absolute', bottom: '4%', right: '4%' }}>
+                <div className='voucher-modal-actions'>
                     <button
                         type="button"
                         className="btn btn-primary"
@@ -114,7 +109,6 @@ const VoucherShop = ({ setPromotion, onClose, Promotion }) => {
                     <button
                         type="button"
                         className="btn btn-secondary"
-                        style={{ marginLeft: '10px' }}
                         onClick={onClose}
                     >
                         Đóng

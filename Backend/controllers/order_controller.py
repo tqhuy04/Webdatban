@@ -4,7 +4,8 @@ from Backend.services.order_service import (
     get_all_orders,
     get_orders_by_booking,
     create_order,
-    delete_order
+    delete_order,
+    search_orders
 )
 
 
@@ -26,3 +27,10 @@ def create(db: Session, data: OrderCreate):
 
 def delete(db: Session, order_id: int):
     return delete_order(db, order_id)
+
+
+# =========================
+# SEARCH
+# =========================
+def search(db: Session, keyword: str):
+    return search_orders(db, keyword)

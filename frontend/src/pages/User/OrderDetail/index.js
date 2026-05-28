@@ -27,6 +27,7 @@ function OrderDetail() {
                 notify.error("Không thể tải chi tiết đơn hàng");
                 setLoading(false);
             });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [OrderID]);
 
     const getImagePath = (productImg) => {
@@ -42,11 +43,25 @@ function OrderDetail() {
         <div className='container-fluid w-100 order-detail-page' style={{ padding: '80px 0 0 0' }}>
             <div className='container-fluid p-0 order-detail-breadcrumb'>
                 <div className='container h-100 d-flex align-items-center breadcrumb-inner'>
-                    <p className='m-0'>Trang chủ / </p>
-                    <p
-                        className='m-0 breadcrumb-current'
+                    <button
                         onClick={() => navigate(-1)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#d69c52',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontSize: '14px',
+                            padding: '0',
+                            marginRight: '8px'
+                        }}
                     >
+                        ← Quay lại
+                    </button>
+                    <p className='m-0' style={{ color: 'rgba(255,255,255,0.5)' }}> / </p>
+                    <p className='m-0 breadcrumb-current' style={{ marginLeft: '8px' }}>
                         Chi tiết đơn hàng
                     </p>
                 </div>

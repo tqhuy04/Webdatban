@@ -130,13 +130,6 @@ function Home() {
                             <i className="fas fa-sync-alt"></i>
                             <span>Làm mới</span>
                         </button>
-                        <button className="header-btn notification">
-                            <i className="fas fa-bell"></i>
-                            <span className="notification-badge">3</span>
-                        </button>
-                        <div className="admin-avatar">
-                            <i className="fas fa-user"></i>
-                        </div>
                     </div>
                 </div>
                 <div className="admin-header-stats">

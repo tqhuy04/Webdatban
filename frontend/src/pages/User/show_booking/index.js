@@ -2,14 +2,24 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import table_bookingApi from "../../../api/booking_tableApi";
 import Pagination from "../../../components/shared/Pagination";
+import { useNotify } from '../../../contexts/ToastContext';
 
 const PAGE_SIZE = 4;
 
 function Show_booking() {
+    const notify = useNotify();
     const navigate = useNavigate();
     const [bookings, setBookings] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [bookingToCancel, setBookingToCancel] = useState(null);
+    const [cancelLoading, setCancelLoading] = useState(false);
+
+    // Checkin Modal State
+    const [showCheckinModal, setShowCheckinModal] = useState(false);
+    const [bookingToCheckin, setBookingToCheckin] = useState(null);
+    const [checkinLoading, setCheckinLoading] = useState(false);
 
     const handleToOrder = (BookingID) => {
         navigate(`/Order/${BookingID}`);
@@ -17,6 +27,36 @@ function Show_booking() {
 
     const handleToTable = (BookingID) => {
         navigate(`/Show_bookingTable/${BookingID}`);
+    };
+
+    const handleCancelClick = (booking) => {
+        setBookingToCancel(booking);
+        setShowCancelModal(true);
+    };
+
+    const handleConfirmCancel = async () => {
+        if (!bookingToCancel) return;
+
+        setCancelLoading(true);
+        try {
+            await table_bookingApi.cancelMyBooking(bookingToCancel.BookingID);
+
+            // Remove from local state
+            setBookings(prev => prev.filter(b => b.BookingID !== bookingToCancel.BookingID));
+            setShowCancelModal(false);
+            setBookingToCancel(null);
+            notify.success("Hủy đặt bàn thành công!");
+        } catch (error) {
+            console.error("Lỗi hủy đặt bàn:", error);
+            notify.error("Không thể hủy đặt bàn. Vui lòng thử lại.");
+        } finally {
+            setCancelLoading(false);
+        }
+    };
+
+    const handleCloseCancelModal = () => {
+        setShowCancelModal(false);
+        setBookingToCancel(null);
     };
 
     useEffect(() => {
@@ -35,7 +75,19 @@ function Show_booking() {
 
     const formatDate = (dateString) => {
         if (!dateString) return '';
-        const date = new Date(dateString);
+        
+        // Xử lý format từ backend: "2026-05-27 22:52:00" hoặc "2026-05-27T22:52:00"
+        let date;
+        if (typeof dateString === 'string') {
+            // Thay dấu cách hoặc T thành dấu -
+            const normalized = dateString.replace(' ', 'T').split('.')[0];
+            date = new Date(normalized);
+        } else {
+            date = new Date(dateString);
+        }
+        
+        if (isNaN(date.getTime())) return dateString; // Fallback
+        
         return date.toLocaleString('vi-VN', {
             day: '2-digit',
             month: '2-digit',
@@ -43,6 +95,98 @@ function Show_booking() {
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const getStatusInfo = (status) => {
+        switch (status) {
+            case 0:
+                return { label: 'Chờ xác nhận', className: 'pending', icon: '⏳' };
+            case 1:
+                return { label: 'Đã xác nhận', className: 'confirmed', icon: '✓' };
+            case 2:
+                return { label: 'Đã checkin', className: 'completed', icon: '🎉' };
+            case 3:
+                return { label: 'Đã hủy', className: 'cancelled', icon: '✕' };
+            default:
+                return { label: 'Không xác định', className: 'pending', icon: '?' };
+        }
+    };
+
+    const canCancel = (status) => {
+        return status !== 2 && status !== 3;
+    };
+
+    const canCheckin = (status) => {
+        return status === 0 || status === 1;
+    };
+
+    // Mở modal checkin
+    const handleCheckinClick = (booking) => {
+        setBookingToCheckin(booking);
+        setShowCheckinModal(true);
+    };
+
+    // Xác nhận checkin và chuyển đến thanh toán phần còn lại
+    const handleCheckinAndPay = async () => {
+        if (!bookingToCheckin) return;
+
+        setCheckinLoading(true);
+        try {
+            // Gọi API checkin
+            await table_bookingApi.checkinMe(bookingToCheckin.BookingID);
+
+            // Đóng modal checkin
+            setShowCheckinModal(false);
+            setBookingToCheckin(null);
+            notify.success("Check-in thành công! Đang chuyển đến trang thanh toán...");
+
+            // Reload danh sách booking từ API
+            const res = await table_bookingApi.getAllOfCustomer();
+            setBookings(res.data || []);
+
+            // Chuyển đến trang thanh toán phần còn lại (70%)
+            navigate(`/Order/${bookingToCheckin.BookingID}`);
+
+        } catch (error) {
+            console.error("Lỗi checkin:", error);
+            notify.error("Check-in thất bại. Vui lòng thử lại.");
+        } finally {
+            setCheckinLoading(false);
+        }
+    };
+
+    // Checkin và đặt thêm món
+    const handleCheckinAndOrderMore = async () => {
+        if (!bookingToCheckin) return;
+
+        setCheckinLoading(true);
+        try {
+            // Gọi API checkin
+            await table_bookingApi.checkinMe(bookingToCheckin.BookingID);
+
+            // Đóng modal checkin
+            setShowCheckinModal(false);
+            setBookingToCheckin(null);
+            notify.success("Check-in thành công! Đang chuyển đến trang đặt món...");
+
+            // Reload danh sách booking từ API
+            const res = await table_bookingApi.getAllOfCustomer();
+            setBookings(res.data || []);
+
+            // Chuyển đến trang đặt món thêm (Order với flag đặt thêm)
+            navigate(`/Order/${bookingToCheckin.BookingID}?action=add_more`);
+
+        } catch (error) {
+            console.error("Lỗi checkin:", error);
+            notify.error("Check-in thất bại. Vui lòng thử lại.");
+        } finally {
+            setCheckinLoading(false);
+        }
+    };
+
+    const handleCloseCheckinModal = () => {
+        setShowCheckinModal(false);
+        setBookingToCheckin(null);
     };
 
     const totalPages = Math.ceil(bookings.length / PAGE_SIZE);
@@ -54,7 +198,23 @@ function Show_booking() {
             <div className='show-booking-hero'>
                 <div className='container'>
                     <nav className='breadcrumb-nav'>
-                        <span className='breadcrumb-home'>Trang chủ</span>
+                        <button
+                            onClick={() => navigate(-1)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '14px',
+                                padding: '0',
+                                marginRight: '8px'
+                            }}
+                        >
+                            ← Quay lại
+                        </button>
                         <span className='breadcrumb-separator'>/</span>
                         <span className='breadcrumb-current'>Các lượt đặt bàn của tôi</span>
                     </nav>
@@ -78,50 +238,76 @@ function Show_booking() {
                 ) : bookings.length > 0 ? (
                     <>
                         <div className='bookings-list'>
-                            {currentBookings.map((booking, index) => (
-                                <div
-                                    key={booking.BookingID}
-                                    className={`booking-card ${booking.Status ? 'completed' : 'pending'}`}
-                                    style={{ animationDelay: `${index * 0.1}s` }}
-                                >
-                                    <div className='booking-card-header'>
-                                        <div className='booking-time'>
-                                            <span className="time-icon">🕐</span>
-                                            <span className="time-text">{formatDate(booking.BookingTime)}</span>
+                            {currentBookings.map((booking, index) => {
+                                const statusInfo = getStatusInfo(booking.Status);
+                                return (
+                                    <div
+                                        key={booking.BookingID}
+                                        className={`booking-card ${statusInfo.className}`}
+                                        style={{ animationDelay: `${index * 0.1}s` }}
+                                    >
+                                        <div className='booking-card-header'>
+                                            <div className='booking-time'>
+                                                <span className="time-icon">🕐</span>
+                                                <span className="time-text">{formatDate(booking.BookingTime)}</span>
+                                            </div>
+                                            <span className={`status-badge ${statusInfo.className}`}>
+                                                {statusInfo.icon} {statusInfo.label}
+                                            </span>
                                         </div>
-                                        <span className={`status-badge ${booking.Status ? 'completed' : 'pending'}`}>
-                                            {booking.Status ? '✓ Hoàn thành' : '⏳ Chưa hoàn thành'}
-                                        </span>
-                                    </div>
 
-                                    <div className='booking-card-body'>
-                                        <div className='booking-info'>
-                                            <div className='info-row'>
-                                                <span className="info-icon">🆔</span>
-                                                <span className="info-label">Mã đặt bàn:</span>
-                                                <span className="info-value">#{booking.BookingID}</span>
+                                        <div className='booking-card-body'>
+                                            <div className='booking-info'>
+                                                <div className='info-row'>
+                                                    <span className="info-icon">👤</span>
+                                                    <span className="info-label">Khách hàng:</span>
+                                                    <span className="info-value">{booking.customer?.full_name || booking.CustomerName || 'Không rõ'}</span>
+                                                </div>
+                                                <div className='info-row'>
+                                                    <span className="info-icon">🆔</span>
+                                                    <span className="info-label">Mã đặt bàn:</span>
+                                                    <span className="info-value">#{booking.BookingID}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div className='booking-card-footer'>
-                                        <button
-                                            className='btn-action btn-tables'
-                                            onClick={() => handleToTable(booking.BookingID)}
-                                        >
-                                            <span className="btn-icon">🪑</span>
-                                            <span className="btn-text">Xem các bàn đã đặt</span>
-                                        </button>
-                                        <button
-                                            className='btn-action btn-orders'
-                                            onClick={() => handleToOrder(booking.BookingID)}
-                                        >
-                                            <span className="btn-icon">📦</span>
-                                            <span className="btn-text">Chi tiết đơn hàng</span>
-                                        </button>
+                                        <div className='booking-card-footer'>
+                                            {canCheckin(booking.Status) && (
+                                                <button
+                                                    className='btn-action btn-checkin'
+                                                    onClick={() => handleCheckinClick(booking)}
+                                                >
+                                                    <span className="btn-icon">📍</span>
+                                                    <span className="btn-text">Tôi đã đến</span>
+                                                </button>
+                                            )}
+                                            <button
+                                                className='btn-action btn-tables'
+                                                onClick={() => handleToTable(booking.BookingID)}
+                                            >
+                                                <span className="btn-icon">🪑</span>
+                                                <span className="btn-text">Xem bàn</span>
+                                            </button>
+                                            <button
+                                                className='btn-action btn-orders'
+                                                onClick={() => handleToOrder(booking.BookingID)}
+                                            >
+                                                <span className="btn-icon">📦</span>
+                                                <span className="btn-text">Chi tiết</span>
+                                            </button>
+                                            {canCancel(booking.Status) && (
+                                                <button
+                                                    className='btn-action btn-cancel'
+                                                    onClick={() => handleCancelClick(booking)}
+                                                >
+                                                    <span className="btn-icon">🗑️</span>
+                                                    <span className="btn-text">Hủy</span>
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         {bookings.length > PAGE_SIZE && (
@@ -141,10 +327,96 @@ function Show_booking() {
                 )}
             </div>
 
+            {/* Checkin Modal */}
+            {showCheckinModal && (
+                <div className="modal-overlay" onClick={handleCloseCheckinModal}>
+                    <div className="modal-content checkin-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-icon checkin-icon">
+                            <span>🎉</span>
+                        </div>
+                        <h3>Chào mừng đến nhà hàng!</h3>
+                        <p>Bạn đã đến cửa hàng và nhận bàn thành công.</p>
+                        <p className="modal-info">Mã đặt bàn: <strong>#{bookingToCheckin?.BookingID}</strong></p>
+
+                        <div className="checkin-options">
+                            <h4>Bạn muốn làm gì tiếp theo?</h4>
+
+                            <button
+                                className="btn-checkin-option btn-pay-remaining"
+                                onClick={handleCheckinAndPay}
+                                disabled={checkinLoading}
+                            >
+                                <span className="option-icon">💳</span>
+                                <span className="option-text">Thanh toán phần còn lại (70%)</span>
+                                <span className="option-desc">Thanh toán số tiền còn lại của món đã đặt</span>
+                            </button>
+
+                            <button
+                                className="btn-checkin-option btn-order-more"
+                                onClick={handleCheckinAndOrderMore}
+                                disabled={checkinLoading}
+                            >
+                                <span className="option-icon">🍽️</span>
+                                <span className="option-text">Đặt thêm món</span>
+                                <span className="option-desc">Thêm món ăn mới vào đơn hàng</span>
+                            </button>
+                        </div>
+
+                        <button
+                            className="btn-modal btn-close-checkin"
+                            onClick={handleCloseCheckinModal}
+                            disabled={checkinLoading}
+                        >
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel Confirmation Modal */}
+            {showCancelModal && (
+                <div className="modal-overlay" onClick={handleCloseCancelModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-icon">
+                            <span>⚠️</span>
+                        </div>
+                        <h3>Xác nhận hủy đặt bàn</h3>
+                        <p>
+                            Bạn có chắc chắn muốn hủy đặt bàn <strong>#{bookingToCancel?.BookingID}</strong>?
+                        </p>
+                        <p className="modal-warning">Hành động này không thể hoàn tác.</p>
+                        <div className="modal-actions">
+                            <button 
+                                className="btn-modal btn-cancel-modal"
+                                onClick={handleCloseCancelModal}
+                                disabled={cancelLoading}
+                            >
+                                Không, giữ lại
+                            </button>
+                            <button 
+                                className="btn-modal btn-confirm-cancel"
+                                onClick={handleConfirmCancel}
+                                disabled={cancelLoading}
+                            >
+                                {cancelLoading ? (
+                                    <span className="loading-text">Đang hủy...</span>
+                                ) : (
+                                    <>
+                                        <span className="btn-icon">✓</span>
+                                        <span className="btn-text">Có, hủy đặt bàn</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style>{`
                 .show-booking-container {
                     min-height: 100vh;
                     background: linear-gradient(135deg, #10302c 0%, #0a1f1c 100%);
+                    padding-top: 80px;
                 }
 
                 .show-booking-hero {
@@ -234,12 +506,18 @@ function Show_booking() {
                     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
                 }
 
+                .booking-card.pending,
+                .booking-card.confirmed {
+                    border-left: 4px solid #f39c12;
+                }
+
                 .booking-card.completed {
                     border-left: 4px solid #4ecdc4;
                 }
 
-                .booking-card.pending {
-                    border-left: 4px solid #f39c12;
+                .booking-card.cancelled {
+                    border-left: 4px solid #e74c3c;
+                    opacity: 0.7;
                 }
 
                 .booking-card-header {
@@ -284,6 +562,16 @@ function Show_booking() {
                     color: #f39c12;
                 }
 
+                .status-badge.confirmed {
+                    background: rgba(52, 152, 219, 0.2);
+                    color: #3498db;
+                }
+
+                .status-badge.cancelled {
+                    background: rgba(231, 76, 60, 0.2);
+                    color: #e74c3c;
+                }
+
                 .booking-card-body {
                     margin-bottom: 20px;
                 }
@@ -320,10 +608,12 @@ function Show_booking() {
                     gap: 15px;
                     padding-top: 20px;
                     border-top: 1px solid rgba(255, 255, 255, 0.08);
+                    flex-wrap: wrap;
                 }
 
                 .btn-action {
                     flex: 1;
+                    min-width: 150px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -357,8 +647,274 @@ function Show_booking() {
                     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
                 }
 
+                .btn-cancel {
+                    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+                    color: #fff;
+                    order: -1; /* Đưa nút hủy lên đầu */
+                }
+
+                .btn-cancel:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+                }
+
+                .booking-card.completed .btn-cancel,
+                .booking-card.cancelled .btn-cancel,
+                .booking-card.completed .btn-checkin,
+                .booking-card.cancelled .btn-checkin {
+                    display: none;
+                }
+
+                .btn-checkin {
+                    background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+                    color: #fff;
+                }
+
+                .btn-checkin:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+                }
+
                 .btn-icon {
                     font-size: 18px;
+                }
+
+                /* Modal Styles */
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    backdrop-filter: blur(4px);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                    animation: fadeIn 0.2s ease;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                .modal-content {
+                    background: linear-gradient(145deg, #1a2f2a 0%, #0d1f1c 100%);
+                    border-radius: 20px;
+                    padding: 32px;
+                    max-width: 450px;
+                    width: 90%;
+                    text-align: center;
+                    border: 1px solid rgba(214, 156, 82, 0.2);
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                    animation: slideUp 0.3s ease;
+                }
+
+                /* Checkin Modal Styles */
+                .checkin-modal {
+                    max-width: 500px;
+                }
+
+                .checkin-icon {
+                    background: rgba(39, 174, 96, 0.2) !important;
+                }
+
+                .checkin-icon span {
+                    font-size: 40px;
+                }
+
+                .modal-info {
+                    background: rgba(214, 156, 82, 0.1);
+                    padding: 10px 15px;
+                    border-radius: 8px;
+                    margin: 15px 0;
+                }
+
+                .checkin-options {
+                    margin: 20px 0;
+                }
+
+                .checkin-options h4 {
+                    color: #d69c52;
+                    font-size: 16px;
+                    margin-bottom: 15px;
+                }
+
+                .btn-checkin-option {
+                    width: 100%;
+                    padding: 16px 20px;
+                    margin-bottom: 12px;
+                    border: 2px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                    background: rgba(255, 255, 255, 0.05);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                }
+
+                .btn-checkin-option:hover:not(:disabled) {
+                    border-color: #d69c52;
+                    background: rgba(214, 156, 82, 0.1);
+                    transform: translateY(-2px);
+                }
+
+                .btn-checkin-option:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+
+                .btn-checkin-option .option-icon {
+                    font-size: 32px;
+                    margin-bottom: 8px;
+                }
+
+                .btn-checkin-option .option-text {
+                    color: #fff;
+                    font-size: 16px;
+                    font-weight: 600;
+                    margin-bottom: 4px;
+                }
+
+                .btn-checkin-option .option-desc {
+                    color: rgba(255, 255, 255, 0.6);
+                    font-size: 13px;
+                }
+
+                .btn-pay-remaining {
+                    border-color: rgba(39, 174, 96, 0.3);
+                }
+
+                .btn-pay-remaining:hover:not(:disabled) {
+                    border-color: #27ae60;
+                    background: rgba(39, 174, 96, 0.15);
+                }
+
+                .btn-order-more {
+                    border-color: rgba(102, 126, 234, 0.3);
+                }
+
+                .btn-order-more:hover:not(:disabled) {
+                    border-color: #667eea;
+                    background: rgba(102, 126, 234, 0.15);
+                }
+
+                .btn-close-checkin {
+                    background: rgba(255, 255, 255, 0.1) !important;
+                    color: rgba(255, 255, 255, 0.8) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                    margin-top: 10px;
+                }
+
+                .btn-close-checkin:hover:not(:disabled) {
+                    background: rgba(255, 255, 255, 0.15) !important;
+                    color: #fff !important;
+                }
+
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px) scale(0.95);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
+                }
+
+                .modal-icon {
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 50%;
+                    background: rgba(231, 76, 60, 0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 20px;
+                }
+
+                .modal-icon span {
+                    font-size: 40px;
+                }
+
+                .modal-content h3 {
+                    color: #fff;
+                    font-size: 24px;
+                    margin-bottom: 16px;
+                    font-weight: 700;
+                }
+
+                .modal-content p {
+                    color: rgba(255, 255, 255, 0.7);
+                    font-size: 16px;
+                    margin-bottom: 12px;
+                    line-height: 1.6;
+                }
+
+                .modal-content p strong {
+                    color: #d69c52;
+                }
+
+                .modal-warning {
+                    color: rgba(231, 76, 60, 0.8) !important;
+                    font-size: 14px !important;
+                    font-style: italic;
+                }
+
+                .modal-actions {
+                    display: flex;
+                    gap: 15px;
+                    margin-top: 24px;
+                }
+
+                .btn-modal {
+                    flex: 1;
+                    padding: 14px 24px;
+                    border: none;
+                    border-radius: 12px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                }
+
+                .btn-cancel-modal {
+                    background: rgba(255, 255, 255, 0.1);
+                    color: rgba(255, 255, 255, 0.8);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+
+                .btn-cancel-modal:hover {
+                    background: rgba(255, 255, 255, 0.15);
+                    color: #fff;
+                }
+
+                .btn-confirm-cancel {
+                    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+                    color: #fff;
+                }
+
+                .btn-confirm-cancel:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+                }
+
+                .btn-confirm-cancel:disabled,
+                .btn-cancel-modal:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+
+                .loading-text {
+                    display: inline-block;
                 }
 
                 .loading-spinner {
@@ -427,6 +983,14 @@ function Show_booking() {
 
                     .btn-action {
                         width: 100%;
+                    }
+
+                    .modal-content {
+                        padding: 24px;
+                    }
+
+                    .modal-actions {
+                        flex-direction: column;
                     }
                 }
             `}</style>

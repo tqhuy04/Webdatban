@@ -11,7 +11,8 @@ from Backend.controllers.customer_controller import (
     get_customer_by_user,
     create_customer,
     update_customer,
-    delete_customer
+    delete_customer,
+    search_customers
 )
 from Backend.core.dependencies import get_current_user, admin_required
 
@@ -92,3 +93,14 @@ def delete(
     admin=Depends(admin_required)
 ):
     return delete_customer(db, customer_id)
+
+
+# =========================
+# SEARCH
+# =========================
+@router.get("/search/", response_model=List[CustomerOut])
+def search(
+    keyword: str,
+    db: Session = Depends(get_db)
+):
+    return search_customers(db, keyword)

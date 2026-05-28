@@ -52,6 +52,32 @@ def create_order_detail_api(
 
 
 # =========================
+# DEBUG: Check Order 78
+# =========================
+@router.get("/debug/order-78")
+def debug_order_78(db: Session = Depends(get_db)):
+    from Backend.models.order import Order
+    from Backend.models.order_detail import OrderDetail
+
+    order = db.query(Order).filter(Order.OrderID == 78).first()
+    if not order:
+        return {"error": "Order 78 not found"}
+
+    details = db.query(OrderDetail).filter(OrderDetail.OrderID == 78).all()
+
+    return {
+        "order": {
+            "OrderID": order.OrderID,
+            "BookingID": order.BookingID,
+            "CustomerID": order.CustomerID,
+            "TotalAmount": order.TotalAmount
+        },
+        "details_count": len(details),
+        "details": [{"id": d.OrderDetailID, "MenuItemID": d.MenuItemID, "Quantity": d.Quantity, "Price": d.Price} for d in details]
+    }
+
+
+# =========================
 # DELETE
 # =========================
 @router.delete("/{detail_id}")

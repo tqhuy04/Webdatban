@@ -56,3 +56,19 @@ def delete_menu_item(db: Session, item_id: int):
     db.commit()
 
     return True
+
+
+# =========================
+# SEARCH
+# =========================
+def search_menu_items(db: Session, keyword: str):
+    """
+    Tìm kiếm món ăn theo tên hoặc mô tả.
+    """
+    return db.query(MenuItem).filter(
+        MenuItem.IsDeleted == False,
+        (
+            MenuItem.Name.ilike(f"%{keyword}%") |
+            MenuItem.Description.ilike(f"%{keyword}%")
+        )
+    ).all()

@@ -68,6 +68,13 @@ const menuItemApi = {
   delete(id) {
     return axiosClient.delete(`/menu-items/${id}`);
   },
+
+  // =========================
+  // SEARCH
+  // =========================
+  search(keyword) {
+    return axiosClient.get(`/menu-items/search/?keyword=${encodeURIComponent(keyword)}`);
+  },
 };
 
 export default menuItemApi;

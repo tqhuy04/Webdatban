@@ -191,6 +191,40 @@ span {
   margin-left: 8px;
 }
 
+/* Header Search Popup */
+.header-search-popup {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1001;
+  margin-top: 8px;
+  width: 450px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  animation: searchPopupFadeIn 0.25s ease;
+}
+
+@keyframes searchPopupFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 576px) {
+  .header-search-popup {
+    width: calc(100vw - 32px);
+    right: -20px;
+  }
+}
+
 
 .banner {
   height: 850px;

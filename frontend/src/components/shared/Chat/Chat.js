@@ -1,80 +1,63 @@
 import React, { useState, useEffect, useRef } from "react";
-import { io } from "socket.io-client";
 import chatApi from "../../../api/chatApi";
+import customerApi from "../../../api/customerApi";
 import { formatChatTime } from "../../utils/formatChatTime";
 import "./Chat.css";
 
-const SOCKET_URL = "http://localhost:8000";
+const POLL_INTERVAL = 3000;
 
-const Chat = ({ user, onClose }) => {
+const Chat = ({ user: propUser, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [socket, setSocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef(null);
-  const adminId = 1; // Admin ID mặc định
+  const adminId = 1;
+  const pollIntervalRef = useRef(null);
 
-  // Kết nối Socket.IO
+  // Load user từ API nếu propUser không có
   useEffect(() => {
-    const socketInstance = io(SOCKET_URL, {
-      transports: ["websocket", "polling"],
-    });
-
-    socketInstance.on("connect", () => {
-      console.log("Connected to Socket.IO server");
-      setIsConnected(true);
-
-      // Đăng ký thông tin user
-      socketInstance.emit("register", {
-        user_id: user?.customerId || user?.id,
-        user_type: "CUSTOMER",
-        account_id: user?.accountId,
-      });
-    });
-
-    socketInstance.on("disconnect", () => {
-      console.log("Disconnected from Socket.IO server");
-      setIsConnected(false);
-    });
-
-    // Lắng nghe tin nhắn đến
-    socketInstance.on("receive_message", (data) => {
-      setMessages((prev) => [...prev, data]);
-      scrollToBottom();
-    });
-
-    // Xác nhận tin nhắn đã gửi
-    socketInstance.on("message_sent", (data) => {
-      if (data.success) {
-        setMessages((prev) => [...prev, data.message]);
-        scrollToBottom();
+    const loadUser = async () => {
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        setIsLoading(false);
+        return;
       }
-    });
 
-    setSocket(socketInstance);
-
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, [user]);
-
-  // Tải lịch sử chat khi component mount
-  useEffect(() => {
-    const loadChatHistory = async () => {
-      if (user?.customerId) {
-        try {
-          const response = await chatApi.getChatHistory(user.customerId);
-          setMessages(response.data || []);
-          scrollToBottom();
-        } catch (error) {
-          console.error("Error loading chat history:", error);
+      try {
+        // Thử lấy từ prop trước
+        if (propUser?.id || propUser?.customerId) {
+          setUserData(propUser);
+          setIsLoading(false);
+          return;
         }
+
+        // Nếu không có prop, gọi API
+        const response = await customerApi.getByIdUser();
+        const user = response.data || response;
+        
+        // API trả về CustomerID (viết hoa), cần chuyển đổi
+        setUserData({
+          ...user,
+          id: user.CustomerID || user.customerID || user.id,
+          customerId: user.CustomerID || user.customerID || user.id,
+          accountId: user.account_id || user.accountId,
+        });
+      } catch (err) {
+        console.error("[Chat] Error loading user:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadChatHistory();
-  }, [user]);
+    loadUser();
+  }, [propUser]);
+
+  const userId = userData?.customerId || userData?.id || propUser?.customerId || propUser?.id;
 
   // Cuộn xuống tin nhắn mới nhất
   const scrollToBottom = () => {
@@ -83,27 +66,87 @@ const Chat = ({ user, onClose }) => {
     }, 100);
   };
 
-  // Gửi tin nhắn
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !socket) return;
+  // Tải lịch sử chat
+  const loadMessages = async () => {
+    if (!userId) return;
 
-    const messageData = {
-      sender_type: "CUSTOMER",
-      sender_id: user?.customerId || user?.id,
-      receiver_type: "ADMIN",
-      receiver_id: adminId,
-      message: newMessage.trim(),
+    try {
+      const response = await chatApi.getChatHistory(userId);
+      const newMessages = response.data || response || [];
+      setMessages(newMessages);
+    } catch (error) {
+      console.error("[Chat] Error loading messages:", error);
+    }
+  };
+
+  // Khởi tạo và polling
+  useEffect(() => {
+    if (!userId || isLoading) return;
+
+    loadMessages();
+
+    pollIntervalRef.current = setInterval(() => {
+      loadMessages();
+    }, POLL_INTERVAL);
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
     };
+  }, [userId, isLoading]);
 
-    socket.emit("send_message", messageData);
-    setNewMessage("");
+  // Gửi tin nhắn
+  const handleSendMessage = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+
+    const messageText = newMessage.trim();
+    if (!messageText) return;
+
+    if (!userId) {
+      alert("Vui lòng đăng nhập để gửi tin nhắn");
+      return;
+    }
+
+    if (isSending) return;
+
+    setIsSending(true);
+    setError(null);
+
+    try {
+      await chatApi.sendMessage({
+        sender_type: "CUSTOMER",
+        sender_id: userId,
+        receiver_type: "ADMIN",
+        receiver_id: adminId,
+        message: messageText,
+      });
+
+      await loadMessages();
+      setNewMessage("");
+      scrollToBottom();
+    } catch (err) {
+      console.error("[Chat] Error:", err);
+      setError("Không thể gửi tin nhắn");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Toggle minimize
   const toggleMinimize = () => {
     setIsMinimized(!isMinimized);
   };
+
+  if (isLoading) {
+    return (
+      <div className="chat-widget">
+        <div style={{ padding: "20px", textAlign: "center" }}>
+          Đang tải...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`chat-widget ${isMinimized ? "minimized" : ""}`}>
@@ -115,8 +158,8 @@ const Chat = ({ user, onClose }) => {
           </div>
           <div className="chat-header-info">
             <span className="chat-title">Hỗ trợ khách hàng</span>
-            <span className={`chat-status ${isConnected ? "online" : "offline"}`}>
-              {isConnected ? "Đang kết nối" : "Kết nối lại..."}
+            <span className={`chat-status ${userId ? "online" : "offline"}`}>
+              {userId ? "Đang kết nối" : "Chưa đăng nhập"}
             </span>
           </div>
         </div>
@@ -132,43 +175,58 @@ const Chat = ({ user, onClose }) => {
             <div className="chat-welcome">
               <div className="chat-welcome-icon">🍽️</div>
               <h4>Chào bạn!</h4>
-              <p>
-                Cảm ơn bạn đã ghé thăm! Hãy đặt câu hỏi để chúng tôi hỗ trợ bạn tốt nhất.
-              </p>
+              <p>Hãy đặt câu hỏi để chúng tôi hỗ trợ bạn tốt nhất.</p>
             </div>
 
-            {messages.map((msg, index) => {
-              const isOwn = msg.sender_type === "CUSTOMER";
-              return (
-                <div
-                  key={msg.id || index}
-                  className={`chat-message ${isOwn ? "own" : "other"}`}
-                >
-                  <div className="message-bubble">
-                    <p>{msg.message}</p>
-                    <span className="message-time">
-                      {msg.created_at ? formatChatTime(msg.created_at) : "Vừa xong"}
-                    </span>
-                  </div>
+            {error && (
+              <div style={{ padding: "10px", background: "#ffebee", color: "#c62828", borderRadius: "8px", margin: "10px 0" }}>
+                {error}
+              </div>
+            )}
+
+            {messages.map((msg, index) => (
+              <div
+                key={msg.id || index}
+                className={`chat-message ${msg.sender_type === "CUSTOMER" ? "own" : "other"}`}
+              >
+                <div className="message-bubble">
+                  <p>{msg.message}</p>
+                  <span className="message-time">
+                    {msg.created_at ? formatChatTime(msg.created_at) : "Vừa xong"}
+                  </span>
                 </div>
-              );
-            })}
+              </div>
+            ))}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
-          <form className="chat-input-area" onSubmit={handleSendMessage}>
+          <div className="chat-input-area">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Nhập tin nhắn..."
-              className="chat-input"
+              placeholder={userId ? "Nhập tin nhắn..." : "Vui lòng đăng nhập..."}
+              disabled={!userId || isSending}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && newMessage.trim() && userId) {
+                  handleSendMessage();
+                }
+              }}
             />
-            <button type="submit" className="chat-send-btn" disabled={!newMessage.trim()}>
-              <i className="fa-solid fa-paper-plane"></i>
+            <button
+              type="button"
+              className="chat-send-btn"
+              onClick={() => handleSendMessage()}
+              disabled={!newMessage.trim() || !userId || isSending}
+            >
+              {isSending ? (
+                <i className="fa-solid fa-spinner fa-spin"></i>
+              ) : (
+                <i className="fa-solid fa-paper-plane"></i>
+              )}
             </button>
-          </form>
+          </div>
         </>
       )}
     </div>

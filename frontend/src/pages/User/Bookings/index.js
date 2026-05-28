@@ -18,6 +18,8 @@ function Bookings() {
     const [BookingTime, setBookingTime] = useState("");
     const [People, setPeople] = useState("");
 
+    const [minDate, setMinDate] = useState("");
+
     const [showBookingTable, setShowBookingTable] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -43,6 +45,15 @@ function Bookings() {
             });
     }, [userId, navigate, notify]);
 
+    // Helper lấy thời gian tối thiểu cho input time
+    const getMinTime = () => {
+        if (BookingDate !== minDate) return "";
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, "0");
+        const m = String(now.getMinutes()).padStart(2, "0");
+        return `${h}:${m}`;
+    };
+
     // 🔥 Submit form
     const handleBooking = (e) => {
         e.preventDefault();
@@ -54,6 +65,21 @@ function Bookings() {
 
         setShowConfirmModal(true);
     };
+
+    // Xóa dữ liệu booking cũ khi bắt đầu đặt mới
+    useEffect(() => {
+        // Xóa booking cũ khi component mount
+        localStorage.removeItem("current_booking_id");
+        sessionStorage.removeItem("current_booking_id");
+
+        // Set min date để không chọn ngày trước thực tế
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+
+        setMinDate(`${year}-${month}-${day}`);
+    }, []);
 
     // ✅ Xác nhận đặt bàn
     const confirmBooking = () => {
@@ -68,6 +94,10 @@ function Bookings() {
             people: People,
             status: 1,
         };
+
+        // Xóa booking cũ trước khi lưu booking mới
+        localStorage.removeItem("current_booking_id");
+        sessionStorage.removeItem("current_booking_id");
 
         sessionStorage.setItem(
             "table_bookings",
@@ -157,9 +187,17 @@ function Bookings() {
                                         type="date"
                                         className="form-control"
                                         value={BookingDate}
-                                        onChange={(e) =>
-                                            setBookingDate(e.target.value)
-                                        }
+                                        min={minDate}
+                                        onChange={(e) => {
+                                            setBookingDate(e.target.value);
+                                            // Nếu chọn ngày hôm nay thì reset thời gian về rỗng
+                                            // để áp dụng lại minTime
+                                            if (e.target.value === minDate) {
+                                                setBookingTime("");
+                                            } else {
+                                                setBookingTime("");
+                                            }
+                                        }}
                                     />
                                 </div>
 
@@ -186,6 +224,7 @@ function Bookings() {
                                         type="time"
                                         className="form-control"
                                         value={BookingTime}
+                                        min={getMinTime()}
                                         onChange={(e) =>
                                             setBookingTime(e.target.value)
                                         }
@@ -242,6 +281,7 @@ function Bookings() {
             <BookingTable
                 isVisible={showBookingTable}
                 onClose={() => setShowBookingTable(false)}
+                people={People}
             />
 
             <MenuSelection

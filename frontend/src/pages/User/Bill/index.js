@@ -3,11 +3,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { formatNumber } from "../../../components/utils/format_number";
 import VoucherShop from "./show_voucher";
 import bankingApi from "../../../api/bankingApi";
-import table_bookingApi from "../../../api/table_bookingApi";
 import booking_tableApi from "../../../api/booking_tableApi";
 import tableApi from "../../../api/tableApi";
 import orderApi from "../../../api/orderApi";
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useNotify } from '../../../contexts/ToastContext';
 
 
@@ -24,8 +23,30 @@ function Bill() {
     const [paymentSuccess, setPaymentSuccess] = useState(false);
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const location = useLocation();
 
     const hasProcessedPayment = useRef(false);
+
+    // Reload data khi location thay đổi (ví dụ: user quay lại từ Cart)
+    useEffect(() => {
+        console.log("=== BILL LOCATION CHANGED - Reloading data ===");
+        const cartData = JSON.parse(localStorage.getItem("cartItems")) || [];
+        const menuDataFromCheckout = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
+        
+        console.log("cartItems:", cartData.length);
+        console.log("menu_items:", menuDataFromCheckout.length);
+        
+        const menu = cartData.length > 0 ? cartData : menuDataFromCheckout;
+        
+        let total = 0;
+        if (menu.length > 0) {
+            total = menu.reduce((sum, item) => sum + (item.Price * (item.Quantity || 1)), 0);
+        }
+        
+        setmenu_items(menu);
+        settotal_price(total);
+        console.log("Updated menu_items state:", menu.length);
+    }, [location.pathname]);
 
     /* ================= LOAD SESSION ================= */
     useEffect(() => {
@@ -75,39 +96,155 @@ function Bill() {
             localStorage.removeItem("vnp_order_id");
         }
 
-        // Không có payment status - lấy data từ session
-        let tables = JSON.parse(localStorage.getItem("tables")) || JSON.parse(sessionStorage.getItem("tables")) || [];
-        let menu = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
-        let total = JSON.parse(localStorage.getItem("total_price")) || JSON.parse(sessionStorage.getItem("total_price")) || 0;
-        let booking = JSON.parse(localStorage.getItem("table_bookings")) || JSON.parse(sessionStorage.getItem("table_bookings"));
-        const customer = JSON.parse(localStorage.getItem("customer")) || JSON.parse(sessionStorage.getItem("customer"));
+        // Hàm load data từ storage
+        const loadBillData = async () => {
+            // Ưu tiên đọc từ cartItems (CartContext) để luôn có data mới nhất
+            // Fallback về menu_items (từ Checkout) nếu cartItems trống
+            const cartData = JSON.parse(localStorage.getItem("cartItems")) || [];
+            const menuDataFromCheckout = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
+            
+            // Debug: log để xem data
+            console.log("=== LOAD BILL DATA ===");
+            console.log("cartItems:", cartData.length, cartData);
+            console.log("menu_items:", menuDataFromCheckout.length, menuDataFromCheckout);
+            
+            // Nếu có cartItems, dùng cartItems (từ Cart)
+            // Nếu không có cartItems nhưng có menu_items, dùng menu_items (từ Checkout)
+            const menu = cartData.length > 0 ? cartData : menuDataFromCheckout;
+            
+            console.log("Final menu to display:", menu.length, menu);
+            
+            // Tính total_price từ menu items
+            let total = 0;
+            if (menu.length > 0) {
+                total = menu.reduce((sum, item) => sum + (item.Price * (item.Quantity || 1)), 0);
+            }
+            
+            let tables = JSON.parse(localStorage.getItem("tables")) || JSON.parse(sessionStorage.getItem("tables")) || [];
+            let booking = JSON.parse(localStorage.getItem("table_bookings")) || JSON.parse(sessionStorage.getItem("table_bookings"));
+            const customer = JSON.parse(localStorage.getItem("customer")) || JSON.parse(sessionStorage.getItem("customer"));
 
-        // Kiểm tra payment_success từ localStorage
-        if (localStorage.getItem("payment_success") === "true") {
-            setPaymentSuccess(true);
-        }
+            // Debug: log storage data
+            console.log("[DEBUG BILL] booking from storage:", booking);
+            console.log("[DEBUG BILL] customer from storage:", customer);
+            console.log("[DEBUG BILL] booking.customer_id:", booking?.customer_id);
+            console.log("[DEBUG BILL] booking.CustomerID:", booking?.CustomerID);
+            console.log("[DEBUG BILL] customer.CustomerID:", customer?.CustomerID);
 
-        if (!booking && !paymentSuccess) {
-            console.log("NO BOOKING DATA - Redirecting to Bookings page");
-            navigate("/Bookings");
-            return;
-        }
+            // Kiểm tra payment_success từ localStorage
+            if (localStorage.getItem("payment_success") === "true") {
+                setPaymentSuccess(true);
+            }
 
-        // GẮN customer_id nếu thiếu
-        if (!booking?.customer_id && customer?.CustomerID) {
-            booking.customer_id = customer.CustomerID;
-            localStorage.setItem("table_bookings", JSON.stringify(booking));
-            sessionStorage.setItem("table_bookings", JSON.stringify(booking));
-        }
+            if (!booking && !paymentSuccess) {
+                console.log("NO BOOKING DATA - Redirecting to Bookings page");
+                navigate("/Bookings");
+                return false;
+            }
 
-        setmenu_items(menu);
-        settable_bookings(booking);
-        settables(tables);
-        settotal_price(total);
-        setIsDataLoaded(true);
+            // GẮN customer_id nếu thiếu (hỗ trợ cả PascalCase và snake_case)
+            if (!booking?.customer_id && !booking?.CustomerID) {
+                let customerId = null;
+                
+                // Thử lấy từ customer storage trước
+                if (customer?.CustomerID) {
+                    customerId = customer.CustomerID;
+                } else if (customer?.customer_id) {
+                    customerId = customer.customer_id;
+                }
+                
+                // Nếu không có trong storage, thử lấy từ API
+                if (!customerId) {
+                    console.log("[DEBUG BILL] No customer_id in storage, fetching from API...");
+                    try {
+                        const res = await fetch("http://localhost:8000/api/customers/me", {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                        });
+                        if (res.ok) {
+                            const customerData = await res.json();
+                            customerId = customerData.CustomerID || customerData.id;
+                            console.log("[DEBUG BILL] Got customerId from API:", customerId);
+                        }
+                    } catch (e) {
+                        console.error("[DEBUG BILL] Error fetching customer:", e);
+                    }
+                }
+                
+                if (customerId) {
+                    booking.customer_id = customerId;
+                    localStorage.setItem("table_bookings", JSON.stringify(booking));
+                    sessionStorage.setItem("table_bookings", JSON.stringify(booking));
+                    console.log("[DEBUG BILL] Attached customer_id to booking:", customerId);
+                }
+            }
 
-        console.log("DATA LOADED - Bill ready");
+            setmenu_items(menu);
+            settable_bookings(booking);
+            settables(tables);
+            settotal_price(total);
+            setIsDataLoaded(true);
+            
+            console.log("DATA LOADED - Bill ready, menu_items:", menu.length);
+            return true;
+        };
+
+        // Load data lần đầu
+        loadBillData();
+
+        // Listener để reload data khi user quay lại trang (ví dụ: từ Cart)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                console.log("=== BILL VISIBLE AGAIN - Reloading data ===");
+                loadBillData();
+            }
+        };
+
+        // Listener cho storage change (khi user thêm món từ trang khác)
+        const handleStorageChange = (e) => {
+            if (e.key === 'cartItems' || e.key === 'menu_items') {
+                console.log("=== BILL STORAGE CHANGED - Reloading data ===", e.key);
+                loadBillData();
+            }
+        };
+
+        // Listener cho focus event (khi user click vào tab)
+        const handleFocus = () => {
+            console.log("=== BILL WINDOW FOCUSED - Reloading data ===");
+            loadBillData();
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('focus', handleFocus);
+
+        // Cleanup listeners
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('focus', handleFocus);
+        };
     }, [navigate, searchParams, paymentSuccess]);
+
+    // Polling để check localStorage thay đổi (cho cùng tab)
+    useEffect(() => {
+        const checkInterval = setInterval(() => {
+            const currentCartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
+            const currentMenuItems = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
+            const allItems = currentCartItems.length > 0 ? currentCartItems : currentMenuItems;
+
+            // So sánh với state hiện tại
+            if (allItems.length !== menu_items.length) {
+                console.log("=== BILL POLLING DETECTED CHANGE - Updating ===");
+                setmenu_items(allItems);
+                const newTotal = allItems.reduce((sum, item) => sum + (item.Price * (item.Quantity || 1)), 0);
+                settotal_price(newTotal);
+            }
+        }, 1000); // Check mỗi 1 giây
+
+        return () => clearInterval(checkInterval);
+    }, [menu_items.length]);
 
     // Redirect sang Thanks page sau 5 giây khi thanh toán thành công
     useEffect(() => {
@@ -196,7 +333,9 @@ function Bill() {
             // Đã có booking, chỉ cần tạo order
             console.log("Booking đã tồn tại, BookingID:", existingBookingId);
             createBookingTables(existingBookingId);
-            createOrder(existingBookingId);
+            // Lấy menu_items trực tiếp từ storage
+            const storedMenuItems = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
+            createOrder(existingBookingId, storedMenuItems);
             return;
         }
 
@@ -212,7 +351,7 @@ function Bill() {
             `${booking.booking_date}T${booking.booking_time}:00`;
 
         const payload = {
-            CustomerID: booking.customer_id,
+            CustomerID: booking.customer_id || booking.CustomerID,
             FullName: booking.full_name,
             Email: booking.email || null,
             PhoneNumber: booking.phone_number,
@@ -224,15 +363,26 @@ function Bill() {
 
         console.log("BOOKING PAYLOAD SEND:", payload);
 
-        table_bookingApi
+        // Sử dụng booking_tableApi thay vì table_bookingApi để đồng bộ với show_booking
+        booking_tableApi
             .create(payload)
             .then(res => {
-                const bookingID = res.data.BookingID;
+                console.log("[DEBUG] booking_tableApi.create response:", res);
+                const bookingID = res.data?.BookingID || res.data?.booking_id;
+                console.log("[DEBUG] Extracted bookingID:", bookingID);
+                if (!bookingID) {
+                    console.error("[ERROR] bookingID is undefined!");
+                    setIsProcessingPayment(false);
+                    notify.error("Lỗi tạo booking. Vui lòng thử lại.");
+                    return;
+                }
                 // Lưu booking ID vào session để tránh tạo lại
                 localStorage.setItem("current_booking_id", bookingID);
                 sessionStorage.setItem("current_booking_id", bookingID);
                 createBookingTables(bookingID);
-                createOrder(bookingID);
+                // Lấy menu_items trực tiếp từ storage
+                const storedMenuItems = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
+                createOrder(bookingID, storedMenuItems);
             })
             .catch(err => {
                 console.error("Lỗi tạo booking:", err.response?.data || err);
@@ -260,9 +410,10 @@ function Bill() {
         }
 
         const payload = {
-            customer_id: currentBooking.customer_id,
+            customer_id: currentBooking.customer_id || currentBooking.CustomerID,
             booking_time: `${currentBooking.booking_date}T${currentBooking.booking_time}:00`,
             table_ids: currentTables.map(t => Number(t.TableID)),
+            people: Number(currentBooking.people) || 1,
         };
 
         console.log("BOOKING_TABLE PAYLOAD:", payload);
@@ -281,18 +432,21 @@ function Bill() {
     }
 
     /* ================= ORDER ================= */
-    function createOrder(BookingID) {
+    function createOrder(BookingID, menuItems = []) {
         const now = new Date();
 
+        // Sử dụng menuItems được truyền vào, hoặc lấy từ state, hoặc từ storage
+        const itemsToUse = menuItems.length > 0 ? menuItems : menu_items;
+
         // Chuẩn bị items cho order
-        const items = menu_items.map(item => ({
+        const items = itemsToUse.map(item => ({
             MenuItemID: item.MenuItemID,
             Quantity: item.Quantity || 1
         }));
 
         const payload = {
             BookingID,
-            CustomerID: table_bookings.customer_id,
+            CustomerID: table_bookings.customer_id || table_bookings.CustomerID,
             PromotionID: Promotion?.PromotionID || null,
             TotalAmount: total_price,
             OrderDate: now.toISOString(),
@@ -345,15 +499,40 @@ function Bill() {
 
     if (isProcessingPayment) {
         return (
-            <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0', minHeight: '100vh' }}>
+            <div className='container-fluid w-100' style={{ background: 'linear-gradient(135deg, #10302c 0%, #1a4a42 100%)', padding: '80px 0 0 0', minHeight: '100vh' }}>
                 <div className='container text-center text-white'>
                     <div style={{ marginTop: '100px' }}>
-                        <div className="spinner-border text-primary" role="status" style={{ width: '4rem', height: '4rem' }}>
-                            <span className="visually-hidden">Loading...</span>
+                        {/* Animated Payment Icon */}
+                        <div style={{
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 30px',
+                            boxShadow: '0 10px 40px rgba(20, 184, 166, 0.4)',
+                            animation: 'pulse 2s infinite'
+                        }}>
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="white" style={{ animation: 'spin 2s linear infinite' }}>
+                                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" fill="none" strokeDasharray="60" strokeDashoffset="20"/>
+                            </svg>
                         </div>
-                        <h2 className="mt-4">Đang xử lý thanh toán...</h2>
-                        <p>Vui lòng đợi trong giây lát</p>
+                        <h2 className="mt-4" style={{ fontWeight: '600', fontSize: '1.8rem' }}>Đang xử lý thanh toán</h2>
+                        <p className="mt-3" style={{ opacity: 0.8, fontSize: '1.1rem' }}>Vui lòng đợi trong giây lát...</p>
+                        <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '20px' }}>Đang kết nối với VNPay</p>
                     </div>
+                    <style>{`
+                        @keyframes pulse {
+                            0%, 100% { transform: scale(1); }
+                            50% { transform: scale(1.05); }
+                        }
+                        @keyframes spin {
+                            from { transform: rotate(0deg); }
+                            to { transform: rotate(360deg); }
+                        }
+                    `}</style>
                 </div>
             </div>
         );
@@ -362,45 +541,95 @@ function Bill() {
     // Hiển thị thông báo thanh toán thành công khi redirect từ VNPay
     if (paymentSuccess || (paymentStatus === '00')) {
         return (
-            <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0', minHeight: '100vh' }}>
+            <div className='container-fluid w-100' style={{ background: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)', padding: '80px 0 0 0', minHeight: '100vh' }}>
                 <div className='container text-center text-white'>
-                    <div style={{ marginTop: '100px' }}>
+                    <div style={{ marginTop: '80px' }}>
+                        {/* Success Icon with Animation */}
                         <div style={{
-                            width: '100px',
-                            height: '100px',
+                            width: '140px',
+                            height: '140px',
                             borderRadius: '50%',
-                            backgroundColor: '#28a745',
+                            background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            margin: '0 auto'
+                            margin: '0 auto 30px',
+                            boxShadow: '0 15px 50px rgba(16, 185, 129, 0.5)',
+                            animation: 'bounceIn 0.6s ease-out'
                         }}>
-                            <svg width="60" height="60" viewBox="0 0 24 24" fill="white">
+                            <svg width="70" height="70" viewBox="0 0 24 24" fill="white">
                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                             </svg>
                         </div>
-                        <h2 className="mt-4" style={{ color: '#28a745' }}>✓ Thanh toán VNPay thành công!</h2>
-                        <p className="mt-3">Cảm ơn bạn đã thanh toán. Đơn hàng của bạn đang được xử lý.</p>
-                        {paymentMessage && <p>Chi tiết: {decodeURIComponent(paymentMessage)}</p>}
-                        <p className="mt-4">Đang chuyển sang trang cảm ơn...</p>
-                        <div className="spinner-border text-light mt-3" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                        </div>
-                        <div className='mt-4'>
-                            {/* <button
-                                onClick={() => navigate('/Thanks')}
-                                className='btn btn-warning me-2'
-                            >
-                                Đến trang cảm ơn ngay
-                            </button> */}
-                            <button
-                                onClick={() => navigate('/user/home')}
-                                className='btn btn-secondary'
-                            >
-                                Về trang chủ
-                            </button>
-                        </div>
+                        <h2 className="mt-4" style={{ 
+                            fontWeight: '700', 
+                            fontSize: '2rem',
+                            color: '#d1fae5'
+                        }}>
+                            Thanh toán thành công!
+                        </h2>
+                        <p className="mt-3" style={{ 
+                            opacity: 0.95, 
+                            fontSize: '1.15rem',
+                            maxWidth: '500px',
+                            margin: '0 auto'
+                        }}>
+                            Cảm ơn bạn đã thanh toán qua VNPay. 
+                            Đơn hàng của bạn đang được xử lý.
+                        </p>
+                        {paymentMessage && (
+                            <div style={{
+                                background: 'rgba(255,255,255,0.15)',
+                                padding: '12px 24px',
+                                borderRadius: '12px',
+                                marginTop: '20px',
+                                display: 'inline-block'
+                            }}>
+                                <span style={{ opacity: 0.8 }}>{decodeURIComponent(paymentMessage)}</span>
+                            </div>
+                        )}
+                        <p className="mt-4" style={{ opacity: 0.7, fontSize: '0.95rem' }}>
+                            Đang chuyển sang trang cảm ơn...
+                        </p>
+                        <div style={{
+                            width: '40px',
+                            height: '40px',
+                            border: '3px solid rgba(255,255,255,0.3)',
+                            borderTop: '3px solid white',
+                            borderRadius: '50%',
+                            margin: '20px auto 0',
+                            animation: 'spin 1s linear infinite'
+                        }}></div>
                     </div>
+                    <div className='mt-5'>
+                        <button
+                            onClick={() => navigate('/user/home')}
+                            style={{
+                                background: 'rgba(255,255,255,0.15)',
+                                border: '2px solid rgba(255,255,255,0.3)',
+                                borderRadius: '12px',
+                                padding: '14px 32px',
+                                color: 'white',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                            }}
+                        >
+                            Về trang chủ
+                        </button>
+                    </div>
+                    <style>{`
+                        @keyframes bounceIn {
+                            0% { transform: scale(0); opacity: 0; }
+                            50% { transform: scale(1.1); }
+                            100% { transform: scale(1); opacity: 1; }
+                        }
+                        @keyframes spin {
+                            from { transform: rotate(0deg); }
+                            to { transform: rotate(360deg); }
+                        }
+                    `}</style>
                 </div>
             </div>
         );
@@ -416,7 +645,7 @@ function Bill() {
     }
 
     const HandlePayVNPay = () => {
-        if (!table_bookings?.customer_id) {
+        if (!table_bookings?.customer_id && !table_bookings?.CustomerID) {
             notify.warning("Thiếu CustomerID – vui lòng đăng nhập lại");
             return;
         }
@@ -428,10 +657,17 @@ function Bill() {
 
         // Nếu đã có booking, chỉ cần tạo order mới và thanh toán
         if (existingBookingId) {
+            const bookingId = parseInt(existingBookingId);
+            if (isNaN(bookingId) || bookingId <= 0) {
+                console.error("Invalid booking ID from storage:", existingBookingId);
+                notify.error("Mã booking không hợp lệ. Vui lòng đặt bàn lại.");
+                setIsProcessingPayment(false);
+                return;
+            }
             // Tạo booking_tables trước (nếu chưa có)
-            createBookingTablesForExistingBooking(parseInt(existingBookingId))
+            createBookingTablesForExistingBooking(bookingId)
                 .then(() => {
-                    createOrderAndPay(parseInt(existingBookingId));
+                    createOrderAndPay(bookingId);
                 })
                 .catch(err => {
                     console.error("Lỗi tạo booking_tables:", err);
@@ -442,23 +678,34 @@ function Bill() {
 
         // Tạo booking mới trước
         const bookingDateTime = `${table_bookings.booking_date}T${table_bookings.booking_time}:00`;
+
+        // Lấy tables từ storage
+        const currentTables = JSON.parse(localStorage.getItem("tables"))
+            || JSON.parse(sessionStorage.getItem("tables"))
+            || [];
+
         const bookingPayload = {
-            CustomerID: table_bookings.customer_id,
-            FullName: table_bookings.full_name,
-            Email: table_bookings.email || null,
-            PhoneNumber: table_bookings.phone_number,
-            Address: table_bookings.address,
-            BookingTime: bookingDateTime,
-            People: Number(table_bookings.people),
-            Status: table_bookings.status,
+            customer_id: table_bookings.customer_id || table_bookings.CustomerID,
+            booking_time: bookingDateTime,
+            table_ids: currentTables.map(t => Number(t.TableID)),
         };
 
-        console.log("Creating booking first:", bookingPayload);
+        console.log("Creating booking with booking_tableApi:", bookingPayload);
 
-        table_bookingApi
+        booking_tableApi
             .create(bookingPayload)
             .then(res => {
-                const bookingID = res.data.BookingID;
+                console.log("[DEBUG] Full response from create booking:", res);
+                console.log("[DEBUG] res.data:", res.data);
+                console.log("[DEBUG] res.data keys:", res.data ? Object.keys(res.data) : "N/A");
+                const bookingID = res.data?.BookingID || res.data?.booking_id || res.data?.id || res.data?.ID;
+                console.log("[DEBUG] Booking created, ID:", bookingID);
+                if (!bookingID) {
+                    console.error("[ERROR] bookingID is undefined!");
+                    setIsProcessingPayment(false);
+                    notify.error("Lỗi tạo booking. Vui lòng thử lại.");
+                    return;
+                }
                 localStorage.setItem("current_booking_id", bookingID);
                 sessionStorage.setItem("current_booking_id", bookingID);
 
@@ -482,15 +729,19 @@ function Bill() {
 
         const now = new Date();
 
+        // Lấy menu_items trực tiếp từ storage
+        const storedMenuItems = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
+        const itemsToUse = storedMenuItems.length > 0 ? storedMenuItems : menu_items;
+
         // Chuẩn bị items cho order
-        const items = menu_items.map(item => ({
+        const items = itemsToUse.map(item => ({
             MenuItemID: item.MenuItemID,
             Quantity: item.Quantity || 1
         }));
 
         const orderPayload = {
             BookingID: bookingID,
-            CustomerID: table_bookings.customer_id,
+            CustomerID: table_bookings.customer_id || table_bookings.CustomerID,
             PromotionID: Promotion?.PromotionID || null,
             OrderDate: now.toISOString(),
             Items: items
@@ -572,7 +823,9 @@ function Bill() {
     };
 
     const getImagePath = (imageUrl) => {
-        if (!imageUrl) return '';
+        // Ảnh mặc định nếu không có URL
+        const defaultImage = 'https://bizweb.dktcdn.net/thumb/compact/100/469/097/products/untitled1bb4fdbb3bd7845448a799-a1c5a559-3505-435f-9278-d7ba29e9c529.jpg';
+        if (!imageUrl) return defaultImage;
         // Encode URL de xu ly ky tu dac biet (dau cach, tieng Viet)
         const encodedPath = imageUrl.split('/').map(part => encodeURIComponent(part)).join('/');
         // Localhost
@@ -581,7 +834,7 @@ function Bill() {
     };
 
     return (
-        <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 0 0' }}>
+        <div  className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 40px 0', minHeight: '70vh' }}>
             {/* Thông báo thanh toán VNPay */}
             {paymentStatus && (
                 <div className={`alert ${paymentStatus === '00' ? 'alert-success' : 'alert-danger'} m-3`} role="alert">
@@ -597,7 +850,24 @@ function Bill() {
 
             <div className='container-fluid p-0' style={{ height: '50px', background: '#000' }}>
                 <div className='container h-100 d-flex align-items-center'>
-                    <p className='m-0' style={{ color: '#fff' }}>Trang chủ / </p>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontSize: '14px',
+                            padding: '0',
+                            marginRight: '8px'
+                        }}
+                    >
+                        ← Quay lại
+                    </button>
+                    <p className='m-0' style={{ color: '#fff' }}> / </p>
                     <p className='m-0' style={{ color: '#d69c52' }}>  Thông tin đặt bàn</p>
                 </div>
             </div>
@@ -620,8 +890,12 @@ function Bill() {
                                     <span>{table_bookings?.phone_number}</span>
                                 </p>
                                 <p>
-                                    <span>Thời gian:</span>
-                                    <span>{table_bookings?.BookingTime}</span>
+                                    <span>Ngày đặt:</span>
+                                    <span>{table_bookings?.booking_date}</span>
+                                </p>
+                                <p>
+                                    <span>Giờ đặt:</span>
+                                    <span>{table_bookings?.booking_time}</span>
                                 </p>
                             </div>
                             <div className='col-md-8'>
@@ -701,19 +975,59 @@ function Bill() {
 
                         </div>
                         <div className=' mt-2 d-flex align-items-center justify-content-center flex-column'>
-                            <h5 className="mb-3">Chọn phương thức thanh toán</h5>
+                            <h5 className="mb-3" style={{ fontWeight: '600' }}>Chọn phương thức thanh toán</h5>
                             <div className="d-flex gap-3 w-100">
                                 <button
-                                    style={{ backgroundColor: '#6c757d', color: 'white', fontSize: '18px', padding: '15px 20px', border: 'none', borderRadius: '8px', flex: 1 }}
+                                    style={{
+                                        background: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                                        color: 'white',
+                                        fontSize: '16px',
+                                        padding: '16px 20px',
+                                        border: 'none',
+                                        borderRadius: '12px',
+                                        flex: 1,
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 4px 15px rgba(107, 114, 128, 0.3)',
+                                        transition: 'all 0.3s ease'
+                                    }}
                                     onClick={() => { HandlePayCash() }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.transform = 'translateY(-2px)';
+                                        e.target.style.boxShadow = '0 6px 20px rgba(107, 114, 128, 0.4)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.transform = 'translateY(0)';
+                                        e.target.style.boxShadow = '0 4px 15px rgba(107, 114, 128, 0.3)';
+                                    }}
                                 >
-                                    Thanh toán tiền mặt
+                                    💵 Thanh toán tiền mặt
                                 </button>
                                 <button
-                                    style={{ backgroundColor: '#0d6efd', color: 'white', fontSize: '18px', padding: '15px 20px', border: 'none', borderRadius: '8px', flex: 1 }}
+                                    style={{
+                                        background: 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)',
+                                        color: 'white',
+                                        fontSize: '16px',
+                                        padding: '16px 20px',
+                                        border: 'none',
+                                        borderRadius: '12px',
+                                        flex: 1,
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 4px 15px rgba(13, 110, 253, 0.3)',
+                                        transition: 'all 0.3s ease'
+                                    }}
                                     onClick={() => { HandlePayVNPay() }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.transform = 'translateY(-2px)';
+                                        e.target.style.boxShadow = '0 6px 20px rgba(13, 110, 253, 0.4)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.transform = 'translateY(0)';
+                                        e.target.style.boxShadow = '0 4px 15px rgba(13, 110, 253, 0.3)';
+                                    }}
                                 >
-                                    Thanh toán qua VNPAY
+                                    💳 Thanh toán qua VNPAY
                                 </button>
                             </div>
                         </div>

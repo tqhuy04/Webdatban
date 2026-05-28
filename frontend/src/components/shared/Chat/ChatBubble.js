@@ -1,38 +1,49 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Chat from "./Chat";
+import { useChatContext } from "../../../contexts/ChatContext";
 import "./ChatBubble.css";
 
-const ChatBubble = ({ user }) => {
+const ChatBubble = () => {
+  const { user } = useChatContext();
   const [isOpen, setIsOpen] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [forceRenderKey, setForceRenderKey] = useState(0);
 
-  const handleOpenChat = () => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      setTimeout(() => setShowLoginPrompt(false), 3000);
-      return;
+  // Lắng nghe sự kiện đăng nhập thành công
+  useEffect(() => {
+    const handleLoginSuccess = () => {
+      setForceRenderKey((prev) => prev + 1);
+    };
+
+    window.addEventListener("loginSuccess", handleLoginSuccess);
+    return () => window.removeEventListener("loginSuccess", handleLoginSuccess);
+  }, []);
+
+  // Force re-render khi user thay đổi
+  useEffect(() => {
+    if (user && isOpen) {
+      setForceRenderKey((prev) => prev + 1);
     }
-    setIsOpen(true);
-  };
+  }, [user, isOpen]);
 
-  if (!user) return null;
+  const handleCloseChat = () => {
+    setIsOpen(false);
+  };
 
   return (
     <>
-      {isOpen && <Chat user={user} onClose={() => setIsOpen(false)} />}
+      {isOpen && (
+        <Chat
+          key={forceRenderKey}
+          user={user}
+          onClose={handleCloseChat}
+        />
+      )}
 
-      {!isOpen && (
-        <>
-          {showLoginPrompt && (
-            <div className="chat-login-prompt">
-              Vui lòng đăng nhập để sử dụng chat
-            </div>
-          )}
-          <button className="chat-bubble-btn" onClick={handleOpenChat}>
-            <i className="fa-solid fa-comments"></i>
-            <span className="chat-bubble-tooltip">Chat với chúng tôi</span>
-          </button>
-        </>
+      {!isOpen && user && (
+        <button className="chat-bubble-btn" onClick={() => setIsOpen(true)}>
+          <i className="fa-solid fa-comments"></i>
+          <span className="chat-bubble-tooltip">Chat với chúng tôi</span>
+        </button>
       )}
     </>
   );

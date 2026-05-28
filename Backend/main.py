@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import socketio
@@ -27,6 +27,7 @@ from Backend.models.cart import Cart
 from Backend.models.otp import OTP
 from Backend.models.chat_message import ChatMessage, _conversation_id_for_message
 from Backend.models.chat_conversation import ChatConversation
+from Backend.models.notification import Notification
 from Backend.core.datetime_utils import isoformat_utc_z
 
 # CREATE TABLES
@@ -35,13 +36,7 @@ Base.metadata.create_all(bind=engine)
 # SOCKET.IO SERVER - CORS cho phép Vercel
 sio = socketio.AsyncServer(
     async_mode='asgi',
-    cors_allowed_origins=[
-        "https://webdatbandola-phi.vercel.app",
-        "https://*.vercel.app",
-        "https://webdatbann.onrender.com",
-        "http://localhost:3000",
-        "http://localhost:8000",
-    ],
+    cors_allowed_origins="*",  # Cho phép tất cả origins để test
     ping_timeout=60000,
     ping_interval=25000,
 )
@@ -63,7 +58,7 @@ app.add_middleware(
         "https://*.vercel.app",
         "https://webdatbann.onrender.com",
     ],
-    allow_credentials=True,
+    allow_credentials=False,  # Đổi thành False để cho phép wildcard origin
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -93,6 +88,7 @@ from Backend.routers.banking import router as banking
 from Backend.routers.order_detail import router as order_detail
 from Backend.routers.cart import router as cart
 from Backend.routers.chat import router as chat
+from Backend.routers.notification import router as notification
 
 app.include_router(auth)
 app.include_router(account)
@@ -110,6 +106,40 @@ app.include_router(banking)
 app.include_router(order_detail)
 app.include_router(cart)
 app.include_router(chat)
+app.include_router(notification)
+
+# =========================
+# AUTO CANCEL EXPIRED BOOKINGS
+# =========================
+@app.on_event("startup")
+async def startup_event():
+    """Chạy khi server khởi động."""
+    import asyncio
+    from Backend.database import SessionLocal
+    from Backend.services.booking_service import auto_cancel_expired_bookings
+
+    def run_cancel():
+        db = SessionLocal()
+        try:
+            count = auto_cancel_expired_bookings(db)
+            if count > 0:
+                print(f"[AUTO-CANCEL] Đã tự động hủy {count} đặt bàn quá hạn")
+        except Exception as e:
+            print(f"[AUTO-CANCEL] Lỗi: {e}")
+        finally:
+            db.close()
+
+    # Chạy auto-cancel ngay lập tức
+    run_cancel()
+
+    # Sau đó chạy mỗi 60 giây
+    async def run_periodic_cancel():
+        while True:
+            await asyncio.sleep(60)
+            run_cancel()
+
+    # Tạo task chạy nền
+    asyncio.create_task(run_periodic_cancel())
 
 # Create uploads directory if not exists
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -313,6 +343,25 @@ async def handle_get_online_customers(sid, data):
             })
     await sio.emit("online_customers_list", {"customers": customers}, room=sid)
     return {"customers": customers}
+
+
+# Hàm gửi thông báo cho tất cả admin (dùng khi có đơn hàng/đặt bàn mới)
+async def send_notification_to_admins(sio, notification_data: dict):
+    """Gửi thông báo cho tất cả admin đang online"""
+    for sid, user_info in online_users.items():
+        if user_info.get("user_type") == "ADMIN":
+            await sio.emit("new_notification", notification_data, room=sid)
+
+
+@app.get("/api/socket-test")
+async def socket_test():
+    """Test endpoint để kiểm tra Socket.IO có hoạt động không"""
+    return {
+        "status": "ok",
+        "message": "Socket.IO server is running",
+        "online_users": len(online_users),
+        "sockets": list(online_users.keys())
+    }
 
 
 # Xuất socket_app làm ứng dụng chính

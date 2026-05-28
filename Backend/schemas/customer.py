@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 class CustomerCreate(BaseModel):
@@ -14,7 +14,7 @@ class CustomerUpdate(BaseModel):
 
 
 class CustomerOut(BaseModel):
-    id: int
+    id: int = Field(..., alias="CustomerID")
     account_id: int
     full_name: str
     phone_number: str
@@ -22,3 +22,4 @@ class CustomerOut(BaseModel):
 
     class Config:
         from_attributes = True
+        populate_by_name = True

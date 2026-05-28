@@ -19,7 +19,8 @@ from Backend.controllers.menu_item_controller import (
     get_by_id,
     create,
     update,
-    delete
+    delete,
+    search
 )
 
 from Backend.core.dependencies import admin_required
@@ -167,3 +168,14 @@ def delete_menu_item(
     _: dict = Depends(admin_required)
 ):
     return delete(db, item_id)
+
+
+# =========================
+# SEARCH
+# =========================
+@router.get("/search/", response_model=List[MenuItemResponse])
+def search_menu_items(
+    keyword: str,
+    db: Session = Depends(get_db)
+):
+    return search(db, keyword)

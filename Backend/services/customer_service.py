@@ -56,3 +56,11 @@ def delete(db: Session, customer_id: int) -> bool:
     db.delete(customer)
     db.commit()
     return True
+
+
+def search_customers(db: Session, keyword: str) -> List[Customer]:
+    """Search customers by name or phone"""
+    return db.query(Customer).filter(
+        (Customer.full_name.ilike(f"%{keyword}%")) |
+        (Customer.phone_number.ilike(f"%{keyword}%"))
+    ).all()

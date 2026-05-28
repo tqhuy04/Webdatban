@@ -12,13 +12,42 @@ function Show_bookingTable() {
     const [loading, setLoading] = useState(true);
     const { BookingID } = useParams();
 
+    // Modal state
+    const [showCheckinModal, setShowCheckinModal] = useState(false);
+    const [checkinLoading, setCheckinLoading] = useState(false);
+
     // ✅ DÙNG THẬT
     const handleToOrder = () => {
         navigate(`/Order/${BookingID}`);
     };
 
-    const handleToTable = () => {
-        navigate(`/OrderDetail/${BookingID}`);
+
+    // Mở modal checkin
+    const handleCheckinClick = () => {
+        setShowCheckinModal(true);
+    };
+
+    // Xác nhận checkin
+    const handleCheckinConfirm = () => {
+        setCheckinLoading(true);
+        booking_tableApi.checkinMe(BookingID)
+            .then(() => {
+                setShowCheckinModal(false);
+                setCheckinLoading(false);
+                navigate('/Show_booking');
+            })
+            .catch((error) => {
+                console.error("Lỗi checkin:", error);
+                setShowCheckinModal(false);
+                setCheckinLoading(false);
+            });
+    };
+
+    // Đóng modal
+    const handleCloseModal = () => {
+        if (!checkinLoading) {
+            setShowCheckinModal(false);
+        }
     };
 
     useEffect(() => {
@@ -40,12 +69,44 @@ function Show_bookingTable() {
     const startIndex = (currentPage - 1) * PAGE_SIZE;
     const currentTables = tables.slice(startIndex, startIndex + PAGE_SIZE);
 
+    const getTableStatus = (status) => {
+        if (status === undefined || status === null) {
+            return { label: 'Còn trống', className: 'available' };
+        }
+        switch (status) {
+            case 0:
+                return { label: 'Còn trống', className: 'available' };
+            case 1:
+                return { label: 'Đã đặt', className: 'reserved' };
+            case 2:
+                return { label: 'Đang sử dụng', className: 'occupied' };
+            default:
+                return { label: 'Còn trống', className: 'available' };
+        }
+    };
+
     return (
         <div className='show-booking-container'>
             <div className='show-booking-hero'>
                 <div className='container'>
                     <nav className='breadcrumb-nav'>
-                        <span className='breadcrumb-home'>Trang chủ</span>
+                        <button
+                            onClick={() => navigate(-1)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '14px',
+                                padding: '0',
+                                marginRight: '8px'
+                            }}
+                        >
+                            ← Quay lại
+                        </button>
                         <span className='breadcrumb-separator'>/</span>
                         <span className='breadcrumb-current'>Các lượt đặt bàn của tôi</span>
                     </nav>
@@ -55,13 +116,13 @@ function Show_bookingTable() {
             <div className='container show-booking-content'>
                 {/* Action Buttons */}
                 <div className='action-buttons'>
+                    <button className="btn-action btn-checkin" onClick={handleCheckinClick}>
+                        <span className="btn-icon">📍</span>
+                        <span className="btn-text">Tôi đã đến</span>
+                    </button>
                     <button className="btn-action btn-order" onClick={handleToOrder}>
                         <span className="btn-icon">📋</span>
                         <span className="btn-text">Xem đơn đặt món</span>
-                    </button>
-                    <button className="btn-action btn-detail" onClick={handleToTable}>
-                        <span className="btn-icon">📦</span>
-                        <span className="btn-text">Chi tiết đơn</span>
                     </button>
                 </div>
 
@@ -83,7 +144,7 @@ function Show_bookingTable() {
                                 {currentTables.map((item, index) => (
                                     <div
                                         key={`${item.BookingID}-${item.TableID}`}
-                                        className={`table-card ${item.table?.Status === 0 ? 'available' : 'occupied'}`}
+                                        className={`table-card ${getTableStatus(item.table?.Status).className}`}
                                         style={{ animationDelay: `${index * 0.1}s` }}
                                     >
                                         <div className='table-card-header'>
@@ -91,8 +152,8 @@ function Show_bookingTable() {
                                                 <span className="table-icon">🪑</span>
                                                  {item.table?.TableNumber}
                                             </div>
-                                            <span className={`status-badge ${item.table?.Status === 0 ? 'available' : 'occupied'}`}>
-                                                {item.table?.Status === 0 ? 'Còn trống' : 'Hết bàn'}
+                                            <span className={`status-badge ${getTableStatus(item.table?.Status).className}`}>
+                                                {getTableStatus(item.table?.Status).label}
                                             </span>
                                         </div>
                                         <div className='table-card-body'>
@@ -135,10 +196,53 @@ function Show_bookingTable() {
                 </div>
             </div>
 
+            {/* Checkin Modal */}
+            {showCheckinModal && (
+                <div className="modal-overlay" onClick={handleCloseModal}>
+                    <div className="modal-content checkin-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-icon checkin-icon">
+                            <span>📍</span>
+                        </div>
+                        <h3>Xác nhận Check-in</h3>
+                        <p className="modal-info">Mã đặt bàn: <strong>#{BookingID}</strong></p>
+                        <p className="modal-message">
+                            Bạn đã đến nhà hàng và muốn check-in?
+                        </p>
+                        <div className="checkin-options">
+                            <button
+                                className="btn-checkin-option btn-confirm-checkin"
+                                onClick={handleCheckinConfirm}
+                                disabled={checkinLoading}
+                            >
+                                {checkinLoading ? (
+                                    <>
+                                        <span className="spinner-small"></span>
+                                        <span>Đang xử lý...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="option-icon">✓</span>
+                                        <span className="option-text">Xác nhận đã đến</span>
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                className="btn-modal btn-close-checkin"
+                                onClick={handleCloseModal}
+                                disabled={checkinLoading}
+                            >
+                                Hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style>{`
                 .show-booking-container {
                     min-height: 100vh;
                     background: linear-gradient(135deg, #10302c 0%, #0a1f1c 100%);
+                    padding-top: 80px;
                 }
 
                 .show-booking-hero {
@@ -204,14 +308,15 @@ function Show_bookingTable() {
                     box-shadow: 0 6px 20px rgba(214, 156, 82, 0.4);
                 }
 
-                .btn-detail {
-                    background: linear-gradient(135deg, #4ecdc4 0%, #3dbdb5 100%);
+
+                .btn-checkin {
+                    background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
                     color: #fff;
                 }
 
-                .btn-detail:hover {
+                .btn-checkin:hover {
                     transform: translateY(-2px);
-                    box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+                    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
                 }
 
                 .btn-icon {
@@ -281,6 +386,10 @@ function Show_bookingTable() {
                     border-left: 4px solid #4ecdc4;
                 }
 
+                .table-card.reserved {
+                    border-left: 4px solid #f39c12;
+                }
+
                 .table-card.occupied {
                     border-left: 4px solid #ff6b6b;
                 }
@@ -316,6 +425,11 @@ function Show_bookingTable() {
                 .status-badge.available {
                     background: rgba(78, 205, 196, 0.2);
                     color: #4ecdc4;
+                }
+
+                .status-badge.reserved {
+                    background: rgba(243, 156, 18, 0.2);
+                    color: #f39c12;
                 }
 
                 .status-badge.occupied {
@@ -420,6 +534,147 @@ function Show_bookingTable() {
                     .tables-grid {
                         grid-template-columns: 1fr;
                     }
+                }
+
+                /* Checkin Modal Styles */
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                    backdrop-filter: blur(4px);
+                    animation: fadeIn 0.3s ease;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                .checkin-modal {
+                    background: linear-gradient(145deg, #1a3a34 0%, #0d2622 100%);
+                    border-radius: 24px;
+                    padding: 40px;
+                    max-width: 420px;
+                    width: 90%;
+                    text-align: center;
+                    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px) scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
+                }
+
+                .checkin-modal h3 {
+                    color: #fff;
+                    font-size: 24px;
+                    font-weight: 700;
+                    margin: 20px 0 10px;
+                }
+
+                .checkin-modal .modal-info {
+                    color: #d69c52;
+                    font-size: 16px;
+                    margin-bottom: 8px;
+                }
+
+                .checkin-modal .modal-message {
+                    color: rgba(255, 255, 255, 0.8);
+                    font-size: 15px;
+                    margin-bottom: 25px;
+                    line-height: 1.5;
+                }
+
+                .checkin-icon {
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto;
+                    box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+                }
+
+                .checkin-icon span {
+                    font-size: 36px;
+                }
+
+                .checkin-options {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    margin-top: 20px;
+                }
+
+                .btn-checkin-option {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    padding: 16px 24px;
+                    border: none;
+                    border-radius: 14px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .btn-confirm-checkin {
+                    background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+                    color: #fff;
+                    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+                }
+
+                .btn-confirm-checkin:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+                }
+
+                .btn-checkin-option:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+
+                .btn-close-checkin {
+                    background: rgba(255, 255, 255, 0.1);
+                    color: rgba(255, 255, 255, 0.8);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+
+                .btn-close-checkin:hover:not(:disabled) {
+                    background: rgba(255, 255, 255, 0.15);
+                    color: #fff;
+                }
+
+                .spinner-small {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    border-top-color: #fff;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                }
+
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
                 }
             `}</style>
         </div>

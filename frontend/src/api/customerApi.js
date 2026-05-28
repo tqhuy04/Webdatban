@@ -27,6 +27,11 @@ const customerApi = {
   create(data) {
     return axiosClient.post("/customers/me", data);
   },
+
+  // SEARCH
+  search(keyword) {
+    return axiosClient.get(`/customers/search/?keyword=${encodeURIComponent(keyword)}`);
+  },
 };
 
 export default customerApi;

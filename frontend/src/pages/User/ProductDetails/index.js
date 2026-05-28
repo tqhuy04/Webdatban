@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Title from '../../../components/shared/Title';
 import menuItemApi from '../../../api/menu_itemApi';
 import { useCart } from '../../../contexts/CartContext';
@@ -8,6 +8,7 @@ import Notification from '../../../components/shared/Notification';
 const SUGGEST_LIMIT = 3;
 
 function ProductDetails() {
+    const navigate = useNavigate();
     const { id } = useParams();
     const { addToCart } = useCart();
     const [quantity, setQuantity] = useState(1);
@@ -22,6 +23,7 @@ function ProductDetails() {
     useEffect(() => {
         const fetchProduct = async () => {
             setLoading(true);
+            setProduct(null); // Clear product when changing
             try {
                 const response = await menuItemApi.getById(id);
                 setProduct(response.data);
@@ -34,6 +36,7 @@ function ProductDetails() {
 
         if (id) {
             fetchProduct();
+            setQuantity(1); // Reset quantity when changing product
         }
     }, [id]);
 
@@ -121,8 +124,25 @@ function ProductDetails() {
 
             <div className='container-fluid p-0' style={{ height: '50px', background: '#000' }}>
                 <div className='container h-100 d-flex align-items-center'>
-                    <p className='m-0' style={{ color: '#fff' }}>Trang chủ / </p>
-                    <p className='m-0' style={{ color: '#d69c52' }}>{product.Name}</p>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontSize: '14px',
+                            padding: '0',
+                            marginRight: '8px'
+                        }}
+                    >
+                        ← Quay lại
+                    </button>
+                    <p className='m-0' style={{ color: '#fff' }}> / </p>
+                    <p className='m-0' style={{ color: '#d69c52', marginLeft: '8px' }}>{product.Name}</p>
                 </div>
             </div>
 

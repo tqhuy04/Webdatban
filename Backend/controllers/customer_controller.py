@@ -40,3 +40,7 @@ def delete_customer(db: Session, customer_id: int):
     if not success:
         raise HTTPException(status_code=404, detail="Customer not found")
     return {"message": "Deleted successfully"}
+
+
+def search_customers(db: Session, keyword: str):
+    return customer_service.search_customers(db, keyword)

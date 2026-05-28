@@ -13,7 +13,7 @@ const CreateForm = ({ setisShowFormCreate, GetTable_bookings }) => {
     useEffect(() => {
         customerApi.getAll()
             .then(res => setCustomers(res.data || []))
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
     const handleSubmit = (e) => {

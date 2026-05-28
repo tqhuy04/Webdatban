@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, DateTime, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from Backend.database import Base
 
@@ -13,6 +13,14 @@ class TableBooking(Base):
     )
     BookingTime = Column(DateTime, nullable=False)
     Status = Column(Integer, nullable=False)
+    People = Column(Integer, default=1)  # Số người đặt bàn
+
+    # Thông tin thanh toán
+    DepositAmount = Column(Float, default=0)  # Số tiền đã cọc (30%)
+    DepositStatus = Column(Integer, default=0)  # 0: Chưa cọc, 1: Đã cọc
+    TotalAmount = Column(Float, default=0)  # Tổng số tiền đơn hàng
+    RemainingAmount = Column(Float, default=0)  # Số tiền còn lại cần thanh toán
+    PaymentStatus = Column(Integer, default=0)  # 0: Chưa thanh toán, 1: Đã thanh toán đủ
 
     # Quan hệ với Customer
     customer = relationship("Customer", back_populates="bookings")

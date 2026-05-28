@@ -16,6 +16,13 @@ const orderApi = {
   create(data) {
     return axiosClient.post("/orders", data);
   },
+
+  // =====================
+  // SEARCH ORDERS
+  // =====================
+  search(keyword) {
+    return axiosClient.get(`/orders/search/?keyword=${encodeURIComponent(keyword)}`);
+  },
 };
 
 export default orderApi;

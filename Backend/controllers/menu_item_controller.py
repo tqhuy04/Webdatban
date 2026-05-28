@@ -66,3 +66,11 @@ def delete(db: Session, item_id: int):
         )
 
     return {"message": "Xóa thành công"}
+
+
+# =========================
+# SEARCH
+# =========================
+def search(db: Session, keyword: str):
+    from Backend.services.menu_item_service import search_menu_items
+    return search_menu_items(db, keyword)

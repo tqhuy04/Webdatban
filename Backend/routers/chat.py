@@ -114,6 +114,9 @@ def get_conversations(db: Session = Depends(get_db)):
         # sender_id trong message chính là customer_id
         cust_id = msg.sender_id
 
+        if cust_id is None:
+            continue
+
         if cust_id in seen_customers:
             continue
         seen_customers.add(cust_id)

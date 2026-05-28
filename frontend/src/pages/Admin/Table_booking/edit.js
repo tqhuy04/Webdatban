@@ -22,16 +22,15 @@ const EditForm = ({ setisShowFormEdit, GetTable_bookings, data, id }) => {
 
         customerApi.getAll()
             .then(res => setCustomers(res.data || []))
-            .catch(() => {});
+            .catch(() => { });
     }, [data]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
         const payload = {
-            CustomerID,
-            BookingTime,
-            Status
+            Status: parseInt(Status),
+            BookingTime: BookingTime
         };
 
         table_bookingApi.update(id, payload)
@@ -53,17 +52,13 @@ const EditForm = ({ setisShowFormEdit, GetTable_bookings, data, id }) => {
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                         <label className="form-label">Khách hàng</label>
-                        <select
-                            value={CustomerID}
-                            onChange={(e) => setCustomerID(e.target.value)}
+                        <input
+                            type="text"
                             className="form-control"
-                        >
-                            {Customers.map(c => (
-                                <option key={c.CustomerID} value={c.CustomerID}>
-                                    {c.full_name}
-                                </option>
-                            ))}
-                        </select>
+                            value={Customers.find(c => c.CustomerID === data?.CustomerID)?.full_name || ""}
+                            disabled
+                        />
+                        <small className="text-muted">Không thể sửa khách hàng</small>
                     </div>
 
                     <div className="mb-3">
@@ -86,6 +81,8 @@ const EditForm = ({ setisShowFormEdit, GetTable_bookings, data, id }) => {
                         >
                             <option value={0}>Chưa xác nhận</option>
                             <option value={1}>Đã xác nhận</option>
+                            <option value={2}>Đang sử dụng</option>
+                            <option value={3}>Đã hủy</option>
                         </select>
                     </div>
 
