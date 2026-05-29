@@ -17,6 +17,10 @@ const orderApi = {
     return axiosClient.post("/orders", data);
   },
 
+  update(id, data) {
+    return axiosClient.put(`/orders/${id}`, data);
+  },
+
   // =====================
   // SEARCH ORDERS
   // =====================

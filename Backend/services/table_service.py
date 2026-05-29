@@ -19,17 +19,30 @@ def update_table(db: Session, table_id: int, data: TableUpdate):
     if not table:
         raise HTTPException(status_code=404, detail="Table not found")
 
+    print(f"[DEBUG update_table] Before update - TableID: {table_id}, Status: {table.Status}")
+    print(f"[DEBUG update_table] Data to update: {data.dict()}")
+
+    # Update fields manually
+    update_data = {}
     if data.TableNumber is not None:
-        table.TableNumber = data.TableNumber
-
+        update_data['TableNumber'] = data.TableNumber
     if data.Capacity is not None:
-        table.Capacity = data.Capacity
-
+        update_data['Capacity'] = data.Capacity
     if data.Status is not None:
-        table.Status = data.Status
+        update_data['Status'] = data.Status
 
-    db.commit()
-    db.refresh(table)
+    print(f"[DEBUG update_table] Update data: {update_data}")
+
+    # Use update statement for more reliable update
+    if update_data:
+        db.query(Table).filter(Table.TableID == table_id).update(update_data)
+        db.commit()
+
+    # Re-query to get the updated data
+    table = db.query(Table).filter(Table.TableID == table_id).first()
+
+    print(f"[DEBUG update_table] After update - TableID: {table_id}, Status: {table.Status}")
+
     return table
 
 

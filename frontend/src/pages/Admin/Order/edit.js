@@ -5,90 +5,109 @@ import { useNotify } from "../../../contexts/ToastContext";
 
 const EditForm = ({ setisShowFormEdit, GetOrders, data, id }) => {
     const notify = useNotify();
-    const [OrderDate, setOrderDate] = useState('');
-    const [TotalAmount, setTotalAmount] = useState(0);
-    const [PromotionID, setPromotionID] = useState();
-    const [Promotions, setPromotions] = useState(null);
+    const [OrderTime, setOrderTime] = useState("");
+    const [TotalAmount, setTotalAmount] = useState("");
+    const [PromotionID, setPromotionID] = useState(null);
+    const [Promotions, setPromotions] = useState([]);
 
     useEffect(() => {
         promotionApi.getAll()
-            .then(response => {
-                setPromotions(response.data);
-            })
+            .then(res => setPromotions(res.data || []))
             .catch(() => {});
+    }, []);
+
+    useEffect(() => {
         if (data) {
+            // Parse OrderDate
             const date = new Date(data.OrderDate);
-            const time = date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-            setOrderDate(time);
-            setTotalAmount(data.TotalAmount);
+            const time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            setOrderTime(time);
+            setTotalAmount(data.TotalAmount || 0);
+            setPromotionID(data.PromotionID);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data])
+    }, [data]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (!OrderTime) {
+            notify.warning("Vui lòng chọn giờ tạo đơn");
+            return;
+        }
+
+        // Parse time
+        const [hour, minute] = OrderTime.split(":");
+        const orderDate = new Date();
+        orderDate.setHours(parseInt(hour));
+        orderDate.setMinutes(parseInt(minute));
+        orderDate.setSeconds(0);
+
         const formdata = {
             BookingID: data.BookingID,
             CustomerID: data.CustomerID,
-            PromotionID,
-            OrderDate,
-            TotalAmount,
-        }
+            PromotionID: PromotionID ? parseInt(PromotionID) : null,
+            OrderDate: orderDate.toISOString(),
+            TotalAmount: parseFloat(TotalAmount) || 0
+        };
+
         orderApi.update(id, formdata)
-            .then(response => {
+            .then(() => {
                 notify.success("Đã cập nhật đơn hàng thành công");
                 GetOrders();
                 setisShowFormEdit(false);
             })
             .catch(() => {
                 notify.error("Cập nhật thất bại");
-            })
+            });
     };
-
 
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h4>{"Sửa dữ liệu"}</h4>
+                <h4>Sửa đơn hàng</h4>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                        <label className="form-label">Thời gian tạo đơn hàng: </label>
+                        <label className="form-label">Giờ tạo đơn</label>
                         <input
                             type="time"
                             className="form-control"
-                            value={OrderDate}
-                            onChange={(e) => setOrderDate(e.target.value)}
+                            value={OrderTime}
+                            onChange={(e) => setOrderTime(e.target.value)}
                             required
                         />
                     </div>
+
                     <div className="mb-3">
-                        <label className="form-label">Tổng tiền đơn hàng</label>
+                        <label className="form-label">Tổng tiền</label>
                         <input
-                            type="text"
+                            type="number"
                             className="form-control"
                             value={TotalAmount}
-                            // onChange={(e) => setTotalAmount(e.target.value)}
+                            onChange={(e) => setTotalAmount(e.target.value)}
+                            min="0"
                             required
                         />
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">Giảm giá: </label>
+                        <label className="form-label">Khuyến mãi</label>
                         <select
-                            onChange={(e) => setPromotionID(e.target.value)}
-                            style={{ width: '100%', height: '30px', border: '1px solid black' }}
+                            className="form-control"
+                            value={PromotionID || ""}
+                            onChange={(e) => setPromotionID(e.target.value || null)}
                         >
-                            <option value={data.PromotionID} hidden>{data.DiscountPercent}</option>
-                            {Promotions?.map((promotion) => (
-                                <option value={promotion.PromotionID}>{promotion.DiscountPercent}</option>
+                            <option value="">-- Không áp dụng --</option>
+                            {Promotions.map(p => (
+                                <option key={p.PromotionID} value={p.PromotionID}>
+                                    {p.DiscountPercent} VNĐ
+                                </option>
                             ))}
                         </select>
-
                     </div>
 
                     <button type="submit" className="btn btn-success me-2">Lưu</button>
                     <button type="button" className="btn btn-secondary"
-                        onClick={() => { setisShowFormEdit(false) }}
+                        onClick={() => setisShowFormEdit(false)}
                     >
                         Hủy
                     </button>
@@ -98,4 +117,4 @@ const EditForm = ({ setisShowFormEdit, GetOrders, data, id }) => {
     );
 };
 
-export default EditForm
+export default EditForm;

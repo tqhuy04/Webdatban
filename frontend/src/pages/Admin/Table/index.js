@@ -12,6 +12,7 @@ function Table() {
     const [isShowFormCreate, setisShowFormCreate] = useState(false);
     const [editTable, setEditTable] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
+    const [refreshKey, setRefreshKey] = useState(0); // Force re-render
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
@@ -24,7 +25,9 @@ function Table() {
         tableApi
             .getAll()
             .then((response) => {
+                console.log("[DEBUG GetTables] Raw response:", response.data);
                 setTables(response.data);
+                setRefreshKey(prev => prev + 1); // Force re-render
             })
             .catch(() => {
                 // Silently fail
@@ -92,7 +95,7 @@ function Table() {
                     />
                 )}
 
-                <table className="table table-bordered table-hover">
+                <table className="table table-bordered table-hover" key={`tables-${refreshKey}`}>
                     <thead className="table-dark">
                         <tr>
                             <th>Tên bàn</th>
@@ -153,6 +156,7 @@ function Table() {
                 {/* FORM SỬA */}
                 {editTable && (
                     <EditForm
+                        key={editTable.TableID}
                         table={editTable}
                         setEditTable={setEditTable}
                         GetTables={GetTables}

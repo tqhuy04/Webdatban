@@ -32,7 +32,7 @@ const CreateForm = ({ onClose, reload }) => {
         };
 
         try {
-            await customerApi.create(accountId, payload);
+            await customerApi.create(payload);
             notify.success("Thêm khách hàng thành công");
             reload();   // ✅ OK
             onClose();  // ✅ OK

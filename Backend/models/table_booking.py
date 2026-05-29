@@ -5,7 +5,7 @@ from Backend.database import Base
 class TableBooking(Base):
     __tablename__ = "table_bookings"
 
-    BookingID = Column(Integer, primary_key=True, index=True)
+    BookingID = Column(Integer, primary_key=True, index=True, autoincrement=True)
     CustomerID = Column(
         Integer,
         ForeignKey("customers.id"),

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import userApi from "../../../api/userApi"; // ❗ GIỮ – KHÔNG BỎ
 import promotionApi from "../../../api/promotionApi";
 import format_date from "../../../components/utils/format_date";
 import { useNotify } from "../../../contexts/ToastContext";
@@ -11,13 +10,6 @@ const EditForm = ({ setisShowFormEdit, GetPromotions, data, id }) => {
     const [discountPercent, setDiscountPercent] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-
-    // giữ userApi tránh warning
-    useEffect(() => {
-        if (!userApi) {
-            console.warn("userApi chưa sẵn sàng");
-        }
-    }, []);
 
     // đổ dữ liệu backend vào form
     useEffect(() => {
@@ -42,8 +34,8 @@ const EditForm = ({ setisShowFormEdit, GetPromotions, data, id }) => {
             name: name.trim(),
             description: description ? description.trim() : null,
             discount_percent: Number(discountPercent),
-            start_date: startDate,
-            end_date: endDate,
+            start_date: format_date(startDate),
+            end_date: format_date(endDate),
         };
 
         promotionApi
@@ -93,8 +85,7 @@ const EditForm = ({ setisShowFormEdit, GetPromotions, data, id }) => {
                             type="number"
                             className="form-control"
                             value={discountPercent}
-                            min={0}
-                            max={1000000}
+                            min="0"
                             onChange={(e) =>
                                 setDiscountPercent(e.target.value)
                             }

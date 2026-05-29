@@ -38,8 +38,8 @@ const CreateForm = ({ setisShowFormCreate, GetOrders, BookingID, CustomerID }) =
             BookingID: parseInt(BookingID),
             CustomerID: parseInt(CustomerID),
             PromotionID: PromotionID ? parseInt(PromotionID) : null,
-            OrderDate: orderDate.toISOString(), // ✅ chuẩn ISO
-            TotalAmount: 0
+            OrderDate: orderDate.toISOString(),
+            TotalAmount: parseFloat(TotalAmount) || 0
         };
 
         orderApi.create(data)

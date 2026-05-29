@@ -5,11 +5,13 @@ from typing import List
 from Backend.database import get_db
 from Backend.schemas.order_detail import (
     OrderDetailCreate,
+    OrderDetailUpdate,
     OrderDetailResponse
 )
 from Backend.controllers.order_detail_controller import (
     get_order_details,
     create,
+    update,
     delete
 )
 
@@ -93,3 +95,21 @@ def delete_order_detail_api(
         )
 
     return {"message": "Delete order detail successfully"}
+
+
+# =========================
+# UPDATE
+# =========================
+@router.put("/{detail_id}")
+def update_order_detail_api(
+    detail_id: int,
+    data: OrderDetailUpdate,
+    db: Session = Depends(get_db)
+):
+    detail = update(db, detail_id, data)
+    if not detail:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order detail or menu item not found"
+        )
+    return detail

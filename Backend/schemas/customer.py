@@ -15,10 +15,10 @@ class CustomerUpdate(BaseModel):
 
 class CustomerOut(BaseModel):
     id: int = Field(..., alias="CustomerID")
-    account_id: int
+    account_id: Optional[int] = None
     full_name: str
     phone_number: str
-    address: str
+    address: Optional[str] = None
 
     class Config:
         from_attributes = True

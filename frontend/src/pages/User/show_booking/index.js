@@ -126,55 +126,20 @@ function Show_booking() {
         setShowCheckinModal(true);
     };
 
-    // Xác nhận checkin và chuyển đến thanh toán phần còn lại
-    const handleCheckinAndPay = async () => {
+    // Xác nhận checkin đơn giản
+    const handleConfirmCheckin = async () => {
         if (!bookingToCheckin) return;
 
         setCheckinLoading(true);
         try {
-            // Gọi API checkin
             await table_bookingApi.checkinMe(bookingToCheckin.BookingID);
 
-            // Đóng modal checkin
             setShowCheckinModal(false);
             setBookingToCheckin(null);
-            notify.success("Check-in thành công! Đang chuyển đến trang thanh toán...");
+            notify.success("Check-in thành công!");
 
-            // Reload danh sách booking từ API
             const res = await table_bookingApi.getAllOfCustomer();
             setBookings(res.data || []);
-
-            // Chuyển đến trang thanh toán phần còn lại (70%)
-            navigate(`/Order/${bookingToCheckin.BookingID}`);
-
-        } catch (error) {
-            console.error("Lỗi checkin:", error);
-            notify.error("Check-in thất bại. Vui lòng thử lại.");
-        } finally {
-            setCheckinLoading(false);
-        }
-    };
-
-    // Checkin và đặt thêm món
-    const handleCheckinAndOrderMore = async () => {
-        if (!bookingToCheckin) return;
-
-        setCheckinLoading(true);
-        try {
-            // Gọi API checkin
-            await table_bookingApi.checkinMe(bookingToCheckin.BookingID);
-
-            // Đóng modal checkin
-            setShowCheckinModal(false);
-            setBookingToCheckin(null);
-            notify.success("Check-in thành công! Đang chuyển đến trang đặt món...");
-
-            // Reload danh sách booking từ API
-            const res = await table_bookingApi.getAllOfCustomer();
-            setBookings(res.data || []);
-
-            // Chuyển đến trang đặt món thêm (Order với flag đặt thêm)
-            navigate(`/Order/${bookingToCheckin.BookingID}?action=add_more`);
 
         } catch (error) {
             console.error("Lỗi checkin:", error);
@@ -277,7 +242,7 @@ function Show_booking() {
                                                     className='btn-action btn-checkin'
                                                     onClick={() => handleCheckinClick(booking)}
                                                 >
-                                                    <span className="btn-icon">📍</span>
+                                                    {/* <span className="btn-icon">📍</span> */}
                                                     <span className="btn-text">Tôi đã đến</span>
                                                 </button>
                                             )}
@@ -285,14 +250,14 @@ function Show_booking() {
                                                 className='btn-action btn-tables'
                                                 onClick={() => handleToTable(booking.BookingID)}
                                             >
-                                                <span className="btn-icon">🪑</span>
+                                                {/* <span className="btn-icon">🪑</span> */}
                                                 <span className="btn-text">Xem bàn</span>
                                             </button>
                                             <button
                                                 className='btn-action btn-orders'
                                                 onClick={() => handleToOrder(booking.BookingID)}
                                             >
-                                                <span className="btn-icon">📦</span>
+                                                {/* <span className="btn-icon">📦</span> */}
                                                 <span className="btn-text">Chi tiết</span>
                                             </button>
                                             {canCancel(booking.Status) && (
@@ -300,7 +265,7 @@ function Show_booking() {
                                                     className='btn-action btn-cancel'
                                                     onClick={() => handleCancelClick(booking)}
                                                 >
-                                                    <span className="btn-icon">🗑️</span>
+                                                    {/* <span className="btn-icon">🗑️</span> */}
                                                     <span className="btn-text">Hủy</span>
                                                 </button>
                                             )}
@@ -334,41 +299,27 @@ function Show_booking() {
                         <div className="modal-icon checkin-icon">
                             <span>🎉</span>
                         </div>
-                        <h3>Chào mừng đến nhà hàng!</h3>
-                        <p>Bạn đã đến cửa hàng và nhận bàn thành công.</p>
+                        <h3>Xác nhận Check-in</h3>
                         <p className="modal-info">Mã đặt bàn: <strong>#{bookingToCheckin?.BookingID}</strong></p>
-
-                        <div className="checkin-options">
-                            <h4>Bạn muốn làm gì tiếp theo?</h4>
-
+                        <p className="modal-message">
+                            Bạn đã đến cửa hàng?
+                        </p>
+                        <div className="modal-actions">
                             <button
-                                className="btn-checkin-option btn-pay-remaining"
-                                onClick={handleCheckinAndPay}
+                                className="btn-modal"
+                                onClick={handleCloseCheckinModal}
                                 disabled={checkinLoading}
                             >
-                                <span className="option-icon">💳</span>
-                                <span className="option-text">Thanh toán phần còn lại (70%)</span>
-                                <span className="option-desc">Thanh toán số tiền còn lại của món đã đặt</span>
+                                Hủy
                             </button>
-
                             <button
-                                className="btn-checkin-option btn-order-more"
-                                onClick={handleCheckinAndOrderMore}
+                                className="btn-modal btn-confirm"
+                                onClick={handleConfirmCheckin}
                                 disabled={checkinLoading}
                             >
-                                <span className="option-icon">🍽️</span>
-                                <span className="option-text">Đặt thêm món</span>
-                                <span className="option-desc">Thêm món ăn mới vào đơn hàng</span>
+                                {checkinLoading ? "Đang xử lý..." : "Xác nhận đã đến"}
                             </button>
                         </div>
-
-                        <button
-                            className="btn-modal btn-close-checkin"
-                            onClick={handleCloseCheckinModal}
-                            disabled={checkinLoading}
-                        >
-                            Đóng
-                        </button>
                     </div>
                 </div>
             )}
@@ -911,6 +862,16 @@ function Show_booking() {
                 .btn-cancel-modal:disabled {
                     opacity: 0.6;
                     cursor: not-allowed;
+                }
+
+                .btn-confirm {
+                    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+                    color: #fff;
+                }
+
+                .btn-confirm:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
                 }
 
                 .loading-text {

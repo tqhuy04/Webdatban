@@ -37,8 +37,9 @@ def create_my_customer(
     db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
+    from Backend.services import customer_service
     # Kiểm tra đã có customer chưa
-    existing = get_customer_by_user(db, user.id)
+    existing = customer_service.get_by_account_id(db, user.id)
     if existing:
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Thông tin khách hàng đã tồn tại")

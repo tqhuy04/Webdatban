@@ -33,17 +33,17 @@ function Bill() {
         console.log("=== BILL LOCATION CHANGED - Reloading data ===");
         const cartData = JSON.parse(localStorage.getItem("cartItems")) || [];
         const menuDataFromCheckout = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
-        
+
         console.log("cartItems:", cartData.length);
         console.log("menu_items:", menuDataFromCheckout.length);
-        
+
         const menu = cartData.length > 0 ? cartData : menuDataFromCheckout;
-        
+
         let total = 0;
         if (menu.length > 0) {
             total = menu.reduce((sum, item) => sum + (item.Price * (item.Quantity || 1)), 0);
         }
-        
+
         setmenu_items(menu);
         settotal_price(total);
         console.log("Updated menu_items state:", menu.length);
@@ -103,24 +103,24 @@ function Bill() {
             // Fallback về menu_items (từ Checkout) nếu cartItems trống
             const cartData = JSON.parse(localStorage.getItem("cartItems")) || [];
             const menuDataFromCheckout = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
-            
+
             // Debug: log để xem data
             console.log("=== LOAD BILL DATA ===");
             console.log("cartItems:", cartData.length, cartData);
             console.log("menu_items:", menuDataFromCheckout.length, menuDataFromCheckout);
-            
+
             // Nếu có cartItems, dùng cartItems (từ Cart)
             // Nếu không có cartItems nhưng có menu_items, dùng menu_items (từ Checkout)
             const menu = cartData.length > 0 ? cartData : menuDataFromCheckout;
-            
+
             console.log("Final menu to display:", menu.length, menu);
-            
+
             // Tính total_price từ menu items
             let total = 0;
             if (menu.length > 0) {
                 total = menu.reduce((sum, item) => sum + (item.Price * (item.Quantity || 1)), 0);
             }
-            
+
             let tables = JSON.parse(localStorage.getItem("tables")) || JSON.parse(sessionStorage.getItem("tables")) || [];
             let booking = JSON.parse(localStorage.getItem("table_bookings")) || JSON.parse(sessionStorage.getItem("table_bookings"));
             const customer = JSON.parse(localStorage.getItem("customer")) || JSON.parse(sessionStorage.getItem("customer"));
@@ -146,14 +146,14 @@ function Bill() {
             // GẮN customer_id nếu thiếu (hỗ trợ cả PascalCase và snake_case)
             if (!booking?.customer_id && !booking?.CustomerID) {
                 let customerId = null;
-                
+
                 // Thử lấy từ customer storage trước
                 if (customer?.CustomerID) {
                     customerId = customer.CustomerID;
                 } else if (customer?.customer_id) {
                     customerId = customer.customer_id;
                 }
-                
+
                 // Nếu không có trong storage, thử lấy từ API (chỉ gọi 1 lần)
                 if (!customerId && !customerFetchedRef.current) {
                     const token = localStorage.getItem('token');
@@ -184,7 +184,7 @@ function Bill() {
                         console.log("[DEBUG BILL] No token - skipping customer fetch");
                     }
                 }
-                
+
                 if (customerId) {
                     booking.customer_id = customerId;
                     localStorage.setItem("table_bookings", JSON.stringify(booking));
@@ -198,7 +198,7 @@ function Bill() {
             settables(tables);
             settotal_price(total);
             setIsDataLoaded(true);
-            
+
             console.log("DATA LOADED - Bill ready, menu_items:", menu.length);
             return true;
         };
@@ -408,11 +408,11 @@ function Bill() {
     /* ================= BOOKING TABLE ================= */
     function createBookingTables(bookingID) {
         // LUÔN LUÔN lấy tables từ storage mới nhất
-        const currentTables = JSON.parse(localStorage.getItem("tables")) 
-            || JSON.parse(sessionStorage.getItem("tables")) 
+        const currentTables = JSON.parse(localStorage.getItem("tables"))
+            || JSON.parse(sessionStorage.getItem("tables"))
             || [];
-        const currentBooking = JSON.parse(localStorage.getItem("table_bookings")) 
-            || JSON.parse(sessionStorage.getItem("table_bookings")) 
+        const currentBooking = JSON.parse(localStorage.getItem("table_bookings"))
+            || JSON.parse(sessionStorage.getItem("table_bookings"))
             || table_bookings;
 
         if (!currentTables || currentTables.length === 0) {
@@ -529,7 +529,7 @@ function Bill() {
                             animation: 'pulse 2s infinite'
                         }}>
                             <svg width="60" height="60" viewBox="0 0 24 24" fill="white" style={{ animation: 'spin 2s linear infinite' }}>
-                                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" fill="none" strokeDasharray="60" strokeDashoffset="20"/>
+                                <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="2" fill="none" strokeDasharray="60" strokeDashoffset="20" />
                             </svg>
                         </div>
                         <h2 className="mt-4" style={{ fontWeight: '600', fontSize: '1.8rem' }}>Đang xử lý thanh toán</h2>
@@ -574,20 +574,20 @@ function Bill() {
                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                             </svg>
                         </div>
-                        <h2 className="mt-4" style={{ 
-                            fontWeight: '700', 
+                        <h2 className="mt-4" style={{
+                            fontWeight: '700',
                             fontSize: '2rem',
                             color: '#d1fae5'
                         }}>
                             Thanh toán thành công!
                         </h2>
-                        <p className="mt-3" style={{ 
-                            opacity: 0.95, 
+                        <p className="mt-3" style={{
+                            opacity: 0.95,
                             fontSize: '1.15rem',
                             maxWidth: '500px',
                             margin: '0 auto'
                         }}>
-                            Cảm ơn bạn đã thanh toán qua VNPay. 
+                            Cảm ơn bạn đã thanh toán qua VNPay.
                             Đơn hàng của bạn đang được xử lý.
                         </p>
                         {paymentMessage && (
@@ -780,8 +780,8 @@ function Bill() {
 
     // Hàm tạo booking_tables khi booking đã tồn tại
     const createBookingTablesForExistingBooking = (bookingID) => {
-        const currentTables = JSON.parse(localStorage.getItem("tables")) 
-            || JSON.parse(sessionStorage.getItem("tables")) 
+        const currentTables = JSON.parse(localStorage.getItem("tables"))
+            || JSON.parse(sessionStorage.getItem("tables"))
             || [];
 
         if (!currentTables || currentTables.length === 0) {
@@ -847,7 +847,7 @@ function Bill() {
     };
 
     return (
-        <div  className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 40px 0', minHeight: '70vh' }}>
+        <div className='container-fluid w-100' style={{ background: '#10302c', padding: '80px 0 40px 0', minHeight: '70vh' }}>
             {/* Thông báo thanh toán VNPay */}
             {paymentStatus && (
                 <div className={`alert ${paymentStatus === '00' ? 'alert-success' : 'alert-danger'} m-3`} role="alert">

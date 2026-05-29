@@ -226,13 +226,6 @@ function Show_bookingTable() {
                                     </>
                                 )}
                             </button>
-                            <button
-                                className="btn-modal btn-close-checkin"
-                                onClick={handleCloseModal}
-                                disabled={checkinLoading}
-                            >
-                                Hủy
-                            </button>
                         </div>
                     </div>
                 </div>

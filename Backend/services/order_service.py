@@ -18,9 +18,8 @@ def get_all_orders(db: Session):
 def get_orders_by_booking(db: Session, booking_id: int):
 
     order = db.query(Order).options(
-
-        joinedload(Order.Items).joinedload(OrderDetail.menu_item)
-
+        joinedload(Order.Items).joinedload(OrderDetail.menu_item),
+        joinedload(Order.promotion)
     ).filter(
         Order.BookingID == booking_id
     ).all()
@@ -77,7 +76,7 @@ def create_order(db: Session, data: OrderCreate):
     db.commit()
     db.refresh(order)
 
-    total = 0
+    subtotal = 0
 
     # tạo order detail + tính total
     if data.Items:
@@ -100,17 +99,63 @@ def create_order(db: Session, data: OrderCreate):
                 Price=price
             )
 
-            total += price * item.Quantity
+            subtotal += price * item.Quantity
 
             db.add(detail)
 
-        # cập nhật total
-        order.TotalAmount = total
-        db.commit()
-        db.refresh(order)
+    # Lấy DiscountPercent từ promotion
+    discount = 0
+    if data.PromotionID:
+        from Backend.models.promotion import Promotion
+        promotion = db.query(Promotion).filter(
+            Promotion.PromotionID == data.PromotionID
+        ).first()
+        if promotion and promotion.DiscountPercent:
+            discount = promotion.DiscountPercent
+
+    # TotalAmount = Tổng phụ - DiscountPercent
+    order.TotalAmount = subtotal - discount
+    db.commit()
+    db.refresh(order)
 
     return order
 
+
+
+# =========================
+# UPDATE
+# =========================
+def update_order(db: Session, order_id: int, data):
+    order = db.query(Order).filter(Order.OrderID == order_id).first()
+    if not order:
+        return None
+
+    # Tính tổng tiền từ order details
+    order_details = db.query(OrderDetail).filter(
+        OrderDetail.OrderID == order_id
+    ).all()
+    subtotal = sum(detail.Price for detail in order_details)
+
+    # Lấy DiscountPercent từ promotion
+    discount = 0
+    if data.PromotionID:
+        from Backend.models.promotion import Promotion
+        promotion = db.query(Promotion).filter(
+            Promotion.PromotionID == data.PromotionID
+        ).first()
+        if promotion and promotion.DiscountPercent:
+            discount = promotion.DiscountPercent
+
+    # Cập nhật thông tin order
+    order.PromotionID = data.PromotionID
+    order.OrderDate = data.OrderDate
+
+    # TotalAmount = Tổng phụ - DiscountPercent
+    order.TotalAmount = subtotal - discount
+
+    db.commit()
+    db.refresh(order)
+    return order
 
 
 # =========================

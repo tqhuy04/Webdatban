@@ -11,6 +11,10 @@ const orderDetailApi = {
     return axiosClient.post("/order-details", data);
   },
 
+  update(id, data) {
+    return axiosClient.put(`/order-details/${id}`, data);
+  },
+
   delete(id) {
     return axiosClient.delete(`/order-details/${id}`);
   },

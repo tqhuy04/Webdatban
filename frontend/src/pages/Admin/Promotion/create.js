@@ -62,16 +62,15 @@ const CreateForm = ({ setisShowFormCreate, GetPromotions }) => {
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">Giảm giá (%)</label>
+                        <label className="form-label">Giảm giá (VNĐ)</label>
                         <input
                             type="number"
                             className="form-control"
                             value={discountPercent}
+                            min="0"
                             onChange={(e) =>
                                 setDiscountPercent(e.target.value)
                             }
-                            min="0"
-                            max="100"
                             required
                         />
                     </div>

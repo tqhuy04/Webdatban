@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import tableApi from "../../../api/tableApi";
 import { useNotify } from "../../../contexts/ToastContext";
 
@@ -7,32 +7,50 @@ const EditForm = ({ table, setEditTable, GetTables }) => {
     const [TableNumber, setTableNumber] = useState("");
     const [Capacity, setCapacity] = useState("");
     const [Status, setStatus] = useState(0);
+    const statusRef = useRef(0);
 
     useEffect(() => {
         if (table) {
+            console.log("[DEBUG EditForm] useEffect - table prop changed:", table);
+            const newStatus = Number(table.Status);
+            console.log("[DEBUG EditForm] Setting status to:", newStatus);
             setTableNumber(table.TableNumber);
             setCapacity(table.Capacity);
-            setStatus(Number(table.Status));
+            setStatus(newStatus);
+            statusRef.current = newStatus;
         }
     }, [table]);
+
+    const handleStatusChange = (e) => {
+        const newStatus = Number(e.target.value);
+        console.log("[DEBUG EditForm] Status changed to:", newStatus);
+        setStatus(newStatus);
+        statusRef.current = newStatus;
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        console.log("[DEBUG EditForm] Current form state - Status:", Status, "Ref:", statusRef.current);
+
         const data = {
             TableNumber,
             Capacity: Number(Capacity),
-            Status: Number(Status),
+            Status: statusRef.current, // Use ref to ensure we get the latest value
         };
+
+        console.log("[DEBUG EditForm] Submitting update:", { id: table.TableID, data });
 
         tableApi
             .update(table.TableID, data)
-            .then(() => {
+            .then((response) => {
+                console.log("[DEBUG EditForm] Update response:", response.data);
                 notify.success("Cập nhật bàn thành công");
                 GetTables();
                 setEditTable(null);
             })
-            .catch(() => {
+            .catch((error) => {
+                console.error("[DEBUG EditForm] Update error:", error);
                 notify.error("Cập nhật thất bại");
             });
     };
@@ -70,12 +88,11 @@ const EditForm = ({ table, setEditTable, GetTables }) => {
                         <select
                             className="form-control"
                             value={Status}
-                            onChange={(e) =>
-                                setStatus(Number(e.target.value))
-                            }
+                            onChange={handleStatusChange}
                         >
                             <option value={0}>Còn bàn</option>
                             <option value={1}>Đã đặt</option>
+                            <option value={2}>Đang sử dụng</option>
                         </select>
                     </div>
 

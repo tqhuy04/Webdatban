@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from Backend.database import get_db
-from Backend.schemas.order import OrderCreate, OrderResponse
+from Backend.schemas.order import OrderCreate, OrderUpdate, OrderResponse
 from Backend.controllers.order_controller import (
     get_all,
     get_by_booking,
     create,
+    update,
     delete,
     search
 )
@@ -28,12 +29,16 @@ def get_orders(db: Session = Depends(get_db)):
 # =========================
 # GET ORDERS BY BOOKING
 # =========================
-@router.get("/booking/{booking_id}", response_model=List[OrderResponse])
+@router.get("/booking/{booking_id}")
 def get_orders_by_booking(
     booking_id: int,
     db: Session = Depends(get_db)
 ):
-    return get_by_booking(db, booking_id)
+    orders = get_by_booking(db, booking_id)
+    print(f"[DEBUG] Found {len(orders)} orders for booking_id={booking_id}")
+    for o in orders:
+        print(f"[DEBUG] Order: {o}")
+    return orders
 
 
 # =========================
@@ -119,6 +124,24 @@ async def debug_create_order(request: Request):
         print(f"[DEBUG] Error: {e}")
         traceback.print_exc()
         return {"error": str(e)}
+
+
+# =========================
+# UPDATE ORDER
+# =========================
+@router.put("/{order_id}")
+def update_order_api(
+    order_id: int,
+    data: OrderUpdate,
+    db: Session = Depends(get_db)
+):
+    result = update(db, order_id, data)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found"
+        )
+    return result
 
 
 # =========================

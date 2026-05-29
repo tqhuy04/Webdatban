@@ -13,8 +13,17 @@ class OrderDetailBase(BaseModel):
     Quantity: int
 
 class OrderDetailCreate(BaseModel):
+    OrderID: Optional[int] = None  # Optional - will be set when creating order
     MenuItemID: int
     Quantity: int
+    Price: float = 0
+
+
+class OrderDetailUpdate(BaseModel):
+    OrderID: int
+    MenuItemID: int
+    Quantity: int
+    Price: float = 0
 
 
 class OrderDetailResponse(OrderDetailCreate):

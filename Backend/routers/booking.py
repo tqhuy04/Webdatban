@@ -73,7 +73,10 @@ def user_create_booking(
     db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    result = create(data, db, user)
+    try:
+        result = create(data, db, user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     # Tạo thông báo cho admin khi có đặt bàn mới
     if result and hasattr(result, 'BookingID'):

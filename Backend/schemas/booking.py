@@ -6,11 +6,14 @@ from Backend.schemas.table import TableOut
 
 
 class BookingTableCreate(BaseModel):
-    customer_id: int
+    customer_id: Optional[int] = None  # Optional: for regular users
+    customer_name: Optional[str] = None  # For admin to create booking with just name
+    customer_phone: Optional[str] = None  # Optional phone number
     booking_time: datetime
     table_ids: List[int]
-    total_amount: Optional[float] = 0  # Tổng tiền đơn hàng (tạm tính)
-    people: Optional[int] = 1  # Số người đặt bàn
+    total_amount: Optional[float] = 0
+    people: Optional[int] = None
+    status: Optional[int] = 0  # Trạng thái booking (0: chưa xác nhận, 1: đã xác nhận)
 
 
 class BookingTableResponse(BaseModel):

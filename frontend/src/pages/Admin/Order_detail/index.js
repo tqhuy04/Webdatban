@@ -1,14 +1,22 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import orderDetailApi from "../../../api/order_detailApi";
 import CreateForm from "./create";
+import EditForm from "./edit";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 import { useParams } from "react-router-dom";
 import { formatNumber } from "../../../components/utils/format_number";
+import { useNotify } from "../../../contexts/ToastContext";
 
-function Order_detail() {
+function Order_detail({ onOrderUpdated }) {
+    const notify = useNotify();
     const { OrderID } = useParams();
+    const navigate = useNavigate();
 
     const [orderDetails, setOrderDetails] = useState([]);
     const [isShowFormCreate, setIsShowFormCreate] = useState(false);
+    const [editingDetail, setEditingDetail] = useState(null);
+    const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const GetOrderDetails = useCallback(() => {
@@ -23,6 +31,43 @@ function Order_detail() {
     useEffect(() => {
         GetOrderDetails();
     }, [GetOrderDetails]);
+
+    // Bắt sự kiện khi quay lại trang Order (browser back)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                if (onOrderUpdated) onOrderUpdated();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [onOrderUpdated]);
+
+    const handleOrderUpdated = () => {
+        GetOrderDetails();
+        if (onOrderUpdated) onOrderUpdated();
+    };
+
+    const handleDeleteClick = (detailId) => {
+        setDeleteModal({ show: true, id: detailId });
+    };
+
+    const handleConfirmDelete = () => {
+        orderDetailApi.delete(deleteModal.id)
+            .then(() => {
+                notify.success("Xóa món thành công");
+                GetOrderDetails();
+                if (onOrderUpdated) onOrderUpdated();
+            })
+            .catch(() => {
+                notify.error("Xóa món thất bại");
+            });
+        setDeleteModal({ show: false, id: null });
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteModal({ show: false, id: null });
+    };
 
     const getImagePath = (imageUrl) => {
         if (!imageUrl) return '';
@@ -62,7 +107,7 @@ function Order_detail() {
                 {isShowFormCreate && (
                     <CreateForm
                         setisShowFormCreate={setIsShowFormCreate}
-                        GetOrder_details={GetOrderDetails}
+                        GetOrder_details={handleOrderUpdated}
                         OrderID={OrderID}
                     />
                 )}
@@ -75,12 +120,13 @@ function Order_detail() {
                             <th>Đơn giá</th>
                             <th>Số lượng</th>
                             <th>Thành tiền</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
                         {orderDetails.length === 0 && (
                             <tr>
-                                <td colSpan="5" className="text-center">
+                                <td colSpan="6" className="text-center">
                                     <div className="empty-state">
                                         <i className="fa fa-list"></i>
                                         <p>Không có dữ liệu</p>
@@ -102,10 +148,41 @@ function Order_detail() {
                                 <td>{formatNumber(detail.menu_item?.Price)}</td>
                                 <td>{detail.Quantity}</td>
                                 <td>{formatNumber(detail.Price)}</td>
+                                <td>
+                                    <button
+                                        className="admin-btn-edit"
+                                        onClick={() => setEditingDetail(detail)}
+                                    >
+                                        <i className="fa fa-edit"></i> Sửa
+                                    </button>
+                                    <button
+                                        className="admin-btn-delete"
+                                        onClick={() => handleDeleteClick(detail.OrderDetailID)}
+                                    >
+                                        <i className="fa fa-trash"></i> Xóa
+                                    </button>
+
+                                    {editingDetail?.OrderDetailID === detail.OrderDetailID && (
+                                        <EditForm
+                                            setisShowFormEdit={setEditingDetail}
+                                            GetOrder_details={handleOrderUpdated}
+                                            OrderID={OrderID}
+                                            data={detail}
+                                        />
+                                    )}
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
+
+                <ConfirmModal
+                    isVisible={deleteModal.show}
+                    title="Xác nhận xóa"
+                    message="Bạn có chắc muốn xóa món này khỏi đơn hàng?"
+                    onConfirm={handleConfirmDelete}
+                    onCancel={handleCancelDelete}
+                />
             </div>
         </div>
     );

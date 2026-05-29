@@ -31,6 +31,17 @@ function Order() {
         getOrders();
     }, [getOrders]);
 
+    // Refresh khi quay lại từ Order_detail
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                getOrders();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [getOrders]);
+
     const handleDeleteClick = (id) => {
         setDeleteModal({ show: true, id });
     };
@@ -119,7 +130,11 @@ function Order() {
                                 </td>
 
                                 <td>
-                                    {order.PromotionID ? `#${order.PromotionID}` : "Không"}
+                                    {order.promotion ? (
+                                        order.promotion.PromotionName
+                                            ? order.promotion.PromotionName
+                                            : `Giảm ${formatNumber(order.promotion.DiscountPercent)}`
+                                    ) : "Không"}
                                 </td>
 
                                 <td>
