@@ -149,6 +149,7 @@ function Table_booking() {
                         <tr>
                             <th>Tên khách hàng</th>
                             <th>Thời gian đặt</th>
+                            <th>Đặt lúc</th>
                             <th>Trạng thái</th>
                             <th>Hành động</th>
                             <th>Đơn hàng</th>
@@ -159,7 +160,7 @@ function Table_booking() {
                     <tbody>
                         {tableBookings.length === 0 && (
                             <tr>
-                                <td colSpan="6" className="text-center">
+                                <td colSpan="7" className="text-center">
                                     <div className="empty-state">
                                         <i className="fa fa-calendar-check"></i>
                                         <p>Không có dữ liệu đặt bàn</p>
@@ -180,6 +181,12 @@ function Table_booking() {
                                     {tb.BookingTime
                                         ? new Date(tb.BookingTime).toLocaleString()
                                         : ""}
+                                </td>
+
+                                <td>
+                                    {tb.CreatedAt
+                                        ? new Date(tb.CreatedAt).toLocaleString()
+                                        : <span className="text-muted">—</span>}
                                 </td>
 
                                 <td>

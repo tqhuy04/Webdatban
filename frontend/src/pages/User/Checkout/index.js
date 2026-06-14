@@ -19,7 +19,7 @@ function Checkout() {
     const [showTableModal, setShowTableModal] = useState(false);
     const [tables, setTables] = useState([]);
     const [loadingTables, setLoadingTables] = useState(false);
-    const [selectedTable, setSelectedTable] = useState(null);
+    const [selectedTables, setSelectedTables] = useState([]);
     const [bookingDate, setBookingDate] = useState('');
     const [bookingTime, setBookingTime] = useState('');
 
@@ -102,8 +102,8 @@ function Checkout() {
             return;
         }
 
-        if (!selectedTable) {
-            notify.warning('Vui lòng chọn bàn trước khi đặt hàng!');
+        if (!selectedTables || selectedTables.length === 0) {
+            notify.warning('Vui lòng chọn ít nhất một bàn trước khi đặt hàng!');
             return;
         }
 
@@ -124,6 +124,12 @@ function Checkout() {
 
             const emailForOrder = accountEmail || customer?.email || '';
 
+            // Tính tổng sức chứa = tổng capacity của tất cả các bàn đã chọn
+            const totalCapacity = selectedTables.reduce(
+                (sum, table) => sum + (Number(table?.Capacity) || 0),
+                0
+            );
+
             const bookingInfo = {
                 booking_date: bookingDate,
                 booking_time: bookingTime,
@@ -132,18 +138,18 @@ function Checkout() {
                 email: emailForOrder,
                 phone_number: customer?.phone_number,
                 address: customer?.address,
-                people: selectedTable?.Capacity || 1,
+                people: totalCapacity || 1,
                 status: 0,
                 BookingTime: `${bookingDate} ${bookingTime}`,
             };
 
             sessionStorage.setItem('table_bookings', JSON.stringify(bookingInfo));
-            sessionStorage.setItem('tables', JSON.stringify([selectedTable]));
+            sessionStorage.setItem('tables', JSON.stringify(selectedTables));
             sessionStorage.setItem('menu_items', JSON.stringify(cartItems));
             sessionStorage.setItem('total_price', JSON.stringify(getCartTotal()));
             // Dùng localStorage để giữ dữ liệu khi redirect từ VNPay về
             localStorage.setItem('table_bookings', JSON.stringify(bookingInfo));
-            localStorage.setItem('tables', JSON.stringify([selectedTable]));
+            localStorage.setItem('tables', JSON.stringify(selectedTables));
             localStorage.setItem('menu_items', JSON.stringify(cartItems));
             localStorage.setItem('total_price', JSON.stringify(getCartTotal()));
             sessionStorage.setItem(
@@ -170,7 +176,7 @@ function Checkout() {
             clearCart();
             notify.success('Đặt bàn & chuyển sang thanh toán!');
             setShowTableModal(false);
-            setSelectedTable(null);
+            setSelectedTables([]);
             setBookingDate('');
             setBookingTime('');
             navigate('/Bill');
@@ -406,7 +412,19 @@ function Checkout() {
                             overflowY: 'auto'
                         }}
                     >
-                        <h4 style={{ marginBottom: '16px', color: '#10302c' }}>Chọn bàn</h4>
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: '12px'
+                            }}
+                        >
+                            <h4 style={{ margin: 0, color: '#10302c' }}>Chọn bàn</h4>
+                            <span style={{ color: '#c8760b', fontWeight: 500 }}>
+                                Đã chọn: {selectedTables.length} bàn
+                            </span>
+                        </div>
                         <div
                             style={{
                                 display: 'flex',
@@ -452,41 +470,147 @@ function Checkout() {
                         {loadingTables ? (
                             <p>Đang tải danh sách bàn...</p>
                         ) : (
-                            <div style={{ maxHeight: '220px', overflowY: 'auto', marginBottom: '16px' }}>
-                                {tables
-                                    .filter(table => table.Status !== 1)
-                                    .map(table => (
-                                        <div
-                                            key={table.TableID}
-                                            onClick={() => setSelectedTable(table)}
-                                            style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                padding: '10px 12px',
-                                                borderRadius: '6px',
-                                                border: selectedTable?.TableID === table.TableID
-                                                    ? '2px solid #d69c52'
-                                                    : '1px solid #ddd',
-                                                marginBottom: '8px',
-                                                cursor: 'pointer',
-                                                background: selectedTable?.TableID === table.TableID ? '#fff6eb' : '#fff'
-                                            }}
-                                        >
-                                            <div>
-                                                <strong>{table.TableNumber}</strong>
-                                                <p className='mb-0' style={{ fontSize: '13px' }}>
-                                                    Sức chứa: {table.Capacity} người
-                                                </p>
-                                            </div>
-                                            {table.Status === 1 && (
-                                                <span style={{ color: 'red', fontSize: '13px' }}>Đã được đặt</span>
-                                            )}
+                            <>
+                                <div style={{ maxHeight: '180px', overflowY: 'auto', marginBottom: '12px' }}>
+                                    {tables
+                                        .filter(table => table.Status !== 1)
+                                        .map(table => {
+                                            const isSelected = selectedTables.some(t => t.TableID === table.TableID);
+                                            return (
+                                                <div
+                                                    key={table.TableID}
+                                                    onClick={() => {
+                                                        setSelectedTables(prev => {
+                                                            if (isSelected) {
+                                                                return prev.filter(t => t.TableID !== table.TableID);
+                                                            }
+                                                            return [...prev, table];
+                                                        });
+                                                    }}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '10px',
+                                                        justifyContent: 'space-between',
+                                                        padding: '10px 12px',
+                                                        borderRadius: '6px',
+                                                        border: isSelected
+                                                            ? '2px solid #d69c52'
+                                                            : '1px solid #ddd',
+                                                        marginBottom: '8px',
+                                                        cursor: 'pointer',
+                                                        background: isSelected ? '#fff6eb' : '#fff'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => {}}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                                        />
+                                                        <div>
+                                                            <strong>{table.TableNumber}</strong>
+                                                            <p className='mb-0' style={{ fontSize: '13px' }}>
+                                                                Sức chứa: {table.Capacity} người
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    {tables.filter(table => table.Status !== 1).length === 0 && (
+                                        <p>Hiện tại chưa có bàn trống.</p>
+                                    )}
+                                </div>
+
+                                {selectedTables.length > 0 && (
+                                    <div
+                                        style={{
+                                            border: '1px solid #d69c52',
+                                            background: '#fff8ed',
+                                            borderRadius: '6px',
+                                            padding: '10px 12px',
+                                            marginBottom: '12px'
+                                        }}
+                                    >
+                                        <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            marginBottom: '6px'
+                                        }}>
+                                            <strong style={{ color: '#10302c' }}>Bàn đã chọn:</strong>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedTables([])}
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: '#c8760b',
+                                                    cursor: 'pointer',
+                                                    fontSize: '13px',
+                                                    padding: 0
+                                                }}
+                                            >
+                                                Bỏ chọn tất cả
+                                            </button>
                                         </div>
-                                    ))}
-                                {tables.filter(table => table.Status !== 1).length === 0 && (
-                                    <p>Hiện tại chưa có bàn trống.</p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {selectedTables.map(t => (
+                                                <span
+                                                    key={t.TableID}
+                                                    style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '6px',
+                                                        background: '#d69c52',
+                                                        color: '#fff',
+                                                        padding: '4px 10px',
+                                                        borderRadius: '20px',
+                                                        fontSize: '13px'
+                                                    }}
+                                                >
+                                                    {t.TableNumber} ({t.Capacity} người)
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedTables(prev =>
+                                                                prev.filter(x => x.TableID !== t.TableID)
+                                                            );
+                                                        }}
+                                                        style={{
+                                                            background: 'rgba(255,255,255,0.25)',
+                                                            border: 'none',
+                                                            color: '#fff',
+                                                            borderRadius: '50%',
+                                                            width: '18px',
+                                                            height: '18px',
+                                                            lineHeight: '18px',
+                                                            padding: 0,
+                                                            cursor: 'pointer',
+                                                            fontSize: '12px'
+                                                        }}
+                                                        aria-label={`Bỏ chọn ${t.TableNumber}`}
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#10302c' }}>
+                                            Tổng sức chứa: <strong>
+                                                {selectedTables.reduce(
+                                                    (sum, t) => sum + (Number(t.Capacity) || 0),
+                                                    0
+                                                )}
+                                            </strong> người
+                                        </p>
+                                    </div>
                                 )}
-                            </div>
+                            </>
                         )}
 
                         <h5 style={{ marginTop: '8px', color: '#10302c' }}>Hóa đơn</h5>
@@ -534,7 +658,7 @@ function Checkout() {
                                 onClick={() => {
                                     setShowTableModal(false);
                                     if (!submitting) {
-                                        setSelectedTable(null);
+                                        setSelectedTables([]);
                                     }
                                 }}
                                 style={{

@@ -224,6 +224,11 @@ function Show_booking() {
                                         <div className='booking-card-body'>
                                             <div className='booking-info'>
                                                 <div className='info-row'>
+                                                    <span className="info-icon">📝</span>
+                                                    <span className="info-label">Đặt lúc:</span>
+                                                    <span className="info-value">{formatDate(booking.CreatedAt) || '—'}</span>
+                                                </div>
+                                                <div className='info-row'>
                                                     <span className="info-icon">👤</span>
                                                     <span className="info-label">Khách hàng:</span>
                                                     <span className="info-value">{booking.customer?.full_name || booking.CustomerName || 'Không rõ'}</span>

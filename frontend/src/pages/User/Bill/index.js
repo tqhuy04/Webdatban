@@ -442,6 +442,14 @@ function Bill() {
 
     /* ================= ORDER ================= */
     function createOrder(BookingID, menuItems = []) {
+        // Guard: chỉ tạo 1 order duy nhất cho 1 booking trong 1 phiên
+        const existingOrderId = localStorage.getItem("current_order_id") || sessionStorage.getItem("current_order_id");
+        if (existingOrderId) {
+            console.log("Order đã tồn tại, bỏ qua tạo mới. OrderID:", existingOrderId);
+            setStatusOfTable();
+            return;
+        }
+
         const now = new Date();
 
         // Sử dụng menuItems được truyền vào, hoặc lấy từ state, hoặc từ storage
@@ -742,9 +750,14 @@ function Bill() {
     }
 
     const createOrderAndPay = (bookingID) => {
-        // LUÔN TẠO ORDER MỚI - xóa order_id cũ để tránh trùng lặp
-        localStorage.removeItem("current_order_id");
-        sessionStorage.removeItem("current_order_id");
+        // Guard: nếu đã có order cho booking này thì KHÔNG tạo order mới để tránh trùng lặp
+        // (giữ nguyên order_id đã có để VNPay callback vẫn cập nhật đúng)
+        const existingOrderId = localStorage.getItem("current_order_id") || sessionStorage.getItem("current_order_id");
+        if (existingOrderId) {
+            console.log("Order đã tồn tại, dùng lại order cũ để thanh toán. OrderID:", existingOrderId);
+            initiateVNPayPayment(parseInt(existingOrderId));
+            return;
+        }
 
         const now = new Date();
 

@@ -50,6 +50,7 @@ class BookingTableDBResponse(BaseModel):
     RemainingAmount: float = 0
     PaymentStatus: int = 0
     TableCount: int = 0  # Số lượng bàn đã đặt
+    CreatedAt: Optional[datetime] = None  # Thời điểm tạo đơn đặt bàn
 
     class Config:
         from_attributes = True

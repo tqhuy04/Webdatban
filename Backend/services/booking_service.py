@@ -69,6 +69,7 @@ def get_all_bookings(db: Session):
             "RemainingAmount": booking.RemainingAmount,
             "PaymentStatus": int(booking.PaymentStatus) if booking.PaymentStatus is not None else 0,
             "DepositStatus": int(booking.DepositStatus) if booking.DepositStatus is not None else 0,
+            "CreatedAt": booking.CreatedAt,
             "customer": customer_data
         })
 
@@ -159,6 +160,7 @@ def get_bookings_of_account(account_id: int, db: Session):
             "PaymentStatus": int(booking.PaymentStatus) if booking.PaymentStatus is not None else 0,
             "DepositStatus": int(booking.DepositStatus) if booking.DepositStatus is not None else 0,
             "TableCount": booking.TableCount,
+            "CreatedAt": booking.CreatedAt,
             "customer": {
                 "full_name": customer.full_name,
                 "phone": customer.phone_number

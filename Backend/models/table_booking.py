@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, DateTime, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from Backend.database import Base
+from datetime import datetime
 
 class TableBooking(Base):
     __tablename__ = "table_bookings"
@@ -14,6 +15,7 @@ class TableBooking(Base):
     BookingTime = Column(DateTime, nullable=False)
     Status = Column(Integer, nullable=False)
     People = Column(Integer, default=1)  # Số người đặt bàn
+    CreatedAt = Column(DateTime, default=datetime.now, nullable=False)  # Thời điểm tạo đơn đặt bàn
 
     # Thông tin thanh toán
     DepositAmount = Column(Float, default=0)  # Số tiền đã cọc (30%)
