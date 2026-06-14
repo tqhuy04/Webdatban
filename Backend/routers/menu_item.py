@@ -16,6 +16,7 @@ from Backend.schemas.menu_item import (
 
 from Backend.controllers.menu_item_controller import (
     get_all,
+    get_active,
     get_by_id,
     create,
     update,
@@ -40,6 +41,14 @@ BASE_UPLOAD_DIR = "uploads/Categories"
 @router.get("/", response_model=List[MenuItemResponse])
 def get_menu_items(db: Session = Depends(get_db)):
     return get_all(db)
+
+
+# =========================
+# GET ACTIVE (for users)
+# =========================
+@router.get("/active/", response_model=List[MenuItemResponse])
+def get_active_menu_items(db: Session = Depends(get_db)):
+    return get_active(db)
 
 
 # =========================

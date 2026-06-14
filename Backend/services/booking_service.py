@@ -179,10 +179,12 @@ DEPOSIT_RATE = 0.30
 def _add_tables_to_booking_internal(db: Session, booking_id: int, table_ids: List[int]):
     """
     Internal helper: thêm bàn vào booking (chỉ thêm bàn chưa có).
+    Đã khóa các dòng BookingTable và Table theo thứ tự id để tránh race condition.
     """
     existing_tables = (
         db.query(BookingTable.TableID)
         .filter(BookingTable.BookingID == booking_id)
+        .with_for_update()
         .all()
     )
     existing_table_ids = {t[0] for t in existing_tables}
@@ -192,11 +194,16 @@ def _add_tables_to_booking_internal(db: Session, booking_id: int, table_ids: Lis
     if not new_table_ids:
         return
 
+    sorted_table_ids = sorted(new_table_ids)
     booking_tables = []
-    for table_id in new_table_ids:
-        # Cập nhật trạng thái bàn thành "Đã đặt" (Status = 1)
-        table = db.query(Table).filter(Table.TableID == table_id).first()
-        if table:
+    for table_id in sorted_table_ids:
+        table = (
+            db.query(Table)
+            .filter(Table.TableID == table_id)
+            .with_for_update()
+            .first()
+        )
+        if table and table.Status != 1:
             table.Status = 1
 
         bt = BookingTable(
@@ -228,24 +235,10 @@ def create_booking(db: Session, data: BookingTableCreate, user=None):
         actual_customer_id = data.customer_id
         print(f"[DEBUG] No user context, using customer_id from data: {actual_customer_id}")
 
-    # kiểm tra booking đã tồn tại chưa
-    existed = (
-        db.query(TableBooking)
-        .filter(
-            TableBooking.CustomerID == actual_customer_id,
-            TableBooking.BookingTime == data.booking_time
-        )
-        .first()
-    )
+    # ✅ Cho phép tài khoản đặt NHIỀU bàn / NHIỀU booking khác nhau.
+    # KHÔNG chặn khi cùng khung giờ - mỗi lần gọi API sẽ tạo 1 booking MỚI.
+    # (Check trùng bàn vẫn được xử lý ở phần khóa bên dưới.)
 
-    if existed:
-        print(f"[DEBUG] Booking already exists, returning existing booking: {existed.BookingID}")
-        # Booking đã tồn tại → vẫn thêm tables nếu chưa có
-        if data.table_ids and len(data.table_ids) > 0:
-            _add_tables_to_booking_internal(db, existed.BookingID, data.table_ids)
-        return existed
-
-    # Tính số tiền cọc (30%)
     total_amount = data.total_amount or 0
     deposit_amount = total_amount * DEPOSIT_RATE
 
@@ -272,13 +265,17 @@ def create_booking(db: Session, data: BookingTableCreate, user=None):
 
     # 2️ kiểm tra có table_ids không
     if data.table_ids and len(data.table_ids) > 0:
-
+        sorted_table_ids = sorted(data.table_ids)
         booking_tables = []
 
-        for table_id in data.table_ids:
-            # Cập nhật trạng thái bàn thành "Đã đặt" (Status = 1)
-            table = db.query(Table).filter(Table.TableID == table_id).first()
-            if table:
+        for table_id in sorted_table_ids:
+            table = (
+                db.query(Table)
+                .filter(Table.TableID == table_id)
+                .with_for_update()
+                .first()
+            )
+            if table and table.Status != 1:
                 table.Status = 1
 
             bt = BookingTable(
@@ -287,10 +284,7 @@ def create_booking(db: Session, data: BookingTableCreate, user=None):
             )
             booking_tables.append(bt)
 
-        # add tất cả cùng lúc
         db.add_all(booking_tables)
-
-        # commit insert booking_tables
         db.commit()
 
     return booking
@@ -310,10 +304,21 @@ def delete_booking(db: Session, booking_id: int):
     from Backend.models.order import Order
     from Backend.models.order_detail import OrderDetail
 
+    # 0. Lấy danh sách bàn của booking để cập nhật trạng thái về "trống" trước khi xóa
+    booking_tables_to_release = (
+        db.query(BookingTable)
+        .filter(BookingTable.BookingID == booking_id)
+        .all()
+    )
+    for bt in booking_tables_to_release:
+        table = db.query(Table).filter(Table.TableID == bt.TableID).first()
+        if table:
+            table.Status = 0
+
     # 1. Xóa order_details của các orders liên quan trước
     orders = db.query(Order).filter(Order.BookingID == booking_id).all()
     order_ids = [o.OrderID for o in orders]
-    
+
     if order_ids:
         db.query(OrderDetail).filter(
             OrderDetail.OrderID.in_(order_ids)

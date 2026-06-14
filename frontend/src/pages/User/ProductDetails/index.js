@@ -44,7 +44,7 @@ function ProductDetails() {
         const fetchSuggestions = async () => {
             if (!product) return;
             try {
-                const res = await menuItemApi.getAll();
+                const res = await menuItemApi.getActive();
                 const all = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
                 const others = all.filter((item) => item.MenuItemID !== product.MenuItemID);
                 const sameCategory = others.filter((item) => item.CategoryID === product.CategoryID);
@@ -193,13 +193,23 @@ function ProductDetails() {
                                     </button>
                                 </div>
 
-                                <button
-                                    className='bt-booking mt-4'
-                                    style={{ width: '180px' }}
-                                    onClick={handleAddToCart}
-                                >
-                                    Thêm vào giỏ hàng
-                                </button>
+                                {product.Status === 'Hết món' ? (
+                                    <button
+                                        className='bt-booking mt-4'
+                                        style={{ width: '180px', background: '#6c757d', cursor: 'not-allowed' }}
+                                        disabled
+                                    >
+                                        Đã hết món
+                                    </button>
+                                ) : (
+                                    <button
+                                        className='bt-booking mt-4'
+                                        style={{ width: '180px' }}
+                                        onClick={handleAddToCart}
+                                    >
+                                        Thêm vào giỏ hàng
+                                    </button>
+                                )}
                             </div>
                         </div>
 

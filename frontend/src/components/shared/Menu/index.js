@@ -19,7 +19,7 @@ const Menu = () => {
         const fetchData = async () => {
             try {
                 const [itemsRes, categoriesRes] = await Promise.all([
-                    menu_itemApi.getAll(),
+                    menu_itemApi.getActive(),
                     menu_categoryApi.getAll(),
                 ]);
 

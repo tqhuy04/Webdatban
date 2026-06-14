@@ -11,11 +11,12 @@ def get_all_feedbacks(db: Session):
     results = (
         db.query(
             Feedback.FeedbackID,
-            Feedback.UserID,          # ⭐ THÊM DÒNG NÀY
+            Feedback.UserID,
             Feedback.Content,
-            Feedback.Rating,          # ⭐ THÊM DÒNG NÀY
+            Feedback.Rating,
             Feedback.CreateAt,
-            Customer.full_name
+            Feedback.AdminReply,
+            Customer.full_name,
         )
         .join(Account, Feedback.UserID == Account.id)
         .outerjoin(Customer, Customer.account_id == Account.id)
@@ -26,11 +27,12 @@ def get_all_feedbacks(db: Session):
     return [
         {
             "FeedbackID": r.FeedbackID,
-            "UserID": r.UserID,       # ⭐ THÊM DÒNG NÀY
+            "UserID": r.UserID,
             "Content": r.Content,
-            "Rating": r.Rating,       # ⭐ THÊM DÒNG NÀY
+            "Rating": r.Rating,
             "CreateAt": r.CreateAt,
-            "full_name": r.full_name
+            "full_name": r.full_name,
+            "AdminReply": r.AdminReply,
         }
         for r in results
     ]
@@ -53,7 +55,8 @@ def get_public_feedbacks(db: Session, skip: int = 0, limit: int = 6):
             Feedback.Content,
             Feedback.Rating,
             Feedback.CreateAt,
-            Customer.full_name
+            Feedback.AdminReply,
+            Customer.full_name,
         )
         .join(Account, Feedback.UserID == Account.id)
         .outerjoin(Customer, Customer.account_id == Account.id)
@@ -70,7 +73,8 @@ def get_public_feedbacks(db: Session, skip: int = 0, limit: int = 6):
             "Content": r.Content,
             "Rating": r.Rating,
             "CreateAt": r.CreateAt,
-            "full_name": r.full_name or "Khách hàng"
+            "full_name": r.full_name or "Khách hàng",
+            "AdminReply": r.AdminReply,
         }
         for r in results
     ]
@@ -128,6 +132,22 @@ def update_feedback(db: Session, feedback_id: int, content: str, rating: int = N
     feedback.Content = content
     if rating is not None:
         feedback.Rating = rating
+    db.commit()
+    db.refresh(feedback)
+    return True
+
+
+def reply_feedback(db: Session, feedback_id: int, admin_reply: str = None):
+    feedback = (
+        db.query(Feedback)
+        .filter(Feedback.FeedbackID == feedback_id)
+        .first()
+    )
+
+    if not feedback:
+        return False
+
+    feedback.AdminReply = admin_reply
     db.commit()
     db.refresh(feedback)
     return True

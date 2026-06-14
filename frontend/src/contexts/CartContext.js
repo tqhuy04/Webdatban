@@ -15,6 +15,10 @@ export const CartProvider = ({ children }) => {
     }, [cartItems]);
 
     const addToCart = (product, quantity = 1) => {
+        if (product.Status === 'Hết món') {
+            return;
+        }
+
         setCartItems(prevItems => {
             const existingItem = prevItems.find(item => item.MenuItemID === product.MenuItemID);
 

@@ -12,7 +12,8 @@ from Backend.controllers.feedback_controller import (
     get_public,
     create,
     delete,
-    update
+    update,
+    reply,
 )
 from Backend.core.dependencies import get_current_user, admin_required
 
@@ -78,6 +79,26 @@ def update_feedback_api(
             detail="Feedback not found"
         )
     return {"message": "Update feedback successfully"}
+
+
+# =========================
+# ADMIN REPLY
+# =========================
+@router.put("/{feedback_id}/reply")
+def reply_feedback_api(
+    feedback_id: int,
+    data: dict,
+    db: Session = Depends(get_db),
+    _: dict = Depends(admin_required)
+):
+    admin_reply = data.get("AdminReply")
+    result = reply(db, feedback_id, admin_reply)
+    if result is False:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Feedback not found"
+        )
+    return {"message": "Reply feedback successfully"}
 
 
 # =========================

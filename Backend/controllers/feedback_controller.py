@@ -5,7 +5,8 @@ from Backend.services.feedback_service import (
     get_public_feedbacks,
     create_feedback,
     delete_feedback,
-    update_feedback
+    update_feedback,
+    reply_feedback,
 )
 
 
@@ -27,3 +28,7 @@ def delete(db: Session, feedback_id: int):
 
 def update(db: Session, feedback_id: int, content: str, rating: int = None):
     return update_feedback(db, feedback_id, content, rating)
+
+
+def reply(db: Session, feedback_id: int, admin_reply: str):
+    return reply_feedback(db, feedback_id, admin_reply)

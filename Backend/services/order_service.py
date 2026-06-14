@@ -90,6 +90,11 @@ def create_order(db: Session, data: OrderCreate):
             if not menu:
                 continue
 
+            # Không cho đặt món đã hết
+            if menu.Status == "Hết món":
+                print(f"[WARN] Bỏ qua món {menu.MenuItemID} - {menu.Name} vì đã hết")
+                continue
+
             price = menu.Price
 
             detail = OrderDetail(

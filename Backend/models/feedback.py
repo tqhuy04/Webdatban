@@ -11,3 +11,4 @@ class Feedback(Base):
     Content = Column(String(255), nullable=False)
     Rating = Column(Integer, default=5)  # Đánh giá 1-5 sao, mặc định 5 sao
     CreateAt = Column(DateTime, default=datetime.utcnow)
+    AdminReply = Column(String(255), nullable=True)

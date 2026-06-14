@@ -1086,6 +1086,35 @@
     transform: translateY(0);
 }
 
+.filter-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 4px 16px rgba(189, 129, 51, 0.2);
+}
+
+.filter-btn--reset {
+    background: #ffffff;
+    color: #4a5568;
+    border: 2px solid #e2e8f0;
+    box-shadow: none;
+}
+
+.filter-btn--reset:hover {
+    background: #f7fafc;
+    color: #2d3748;
+    border-color: #cbd5e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 /* Charts Section */
 .charts-section {
     display: grid;

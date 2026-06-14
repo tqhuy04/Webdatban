@@ -32,7 +32,7 @@ const MenuSelection = ({ isVisible, onClose }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const itemRes = await menu_itemApi.getAll();
+                const itemRes = await menu_itemApi.getActive();
                 const cateRes = await menu_categoryApi.getAll();
 
                 const items = (itemRes?.data || []).map((i) => ({

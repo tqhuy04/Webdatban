@@ -10,6 +10,13 @@ const menuItemApi = {
   },
 
   // =========================
+  // GET ACTIVE (for users)
+  // =========================
+  getActive() {
+    return axiosClient.get("/menu-items/active/");
+  },
+
+  // =========================
   // GET BY ID
   // =========================
   getById(id) {

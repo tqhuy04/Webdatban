@@ -160,6 +160,11 @@ function Feedback() {
                                         </div>
                                     </div>
                                     <div className='user-feedback-item-content'>{fb.Content}</div>
+                                    {fb.AdminReply && (
+                                        <div className='user-feedback-item-reply'>
+                                            <i className="fa fa-reply"></i> {fb.AdminReply}
+                                        </div>
+                                    )}
                                 </div>
                             )
                         })}

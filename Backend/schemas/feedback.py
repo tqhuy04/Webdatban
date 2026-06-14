@@ -17,6 +17,7 @@ class FeedbackResponse(FeedbackBase):
     UserID: int
     CreateAt: datetime
     full_name: Optional[str] = None   # ⭐ THÊM DÒNG NÀY
+    AdminReply: Optional[str] = None
 
     class Config:
         from_attributes = True

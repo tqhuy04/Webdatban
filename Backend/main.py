@@ -281,15 +281,15 @@ async def handle_send_message(sid, data):
                 user_info.get("user_type") == receiver_type):
                 receiver_sid = s_id
                 break
-        
+
         if receiver_sid:
             await sio.emit("receive_message", message_data, room=receiver_sid)
-        
+
         # Xác nhận cho người gửi
         await sio.emit("message_sent", {"success": True, "message": message_data}, room=sid)
-        
+
         return {"success": True, "message_id": chat_message.id}
-        
+
     except Exception as e:
         db.rollback()
         print(f"Error sending message: {e}")

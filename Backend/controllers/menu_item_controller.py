@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from Backend.schemas.menu_item import MenuItemCreate, MenuItemUpdate
 from Backend.services.menu_item_service import (
     get_all_menu_items,
+    get_active_menu_items,
     get_menu_item_by_id,
     create_menu_item,
     update_menu_item,
@@ -26,6 +27,10 @@ def get_category(category_id: int, db: Session):
 
 def get_all(db: Session):
     return get_all_menu_items(db)
+
+
+def get_active(db: Session):
+    return get_active_menu_items(db)
 
 
 def get_by_id(db: Session, item_id: int):

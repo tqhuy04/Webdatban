@@ -31,44 +31,100 @@ function Home() {
     const [labels, setLabels] = useState([]);
     const [datasets, setDatasets] = useState([]);
 
-    // lọc ngày (chưa xử lý backend, chỉ giữ UI)
+    // phân bổ Sáng/Chiều/Tối cho biểu đồ tròn
+    const [pieLabels, setPieLabels] = useState(["Sáng", "Chiều", "Tối"]);
+    const [pieData, setPieData] = useState([0, 0, 0]);
+
+    // lọc ngày + mốc thời gian
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const [timeFrame, setTimeFrame] = useState("morning");
+    const [timeFrame, setTimeFrame] = useState("all");
+    const [loading, setLoading] = useState(false);
+
+    // đồng hồ thời gian thực
+    const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
-        // tổng đơn + tổng bàn + doanh thu
-        statisticalApi.getOrderandTable()
-            .then(response => {
-                setSumOrder(response.data.totalOrders);
-                setCountTable(response.data.totalTables);
-                if (typeof response.data.totalRevenue !== "undefined") {
-                    setSumRevenue(response.data.totalRevenue);
-                }
-            })
-            .catch(() => {
-                // Silently fail
-            });
-
-        // chart order theo ngày
-        statisticalApi.getChartOfOrder()
-            .then(response => {
-                const chartLabels = response.data.map(item => item.date);
-                const chartData = response.data.map(item => item.total);
-
-                setLabels(chartLabels);
-                setDatasets(chartData);
-            })
-            .catch(() => {
-                // Silently fail
-            });
+        const timerId = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(timerId);
     }, []);
 
-    const handleSubmitDates = () => {
-        console.log("Start:", startDate);
-        console.log("End:", endDate);
-        console.log("Time frame:", timeFrame);
-        // sau này gọi API lọc
+    const formatDate = (date) => {
+        const days = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+        return `${days[date.getDay()]}, ${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+    };
+
+    const formatClock = (date) => {
+        return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
+    };
+
+    // tách hàm fetch ra để tái sử dụng khi lọc
+    const fetchStats = (params = {}) => {
+        return Promise.all([
+            statisticalApi.getOrderandTable(params),
+            statisticalApi.getChartOfOrder(params),
+            statisticalApi.getPieTimeframe(params),
+        ]).then(([statsRes, chartRes, pieRes]) => {
+            if (statsRes?.data) {
+                setSumOrder(statsRes.data.totalOrders ?? 0);
+                setCountTable(statsRes.data.totalTables ?? 0);
+                setSumRevenue(statsRes.data.totalRevenue ?? 0);
+            }
+            if (Array.isArray(chartRes?.data)) {
+                setLabels(chartRes.data.map(item => item.date));
+                setDatasets(chartRes.data.map(item => item.total));
+            }
+            if (Array.isArray(pieRes?.data)) {
+                const labelMap = { morning: "Sáng", afternoon: "Chiều", evening: "Tối" };
+                setPieLabels(pieRes.data.map(item => labelMap[item.label] || item.label));
+                setPieData(pieRes.data.map(item => item.value));
+            }
+        });
+    };
+
+    useEffect(() => {
+        fetchStats().catch(() => {
+            // Silently fail
+        });
+    }, []);
+
+    const buildParams = () => {
+        const params = {};
+        if (startDate) params.start_date = startDate;
+        if (endDate) params.end_date = endDate;
+        if (timeFrame && timeFrame !== "all") params.time_frame = timeFrame;
+        return params;
+    };
+
+    const handleApplyFilter = async () => {
+        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            alert("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
+            return;
+        }
+        try {
+            setLoading(true);
+            await fetchStats(buildParams());
+        } catch (err) {
+            // Silently fail
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetFilter = async () => {
+        setStartDate("");
+        setEndDate("");
+        setTimeFrame("all");
+        try {
+            setLoading(true);
+            await fetchStats();
+        } catch (err) {
+            // Silently fail
+        } finally {
+            setLoading(false);
+        }
     };
 
     const dataBar = {
@@ -85,11 +141,11 @@ function Home() {
     };
 
     const dataPie = {
-        labels: ["Sáng", "Chiều", "Tối"],
+        labels: pieLabels,
         datasets: [
             {
                 label: "Mốc Thời Gian",
-                data: [30, 50, 20],
+                data: pieData,
                 backgroundColor: ["#ff9999", "#66b3ff", "#99ff99"],
                 borderColor: ["#ff6666", "#3399ff", "#33cc33"],
                 borderWidth: 1,
@@ -126,7 +182,7 @@ function Home() {
                         </p>
                     </div>
                     <div className="admin-header-actions">
-                        <button className="header-btn refresh">
+                        <button className="header-btn refresh" onClick={handleResetFilter} disabled={loading}>
                             <i className="fas fa-sync-alt"></i>
                             <span>Làm mới</span>
                         </button>
@@ -135,11 +191,11 @@ function Home() {
                 <div className="admin-header-stats">
                     <div className="mini-stat">
                         <i className="fas fa-calendar-day"></i>
-                        <span>Hôm nay</span>
+                        <span>{formatDate(currentTime)}</span>
                     </div>
                     <div className="mini-stat">
                         <i className="fas fa-clock"></i>
-                        <span id="current-time">--:--</span>
+                        <span>{formatClock(currentTime)}</span>
                     </div>
                 </div>
             </div>
@@ -202,6 +258,7 @@ function Home() {
                         <input
                             type="date"
                             value={startDate}
+                            max={endDate || undefined}
                             onChange={(e) => setStartDate(e.target.value)}
                         />
                     </div>
@@ -214,6 +271,7 @@ function Home() {
                         <input
                             type="date"
                             value={endDate}
+                            min={startDate || undefined}
                             onChange={(e) => setEndDate(e.target.value)}
                         />
                     </div>
@@ -227,16 +285,31 @@ function Home() {
                             value={timeFrame}
                             onChange={(e) => setTimeFrame(e.target.value)}
                         >
-                            <option value="morning">Sáng</option>
-                            <option value="afternoon">Chiều</option>
-                            <option value="evening">Tối</option>
+                            <option value="all">Tất cả</option>
+                            <option value="morning">Sáng (5h - 12h)</option>
+                            <option value="afternoon">Chiều (12h - 18h)</option>
+                            <option value="evening">Tối (18h - 24h)</option>
                         </select>
                     </div>
 
-                    <button className="filter-btn" onClick={handleSubmitDates}>
-                        <i className="fas fa-search"></i>
-                        Xác Nhận
-                    </button>
+                    <div className="filter-actions">
+                        <button
+                            className="filter-btn"
+                            onClick={handleApplyFilter}
+                            disabled={loading}
+                        >
+                            <i className="fas fa-search"></i>
+                            {loading ? "Đang lọc..." : "Xác Nhận"}
+                        </button>
+                        <button
+                            className="filter-btn filter-btn--reset"
+                            onClick={handleResetFilter}
+                            disabled={loading}
+                        >
+                            <i className="fas fa-undo"></i>
+                            Đặt lại
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -21,6 +21,11 @@ const feedbackApi = {
     return axiosClient.put(`/feedbacks/${id}`, data);
   },
 
+  // admin reply feedback
+  reply(id, data) {
+    return axiosClient.put(`/feedbacks/${id}/reply`, data);
+  },
+
   delete(id) {
     return axiosClient.delete(`/feedbacks/${id}`);
   },

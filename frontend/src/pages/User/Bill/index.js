@@ -363,15 +363,18 @@ function Bill() {
         const bookingDateTime =
             `${booking.booking_date}T${booking.booking_time}:00`;
 
+        // Lấy tables từ storage để tạo booking kèm bàn trong cùng 1 request
+        const currentTables = JSON.parse(localStorage.getItem("tables"))
+            || JSON.parse(sessionStorage.getItem("tables"))
+            || [];
+        const tableIds = currentTables.map(t => Number(t.TableID));
+
         const payload = {
-            CustomerID: booking.customer_id || booking.CustomerID,
-            FullName: booking.full_name,
-            Email: booking.email || null,
-            PhoneNumber: booking.phone_number,
-            Address: booking.address,
-            BookingTime: bookingDateTime,
-            People: Number(booking.people),
-            Status: booking.status,
+            customer_id: booking.customer_id || booking.CustomerID,
+            booking_time: bookingDateTime,
+            table_ids: tableIds,
+            people: Number(booking.people) || 1,
+            total_amount: 0,
         };
 
         console.log("BOOKING PAYLOAD SEND:", payload);
@@ -392,7 +395,6 @@ function Bill() {
                 // Lưu booking ID vào session để tránh tạo lại
                 localStorage.setItem("current_booking_id", bookingID);
                 sessionStorage.setItem("current_booking_id", bookingID);
-                createBookingTables(bookingID);
                 // Lấy menu_items trực tiếp từ storage
                 const storedMenuItems = JSON.parse(localStorage.getItem("menu_items")) || JSON.parse(sessionStorage.getItem("menu_items")) || [];
                 createOrder(bookingID, storedMenuItems);
@@ -411,9 +413,6 @@ function Bill() {
         const currentTables = JSON.parse(localStorage.getItem("tables"))
             || JSON.parse(sessionStorage.getItem("tables"))
             || [];
-        const currentBooking = JSON.parse(localStorage.getItem("table_bookings"))
-            || JSON.parse(sessionStorage.getItem("table_bookings"))
-            || table_bookings;
 
         if (!currentTables || currentTables.length === 0) {
             console.error("table_ids rỗng - Kiểm tra lại session storage");
@@ -422,23 +421,20 @@ function Bill() {
             return;
         }
 
-        const payload = {
-            customer_id: currentBooking.customer_id || currentBooking.CustomerID,
-            booking_time: `${currentBooking.booking_date}T${currentBooking.booking_time}:00`,
-            table_ids: currentTables.map(t => Number(t.TableID)),
-            people: Number(currentBooking.people) || 1,
-        };
+        const table_ids = currentTables.map(t => Number(t.TableID));
 
-        console.log("BOOKING_TABLE PAYLOAD:", payload);
+        console.log("ADD TABLES TO BOOKING:", { bookingID, table_ids });
 
+        // Gọi endpoint addTablesToBooking thay vì create() để tránh tạo booking trùng.
+        // Endpoint này chỉ thêm liên kết BookingTable cho booking đã tồn tại.
         booking_tableApi
-            .create(payload)
+            .addTablesToBooking(bookingID, table_ids)
             .then(() => {
-                console.log("Tạo booking_table thành công");
+                console.log("Đã liên kết bàn vào booking thành công");
             })
             .catch(err => {
                 console.error(
-                    "Lỗi tạo booking_table:",
+                    "Lỗi liên kết bàn vào booking:",
                     err.response?.data || err
                 );
             });
@@ -502,7 +498,17 @@ function Bill() {
 
 
     function HandleClean() {
+        // Clear storage để lần đặt bàn sau là hoàn toàn mới (không bị dính booking cũ)
         sessionStorage.clear();
+        localStorage.removeItem("current_booking_id");
+        localStorage.removeItem("current_order_id");
+        localStorage.removeItem("vnp_order_id");
+        localStorage.removeItem("payment_success");
+        localStorage.removeItem("payment_time");
+        localStorage.removeItem("table_bookings");
+        localStorage.removeItem("tables");
+        localStorage.removeItem("menu_items");
+        localStorage.removeItem("total_price");
         navigate('/Thanks')
     }
 
@@ -1040,7 +1046,7 @@ function Bill() {
                                         e.target.style.boxShadow = '0 4px 15px rgba(13, 110, 253, 0.3)';
                                     }}
                                 >
-                                    💳 Thanh toán qua VNPAY
+                                    💳 Thanh toán trực tuyến
                                 </button>
                             </div>
                         </div>

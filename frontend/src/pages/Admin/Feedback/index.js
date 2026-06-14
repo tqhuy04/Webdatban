@@ -8,6 +8,7 @@ function Feedback() {
     const notify = useNotify();
     const [feedbacks, setFeedbacks] = useState([]);
     const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
+    const [replyModal, setReplyModal] = useState({ show: false, id: null, value: "" });
 
     useEffect(() => {
         getFeedbacks();
@@ -39,6 +40,25 @@ function Feedback() {
 
     const handleCancelDelete = () => {
         setDeleteModal({ show: false, id: null });
+    };
+
+    const handleReplyClick = (fb) => {
+        setReplyModal({ show: true, id: fb.FeedbackID, value: fb.AdminReply || "" });
+    };
+
+    const handleConfirmReply = async () => {
+        try {
+            await feedbackApi.reply(replyModal.id, { AdminReply: replyModal.value });
+            notify.success("Đã gửi phản hồi");
+            getFeedbacks();
+        } catch (err) {
+            notify.error("Gửi phản hồi thất bại");
+        }
+        setReplyModal({ show: false, id: null, value: "" });
+    };
+
+    const handleCancelReply = () => {
+        setReplyModal({ show: false, id: null, value: "" });
     };
 
     const renderStars = (rating) => {
@@ -75,15 +95,16 @@ function Feedback() {
                             <th>Tên tài khoản</th>
                             <th>Đánh giá</th>
                             <th>Nội dung</th>
+                            <th>Phản hồi</th>
                             <th>Ngày tạo</th>
-                            <th width="100">Hành động</th>
+                            <th width="220">Hành động</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         {feedbacks.length === 0 && (
                             <tr>
-                                <td colSpan="5" className="text-center">
+                                <td colSpan="6" className="text-center">
                                     <div className="empty-state">
                                         <i className="fa fa-comments"></i>
                                         <p>Không có dữ liệu phản hồi</p>
@@ -97,12 +118,20 @@ function Feedback() {
                                 <td>{fb.full_name || "Ẩn danh"}</td>
                                 <td>{renderStars(fb.Rating || 5)}</td>
                                 <td>{fb.Content}</td>
+                                <td>{fb.AdminReply || "Chưa có phản hồi"}</td>
                                 <td>
                                     {new Date(fb.CreateAt).toLocaleDateString()}
                                 </td>
                                 <td>
                                     <button
+                                        className="admin-btn-edit"
+                                        onClick={() => handleReplyClick(fb)}
+                                    >
+                                        <i className="fa fa-reply"></i> Trả lời
+                                    </button>
+                                    <button
                                         className="admin-btn-delete"
+                                        style={{ marginLeft: 8 }}
                                         onClick={() => handleDeleteClick(fb.FeedbackID)}
                                     >
                                         <i className="fa fa-trash"></i> Xóa
@@ -121,6 +150,31 @@ function Feedback() {
                 onConfirm={handleConfirmDelete}
                 onCancel={handleCancelDelete}
             />
+
+            {replyModal.show && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h4>Trả lời đánh giá</h4>
+                        <div className="form-group-modal">
+                            <label>Nội dung phản hồi</label>
+                            <textarea
+                                className="modal-textarea"
+                                value={replyModal.value}
+                                onChange={(e) => setReplyModal((prev) => ({ ...prev, value: e.target.value }))}
+                                placeholder="Nhập nội dung phản hồi..."
+                            />
+                        </div>
+                        <div className="modal-actions">
+                            <button type="button" className="btn-modal-save" onClick={handleConfirmReply}>
+                                <i className="fa fa-check"></i> Gửi phản hồi
+                            </button>
+                            <button type="button" className="btn-modal-cancel" onClick={handleCancelReply}>
+                                Hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

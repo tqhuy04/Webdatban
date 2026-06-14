@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from Backend.models.menu_item import MenuItem
 from Backend.models.menu_category import MenuCategory
@@ -6,6 +7,13 @@ from Backend.schemas.menu_item import MenuItemCreate, MenuItemUpdate
 
 def get_all_menu_items(db: Session):
     return db.query(MenuItem).filter(MenuItem.IsDeleted == False).all()
+
+
+def get_active_menu_items(db: Session):
+    return db.query(MenuItem).filter(
+        MenuItem.IsDeleted == False,
+        MenuItem.Status == "Còn món"
+    ).all()
 
 
 def get_menu_item_by_id(db: Session, item_id: int):
@@ -22,6 +30,22 @@ def get_menu_category_by_id(db: Session, category_id: int):
 
 
 def create_menu_item(db: Session, data: MenuItemCreate):
+    existing_item = (
+        db.query(MenuItem)
+        .filter(
+            MenuItem.Name == data.Name,
+            MenuItem.IsDeleted == False,
+        )
+        .with_for_update()
+        .first()
+    )
+
+    if existing_item:
+        raise HTTPException(
+            status_code=409,
+            detail="Tên món ăn đã tồn tại",
+        )
+
     item = MenuItem(**data.dict())
 
     db.add(item)
@@ -64,9 +88,11 @@ def delete_menu_item(db: Session, item_id: int):
 def search_menu_items(db: Session, keyword: str):
     """
     Tìm kiếm món ăn theo tên hoặc mô tả.
+    Chỉ trả về món còn bán (không hiển thị món hết cho người dùng).
     """
     return db.query(MenuItem).filter(
         MenuItem.IsDeleted == False,
+        MenuItem.Status == "Còn món",
         (
             MenuItem.Name.ilike(f"%{keyword}%") |
             MenuItem.Description.ilike(f"%{keyword}%")
